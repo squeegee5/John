@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Marmoset Hang Glider</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+        <div id="hud">
+            <div class="hud-item">Score: <span id="score">0</span></div>
+            <div class="hud-item">Altitude: <span id="altitude">0</span>m</div>
+            <div class="hud-item">Weapon: <span id="weapon">None</span></div>
+        </div>
+        <div id="start-screen">
+            <h1>Marmoset Hang Glider</h1>
+            <p>Guide your marmoset on a Flying V guitar through thermals!</p>
+            <p>Collect checkpoints, land on cliffs, and blast flying lizards!</p>
+            <button id="start-btn">Start Game</button>
+            <div id="controls-info">
+                <p><strong>Controls:</strong></p>
+                <p>Touch left/right to steer</p>
+                <p>Tap screen to shoot</p>
+            </div>
+        </div>
+        <div id="game-over-screen" style="display: none;">
+            <h1>Game Over!</h1>
+            <p>Final Score: <span id="final-score">0</span></p>
+            <p>Altitude Reached: <span id="final-altitude">0</span>m</p>
+            <button id="restart-btn">Play Again</button>
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>
