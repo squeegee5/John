@@ -313,8 +313,10 @@
   }
 
   function setDesignBookLinks() {
-    const link = document.getElementById('designBookLinkDesigner');
-    if (link) link.href = CONFIG.designBookUrl;
+    const linkDesigner = document.getElementById('designBookLinkDesigner');
+    if (linkDesigner) linkDesigner.href = CONFIG.designBookUrl;
+    const linkRoom = document.getElementById('designBookLinkRoom');
+    if (linkRoom) linkRoom.href = CONFIG.designBookUrl;
   }
 
   function setText(id, text) {
@@ -325,21 +327,25 @@
   // ── Navigation ───────────────────────────────────────────
 
   function navigateTo(step) {
-    // Initialize calendar when navigating to calendar step
-    if (step === 'designer-calendar' && !calendarInstance) {
+    // Initialize or re-render calendar when navigating to calendar step
+    if (step === 'designer-calendar') {
       setTimeout(() => {
         const container = document.getElementById('calendarContainer');
-        calendarInstance = new CalendarBooking(container, (slotData) => {
-          state.appointmentSlot = slotData;
-          // Auto-advance to contact or confirmation
-          setTimeout(() => {
-            if (state.contactFilled) {
-              submitAndConfirm();
-            } else {
-              navigateTo('contact');
-            }
-          }, 400);
-        });
+        if (!calendarInstance) {
+          calendarInstance = new CalendarBooking(container, (slotData) => {
+            state.appointmentSlot = slotData;
+            // Auto-advance to contact or confirmation
+            setTimeout(() => {
+              if (state.contactFilled) {
+                submitAndConfirm();
+              } else {
+                navigateTo('contact');
+              }
+            }, 400);
+          });
+        } else {
+          calendarInstance.render();
+        }
       }, 100);
     }
 
@@ -666,10 +672,7 @@
   }
 
   // ── Pre-fill contact on navigate ─────────────────────────
-  // Watch for navigation to contact step
-  const originalNavigateTo = navigateTo;
-  // We can't easily override because of hoisting, so we use a MutationObserver
-  // to detect when the contact step becomes active.
+  // Use a MutationObserver to detect when the contact step becomes active.
   const observer = new MutationObserver(() => {
     const contactStep = document.querySelector('.step[data-step="contact"]');
     if (contactStep && contactStep.classList.contains('active')) {

@@ -461,6 +461,12 @@ img {
   margin-bottom: var(--space-xl);
 }
 
+.step-links {
+  text-align: center;
+  margin-top: var(--space-lg);
+  margin-bottom: var(--space-sm);
+}
+
 /* ── Calendar ──────────────────────────────────────────────── */
 .calendar-container {
   background: var(--color-bg-card);

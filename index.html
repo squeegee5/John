@@ -87,6 +87,11 @@
         <div class="card-grid equipment-grid" id="equipmentCards">
           <!-- Populated by JS -->
         </div>
+        <div class="step-links">
+          <a href="#" class="btn btn-outline design-book-link" id="designBookLinkRoom" target="_blank">
+            View Our Design Book
+          </a>
+        </div>
         <div class="step-nav">
           <button class="btn btn-back" data-action="back">Back</button>
           <button class="btn btn-primary" data-action="equipment-next">Continue</button>
@@ -145,14 +150,17 @@
           <div class="form-group">
             <label for="contactName">Full Name *</label>
             <input type="text" id="contactName" name="name" required placeholder="Your full name">
+            <span class="error-message">Please enter your name</span>
           </div>
           <div class="form-group">
             <label for="contactEmail">Email Address *</label>
             <input type="email" id="contactEmail" name="email" required placeholder="your@email.com">
+            <span class="error-message">Please enter a valid email address</span>
           </div>
           <div class="form-group">
             <label for="contactPhone">Phone Number *</label>
             <input type="tel" id="contactPhone" name="phone" required placeholder="Your phone number">
+            <span class="error-message">Please enter your phone number</span>
           </div>
           <div class="form-group">
             <label for="contactPostcode">Postcode / Location</label>
