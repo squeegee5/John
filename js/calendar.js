@@ -171,19 +171,19 @@ class CalendarBooking {
       <div class="calendar-grid">
     `;
 
-    // Day headers
+    // Each day is a column container with header + slots together
+    // This ensures correct stacking on mobile
     for (const day of days) {
+      const slots = this.getSlotsForDay(day);
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+      html += `<div class="calendar-day">`;
       html += `
         <div class="calendar-day-header">
           ${this.getDayLabel(day)}
-          <span class="day-date">${day.getDate()} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][day.getMonth()]}</span>
+          <span class="day-date">${day.getDate()} ${months[day.getMonth()]}</span>
         </div>
       `;
-    }
-
-    // Slot columns
-    for (const day of days) {
-      const slots = this.getSlotsForDay(day);
       html += `<div class="calendar-day-slots">`;
       if (slots.length === 0) {
         html += `<div class="calendar-slot unavailable">No slots</div>`;
@@ -198,13 +198,13 @@ class CalendarBooking {
           html += `
             <div class="${classes.join(' ')}"
                  data-date="${slot.date.toISOString()}"
-                 data-hour="${slot.hour}"
-                 ${slot.unavailable ? '' : ''}>
+                 data-hour="${slot.hour}">
               ${slot.label}
             </div>
           `;
         }
       }
+      html += `</div>`;
       html += `</div>`;
     }
 
