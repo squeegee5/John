@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Design Your Sensory Room | Southpaw</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div id="sensory-app">
+
+    <!-- Progress Bar -->
+    <div class="progress-container" id="progressContainer">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         LANDING PAGE
+         ═══════════════════════════════════════════════════════ -->
+    <section class="step active" data-step="landing">
+      <div class="step-content">
+        <h1 class="hero-title" id="heroTitle"></h1>
+        <p class="hero-subtitle" id="heroSubtitle"></p>
+        <div class="card-grid two-col" id="landingCards">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         ROOM PATH - Step 1: Room Type
+         ═══════════════════════════════════════════════════════ -->
+    <section class="step" data-step="room-type">
+      <div class="step-content">
+        <div class="step-header">
+          <h2 id="roomTypeTitle"></h2>
+          <p id="roomTypeSubtitle"></p>
+        </div>
+        <div class="card-grid" id="roomTypeCards">
+          <!-- Populated by JS -->
+        </div>
+        <div class="step-nav">
+          <button class="btn btn-back" data-action="back">Back</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ROOM PATH - Step 2: Age Group -->
+    <section class="step" data-step="room-age">
+      <div class="step-content">
+        <div class="step-header">
+          <h2 id="ageTitle"></h2>
+          <p id="ageSubtitle"></p>
+        </div>
+        <div class="card-grid four-col" id="ageCards">
+          <!-- Populated by JS -->
+        </div>
+        <div class="step-nav">
+          <button class="btn btn-back" data-action="back">Back</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ROOM PATH - Step 3: Room Size -->
+    <section class="step" data-step="room-size">
+      <div class="step-content">
+        <div class="step-header">
+          <h2 id="sizeTitle"></h2>
+          <p id="sizeSubtitle"></p>
+        </div>
+        <div class="card-grid four-col" id="sizeCards">
+          <!-- Populated by JS -->
+        </div>
+        <div class="step-nav">
+          <button class="btn btn-back" data-action="back">Back</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ROOM PATH - Step 4: Equipment (multi-select) -->
+    <section class="step" data-step="room-equipment">
+      <div class="step-content">
+        <div class="step-header">
+          <h2 id="equipmentTitle"></h2>
+          <p id="equipmentSubtitle"></p>
+        </div>
+        <div class="card-grid equipment-grid" id="equipmentCards">
+          <!-- Populated by JS -->
+        </div>
+        <div class="step-nav">
+          <button class="btn btn-back" data-action="back">Back</button>
+          <button class="btn btn-primary" data-action="equipment-next">Continue</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         DESIGNER PATH - Step 1: Choose Designer
+         ═══════════════════════════════════════════════════════ -->
+    <section class="step" data-step="designer-select">
+      <div class="step-content">
+        <div class="step-header">
+          <h2 id="designerTitle"></h2>
+          <p id="designerSubtitle"></p>
+        </div>
+        <a href="#" class="btn btn-outline design-book-link" id="designBookLinkDesigner" target="_blank">
+          View Our Design Book
+        </a>
+        <div class="card-grid designer-grid" id="designerCards">
+          <!-- Populated by JS -->
+        </div>
+        <div class="step-nav">
+          <button class="btn btn-back" data-action="back">Back</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- DESIGNER PATH - Step 2: Calendar Booking -->
+    <section class="step" data-step="designer-calendar">
+      <div class="step-content">
+        <div class="step-header">
+          <h2 id="calendarTitle"></h2>
+          <p id="calendarSubtitle"></p>
+        </div>
+        <div class="calendar-container" id="calendarContainer">
+          <!-- Calendar populated by JS -->
+        </div>
+        <p class="calendar-note" id="calendarNote"></p>
+        <div class="step-nav">
+          <button class="btn btn-back" data-action="back">Back</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         CONTACT DETAILS
+         ═══════════════════════════════════════════════════════ -->
+    <section class="step" data-step="contact">
+      <div class="step-content">
+        <div class="step-header">
+          <h2 id="contactTitle"></h2>
+          <p id="contactSubtitle"></p>
+        </div>
+        <form class="contact-form" id="contactForm" novalidate>
+          <div class="form-group">
+            <label for="contactName">Full Name *</label>
+            <input type="text" id="contactName" name="name" required placeholder="Your full name">
+          </div>
+          <div class="form-group">
+            <label for="contactEmail">Email Address *</label>
+            <input type="email" id="contactEmail" name="email" required placeholder="your@email.com">
+          </div>
+          <div class="form-group">
+            <label for="contactPhone">Phone Number *</label>
+            <input type="tel" id="contactPhone" name="phone" required placeholder="Your phone number">
+          </div>
+          <div class="form-group">
+            <label for="contactPostcode">Postcode / Location</label>
+            <input type="text" id="contactPostcode" name="postcode" placeholder="Your postcode or area">
+          </div>
+          <div class="form-group">
+            <label for="contactPremises">Premises Name</label>
+            <input type="text" id="contactPremises" name="premises" placeholder="Name of the premises">
+          </div>
+          <div class="step-nav">
+            <button type="button" class="btn btn-back" data-action="back">Back</button>
+            <button type="submit" class="btn btn-primary">Submit</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         CONFIRMATION / COMPLETION
+         ═══════════════════════════════════════════════════════ -->
+    <section class="step" data-step="confirmation">
+      <div class="step-content confirmation-content">
+        <div class="confirmation-icon">
+          <svg viewBox="0 0 64 64" width="80" height="80">
+            <circle cx="32" cy="32" r="30" fill="none" stroke="currentColor" stroke-width="2"/>
+            <path d="M20 33l8 8 16-16" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h2>Thank You!</h2>
+        <p class="confirmation-message" id="confirmationMessage">
+          Your details have been sent to our design team. We'll be in touch shortly to discuss your sensory room project.
+        </p>
+        <div class="confirmation-summary" id="confirmationSummary">
+          <!-- Populated by JS with a summary of selections -->
+        </div>
+        <div class="confirmation-actions" id="confirmationActions">
+          <!-- "Continue to Designer/Room" button + external links -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Loading overlay for form submission -->
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="spinner"></div>
+      <p>Sending your details...</p>
+    </div>
+
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/calendar.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
