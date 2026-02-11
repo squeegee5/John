@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book a Sensory Room Design Consultation | Southpaw</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+/* ================================================================
+   SOUTHPAW BOOKING SYSTEM — FULL SELF-CONTAINED STYLES
+   Magnet-style graphical quiz with image-overlay cards
+   ================================================================ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --pri:#2A7B88;--pri-d:#1E5F6A;--pri-l:#E6F4F6;
+  --acc:#E8734A;--acc-d:#D4612F;
+  --bg:#F5F7FA;--card:#fff;
+  --txt:#1A202C;--txt2:#4A5568;--txt3:#A0AEC0;
+  --brd:#E2E8F0;--brd2:#EDF2F7;
+  --ok:#48BB78;--err:#E53E3E;
+  --sh-s:0 1px 3px rgba(0,0,0,.08);
+  --sh-m:0 6px 20px rgba(0,0,0,.1);
+  --sh-l:0 12px 40px rgba(0,0,0,.14);
+  --r-s:10px;--r-m:16px;--r-l:22px;
+  --ease:cubic-bezier(.4,0,.2,1);
+  --font:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+}
+html{font-size:16px;scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+body{font-family:var(--font);background:var(--bg);color:var(--txt);line-height:1.6;min-height:100vh;overflow-x:hidden}
+
+/* ── Top bar ── */
+.topbar{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--brd2)}
+.topbar__in{max-width:1280px;margin:0 auto;padding:.7rem 1.5rem;display:flex;align-items:center;gap:1.25rem}
+.topbar__brand{font-size:1.3rem;font-weight:800;color:var(--pri);letter-spacing:-.03em;white-space:nowrap}
+.topbar__prog{flex:1;display:flex;align-items:center;gap:.75rem}
+.prog{flex:1;height:5px;background:var(--brd2);border-radius:3px;overflow:hidden}
+.prog__fill{height:100%;background:linear-gradient(90deg,var(--pri),var(--acc));border-radius:3px;transition:width .6s var(--ease);width:0}
+.prog__txt{font-size:.7rem;font-weight:700;color:var(--txt3);white-space:nowrap;min-width:2.5rem;text-align:right}
+
+/* ── Wizard ── */
+.wiz{max-width:1280px;margin:0 auto;padding:1.5rem 1.5rem 5rem;position:relative}
+
+/* ── Steps ── */
+.step{display:none;animation:fadeUp .45s var(--ease)}
+.step.on{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+.step__hd{text-align:center;margin-bottom:2.25rem}
+.step__h1{font-size:2.2rem;font-weight:800;color:var(--txt);letter-spacing:-.03em;line-height:1.15;margin-bottom:.45rem}
+.step__sub{font-size:1.05rem;color:var(--txt2);max-width:520px;margin:0 auto;line-height:1.65}
+
+/* ── Back ── */
+.back{display:inline-flex;align-items:center;gap:.3rem;background:0;border:0;color:var(--txt2);font:.5rem/1 var(--font);font-size:.88rem;font-weight:600;cursor:pointer;padding:.45rem .7rem;border-radius:var(--r-s);transition:.2s var(--ease);margin-bottom:.75rem}
+.back:hover{background:var(--brd2);color:var(--txt)}
+.back svg{width:18px;height:18px}
+
+/* ══════════════════════════════════════════════
+   CHOICE CARDS — Magnet-style image overlay
+   ══════════════════════════════════════════════ */
+.grid{display:grid;gap:1rem}
+.grid--2{grid-template-columns:repeat(2,1fr);max-width:780px;margin:0 auto}
+.grid--3{grid-template-columns:repeat(3,1fr)}
+.grid--4{grid-template-columns:repeat(4,1fr)}
+.grid--4w{grid-template-columns:repeat(4,1fr)}
+.grid--equip{grid-template-columns:repeat(4,1fr);gap:.85rem}
+.grid--des{grid-template-columns:repeat(2,1fr);max-width:860px;margin:0 auto;gap:1.25rem}
+
+/* ─ Card base ─ */
+.card{position:relative;border-radius:var(--r-m);overflow:hidden;cursor:pointer;border:3px solid transparent;transition:all .3s var(--ease);background:var(--card);display:flex;flex-direction:column}
+.card:focus-visible{outline:3px solid var(--pri);outline-offset:3px}
+.card:hover{transform:translateY(-4px);box-shadow:var(--sh-l)}
+.card:hover .card__img{transform:scale(1.06)}
+.card.sel{border-color:var(--pri);box-shadow:0 0 0 3px var(--pri-l),var(--sh-m)}
+
+/* check badge */
+.card.sel::after{content:'';position:absolute;top:.7rem;right:.7rem;width:30px;height:30px;background:var(--pri) url("data:image/svg+xml,%3Csvg width='14' height='14' viewBox='0 0 14 14' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 7L6 10L11 4' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat center;border-radius:50%;z-index:5;animation:popIn .3s var(--ease)}
+@keyframes popIn{0%{transform:scale(0)}60%{transform:scale(1.2)}100%{transform:scale(1)}}
+
+/* ─ Image area ─ */
+.card__imgw{position:relative;width:100%;aspect-ratio:4/3;overflow:hidden}
+.card--hero .card__imgw{aspect-ratio:16/9}
+.card--des .card__imgw{aspect-ratio:3/4}
+.card__img{width:100%;height:100%;object-fit:cover;transition:transform .5s var(--ease);display:block}
+
+/* Placeholder (gradient + icon, shown when no image loaded) */
+.card__ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;position:relative}
+.card__ph::after{content:'';position:absolute;inset:0;background:linear-gradient(160deg,rgba(255,255,255,.15) 0%,rgba(0,0,0,.2) 100%)}
+.card__ico{font-size:3.5rem;position:relative;z-index:1;filter:drop-shadow(0 3px 8px rgba(0,0,0,.25));transition:transform .35s var(--ease)}
+.card:hover .card__ico{transform:scale(1.12)}
+.card--hero .card__ico{font-size:4.5rem}
+
+/* Text overlay on image — Magnet style */
+.card__overlay{position:absolute;bottom:0;left:0;right:0;padding:1rem 1.1rem;background:linear-gradient(0deg,rgba(0,0,0,.65) 0%,rgba(0,0,0,.0) 100%);z-index:2;pointer-events:none}
+.card__overlay .card__t{color:#fff;font-size:.95rem;font-weight:700;text-shadow:0 1px 4px rgba(0,0,0,.4);line-height:1.25}
+.card__overlay .card__st{color:rgba(255,255,255,.8);font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.15rem;text-shadow:0 1px 3px rgba(0,0,0,.4)}
+
+/* Hero variant */
+.card--hero .card__overlay .card__t{font-size:1.3rem}
+.card--hero .card__overlay .card__st{font-size:.78rem;margin-bottom:.2rem}
+.card--hero .card__overlay .card__desc{color:rgba(255,255,255,.75);font-size:.85rem;margin-top:.15rem}
+
+/* Body below image (used for designers) */
+.card__body{padding:1.1rem 1.15rem;flex:1}
+.card__name{font-size:1.1rem;font-weight:800;color:var(--txt);margin-bottom:.1rem}
+.card__role{font-size:.72rem;color:var(--pri);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.45rem}
+.card__bio{font-size:.82rem;color:var(--txt2);line-height:1.55}
+
+/* ─ Equipment card (smaller) ─ */
+.ecard{position:relative;border-radius:var(--r-s);overflow:hidden;cursor:pointer;border:2.5px solid var(--brd2);transition:all .25s var(--ease);background:var(--card);display:flex;flex-direction:column;text-align:center}
+.ecard:hover{border-color:var(--pri);transform:translateY(-2px);box-shadow:var(--sh-s)}
+.ecard.sel{border-color:var(--pri);background:var(--pri-l)}
+.ecard.sel::after{content:'';position:absolute;top:.45rem;right:.45rem;width:22px;height:22px;background:var(--pri) url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2.5 6L5 8.5L9.5 3.5' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat center;border-radius:50%;z-index:5;animation:popIn .25s var(--ease)}
+.ecard__imgw{width:100%;aspect-ratio:4/3;overflow:hidden;position:relative}
+.ecard__t{padding:.55rem .4rem;font-size:.78rem;font-weight:700;color:var(--txt);line-height:1.2}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;font-family:var(--font);font-weight:700;border:2.5px solid transparent;border-radius:var(--r-m);cursor:pointer;transition:all .25s var(--ease);text-decoration:none;white-space:nowrap;font-size:.95rem;padding:.75rem 1.5rem}
+.btn--p{background:var(--pri);color:#fff;border-color:var(--pri)}
+.btn--p:hover{background:var(--pri-d);border-color:var(--pri-d);box-shadow:var(--sh-m)}
+.btn--a{background:var(--acc);color:#fff;border-color:var(--acc)}
+.btn--a:hover{background:var(--acc-d);border-color:var(--acc-d)}
+.btn--o{background:0;color:var(--pri);border-color:var(--brd)}
+.btn--o:hover{border-color:var(--pri);background:var(--pri-l)}
+.btn--g{background:0;color:var(--txt2);border:0;padding:.4rem .8rem}
+.btn--g:hover{color:var(--txt);background:var(--brd2)}
+.btn--lg{padding:1rem 2.2rem;font-size:1.05rem;border-radius:var(--r-l)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn svg{width:18px;height:18px;flex-shrink:0}
+
+.acts{display:flex;justify-content:center;gap:1rem;margin-top:2rem}
+.acts--col{flex-direction:column;align-items:center;max-width:420px;margin-left:auto;margin-right:auto}
+.acts--col .btn{width:100%}
+
+/* ── Success ── */
+.success{margin-bottom:1.25rem;animation:popBig .55s cubic-bezier(.175,.885,.32,1.275)}
+@keyframes popBig{0%{transform:scale(0);opacity:0}60%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+
+/* ── Form ── */
+.form{max-width:600px;margin:0 auto}
+.frow{margin-bottom:1rem}
+.frow--2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.fgrp{display:flex;flex-direction:column}
+.flbl{font-size:.82rem;font-weight:700;color:var(--txt);margin-bottom:.3rem}
+.finp{font-family:var(--font);font-size:.95rem;padding:.75rem 1rem;border:2.5px solid var(--brd);border-radius:var(--r-s);background:#fff;color:var(--txt);transition:border-color .2s,box-shadow .2s;outline:0;width:100%}
+.finp::placeholder{color:var(--txt3)}
+.finp:focus{border-color:var(--pri);box-shadow:0 0 0 3px var(--pri-l)}
+.finp--ta{resize:vertical;min-height:76px}
+.finp.err{border-color:var(--err)}
+.ferr{font-size:.75rem;color:var(--err);margin-top:.2rem;min-height:1em}
+
+/* ── Spinner ── */
+.spin{display:inline-block;width:20px;height:20px;border:3px solid rgba(255,255,255,.3);border-radius:50%;border-top-color:#fff;animation:sp .6s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ── Calendar ── */
+.cal{max-width:680px;margin:0 auto}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
+.cal-nav__t{font-size:1.15rem;font-weight:800;color:var(--txt)}
+.cal-nav__b{background:0;border:2px solid var(--brd);border-radius:var(--r-s);width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.2s var(--ease);color:var(--txt2)}
+.cal-nav__b:hover:not(:disabled){border-color:var(--pri);color:var(--pri);background:var(--pri-l)}
+.cal-nav__b:disabled{opacity:.25;cursor:not-allowed}
+.cal-g{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:1.5rem}
+.cal-g__h{text-align:center;font-size:.7rem;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.07em;padding:.5rem 0}
+.cal-d{text-align:center;padding:.6rem .2rem;font-size:.88rem;font-weight:600;border-radius:var(--r-s);cursor:pointer;transition:.2s var(--ease);color:var(--txt);background:var(--card);border:1.5px solid transparent}
+.cal-d:hover:not(.cal-d--off):not(.cal-d--e){background:var(--pri-l);color:var(--pri);border-color:var(--pri)}
+.cal-d--today{font-weight:800;border-color:var(--pri)!important}
+.cal-d--sel{background:var(--pri)!important;color:#fff!important;border-color:var(--pri)!important;font-weight:800}
+.cal-d--off{color:var(--txt3);cursor:not-allowed;opacity:.35}
+.cal-d--e{cursor:default;background:0}
+
+.tslots{animation:fadeUp .3s var(--ease)}
+.tslots__h{font-size:1rem;font-weight:700;color:var(--txt);margin-bottom:1rem;text-align:center}
+.tslots__g{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;max-width:480px;margin:0 auto}
+.tslot{padding:.8rem .8rem;background:var(--card);border:2.5px solid var(--brd);border-radius:var(--r-m);text-align:center;font-size:.82rem;font-weight:700;font-family:var(--font);color:var(--txt);cursor:pointer;transition:.25s var(--ease)}
+.tslot:hover:not(.tslot--bk){border-color:var(--pri);background:var(--pri-l);color:var(--pri)}
+.tslot--sel{background:var(--pri)!important;border-color:var(--pri)!important;color:#fff!important}
+.tslot--bk{opacity:.3;cursor:not-allowed;text-decoration:line-through}
+.cal-cfm{display:flex;justify-content:center;margin-top:2rem}
+
+/* ══════════ Responsive ══════════ */
+@media(max-width:960px){
+  .grid--4,.grid--4w{grid-template-columns:repeat(3,1fr)}
+  .grid--equip{grid-template-columns:repeat(3,1fr)}
+}
+@media(max-width:640px){
+  .wiz{padding:1rem 1rem 3rem}
+  .step__h1{font-size:1.55rem}
+  .step__sub{font-size:.92rem}
+  .grid--2{grid-template-columns:1fr;max-width:400px}
+  .grid--3,.grid--4,.grid--4w{grid-template-columns:repeat(2,1fr)}
+  .grid--equip{grid-template-columns:repeat(2,1fr)}
+  .grid--des{grid-template-columns:1fr;max-width:400px}
+  .frow--2{grid-template-columns:1fr}
+  .tslots__g{grid-template-columns:repeat(2,1fr)}
+  .btn--lg{padding:.85rem 1.4rem;font-size:.95rem}
+  .topbar__in{padding:.55rem .9rem}
+  .topbar__brand{font-size:1.1rem}
+  .prog__txt{display:none}
+  .card__ico{font-size:2.5rem}
+  .card--hero .card__ico{font-size:3.2rem}
+  .card--hero .card__overlay .card__t{font-size:1.1rem}
+}
+@media(max-width:380px){
+  .grid--equip{gap:.6rem}
+  .ecard__t{font-size:.7rem;padding:.35rem}
+}
+</style>
+</head>
+<body>
+
+<!-- ─ Top bar ─ -->
+<header class="topbar">
+  <div class="topbar__in">
+    <div class="topbar__brand">Southpaw</div>
+    <div class="topbar__prog">
+      <div class="prog"><div class="prog__fill" id="progFill"></div></div>
+      <span class="prog__txt" id="progTxt"></span>
+    </div>
+  </div>
+</header>
+
+<!-- ─ Wizard ─ -->
+<main class="wiz" id="wiz">
+
+  <!-- ═══ WELCOME ═══ -->
+  <section class="step" id="s-welcome" data-s="welcome">
+    <div class="step__hd">
+      <h1 class="step__h1">Design Your Sensory Space</h1>
+      <p class="step__sub">Book a free design consultation with our expert team. Choose where you'd like to start.</p>
+    </div>
+    <div class="grid grid--2" id="welcomeGrid"></div>
+  </section>
+
+  <!-- ═══ ROOM TYPE ═══ -->
+  <section class="step" id="s-room-type" data-s="room-type">
+    <div class="step__hd">
+      <button class="back" data-do="back"><svg viewBox="0 0 20 20" fill="none"><path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Back</button>
+      <h1 class="step__h1">Choose Your Room Type</h1>
+      <p class="step__sub">What kind of sensory environment are you looking for?</p>
+    </div>
+    <div class="grid grid--4w" id="roomGrid"></div>
+  </section>
+
+  <!-- ═══ AGE ═══ -->
+  <section class="step" id="s-age" data-s="age">
+    <div class="step__hd">
+      <button class="back" data-do="back"><svg viewBox="0 0 20 20" fill="none"><path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Back</button>
+      <h1 class="step__h1">Age Range</h1>
+      <p class="step__sub">Who will be using the sensory space?</p>
+    </div>
+    <div class="grid grid--4" id="ageGrid"></div>
+  </section>
+
+  <!-- ═══ SIZE ═══ -->
+  <section class="step" id="s-size" data-s="size">
+    <div class="step__hd">
+      <button class="back" data-do="back"><svg viewBox="0 0 20 20" fill="none"><path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Back</button>
+      <h1 class="step__h1">Room Size</h1>
+      <p class="step__sub">How large is the space you have available?</p>
+    </div>
+    <div class="grid grid--4" id="sizeGrid"></div>
+  </section>
+
+  <!-- ═══ EQUIPMENT ═══ -->
+  <section class="step" id="s-equipment" data-s="equipment">
+    <div class="step__hd">
+      <button class="back" data-do="back"><svg viewBox="0 0 20 20" fill="none"><path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Back</button>
+      <h1 class="step__h1">Equipment</h1>
+      <p class="step__sub">Select all the equipment you're interested in</p>
+    </div>
+    <div class="grid grid--equip" id="equipGrid"></div>
+    <div class="acts"><button class="btn btn--p btn--lg" data-do="equip-next">Continue <svg viewBox="0 0 20 20" fill="none"><path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+  </section>
+
+  <!-- ═══ CONTACT ═══ -->
+  <section class="step" id="s-contact" data-s="contact">
+    <div class="step__hd">
+      <button class="back" data-do="back"><svg viewBox="0 0 20 20" fill="none"><path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Back</button>
+      <h1 class="step__h1">Your Details</h1>
+      <p class="step__sub">So we can get in touch about your consultation</p>
+    </div>
+    <form class="form" id="cForm" novalidate>
+      <div class="frow"><div class="fgrp">
+        <label class="flbl" for="cName">Full Name *</label>
+        <input class="finp" type="text" id="cName" required placeholder="Your full name">
+        <span class="ferr" id="eName"></span>
+      </div></div>
+      <div class="frow frow--2">
+        <div class="fgrp">
+          <label class="flbl" for="cEmail">Email Address *</label>
+          <input class="finp" type="email" id="cEmail" required placeholder="you@example.com">
+          <span class="ferr" id="eEmail"></span>
+        </div>
+        <div class="fgrp">
+          <label class="flbl" for="cPhone">Phone Number *</label>
+          <input class="finp" type="tel" id="cPhone" required placeholder="07xxx xxxxxx">
+          <span class="ferr" id="ePhone"></span>
+        </div>
+      </div>
+      <div class="frow frow--2">
+        <div class="fgrp">
+          <label class="flbl" for="cPost">Postcode / Location</label>
+          <input class="finp" type="text" id="cPost" placeholder="e.g. M1 1AA">
+        </div>
+        <div class="fgrp">
+          <label class="flbl" for="cPrem">Premises Name</label>
+          <input class="finp" type="text" id="cPrem" placeholder="e.g. Oak Hill School">
+        </div>
+      </div>
+      <div class="fgrp">
+        <label class="flbl" for="cNotes">Additional Notes</label>
+        <textarea class="finp finp--ta" id="cNotes" rows="3" placeholder="Anything else you'd like us to know?"></textarea>
+      </div>
+      <div class="acts"><button type="submit" class="btn btn--p btn--lg" id="cBtn"><span id="cBtnTxt">Submit &amp; Continue</span><span id="cSpin" class="spin" style="display:none"></span></button></div>
+    </form>
+  </section>
+
+  <!-- ═══ ROOM COMPLETE ═══ -->
+  <section class="step" id="s-room-complete" data-s="room-complete">
+    <div class="step__hd">
+      <div class="success"><svg width="68" height="68" viewBox="0 0 68 68" fill="none"><circle cx="34" cy="34" r="31" stroke="var(--pri)" stroke-width="3"/><path d="M21 35L30 44L47 25" stroke="var(--pri)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <h1 class="step__h1">Room Preferences Saved!</h1>
+      <p class="step__sub">We've received your room details. Would you also like to choose a designer and book an appointment?</p>
+    </div>
+    <div class="acts acts--col">
+      <button class="btn btn--p btn--lg" data-do="goto-designer">Choose a Designer &amp; Book Appointment <svg viewBox="0 0 20 20" fill="none"><path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <a class="btn btn--o btn--lg" id="lnkDB1" href="#" target="_blank">View Our Design Book <svg viewBox="0 0 16 16" fill="none"><path d="M6 3H3V13H13V10M9 3H13V7M13 3L7 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+      <a class="btn btn--o btn--lg" id="lnkDP1" href="#" target="_blank">Learn About Our Design Process <svg viewBox="0 0 16 16" fill="none"><path d="M6 3H3V13H13V10M9 3H13V7M13 3L7 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+    </div>
+  </section>
+
+  <!-- ═══ DESIGNER ═══ -->
+  <section class="step" id="s-designer" data-s="designer">
+    <div class="step__hd">
+      <button class="back" data-do="back"><svg viewBox="0 0 20 20" fill="none"><path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Back</button>
+      <h1 class="step__h1">Choose Your Designer</h1>
+      <p class="step__sub">Meet our design team and pick the right person for your project</p>
+    </div>
+    <div class="grid grid--des" id="desGrid"></div>
+    <div class="acts" style="margin-top:1.25rem">
+      <a class="btn btn--o" id="lnkDB2" href="#" target="_blank">View Our Design Book <svg viewBox="0 0 16 16" fill="none"><path d="M6 3H3V13H13V10M9 3H13V7M13 3L7 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+    </div>
+  </section>
+
+  <!-- ═══ CALENDAR ═══ -->
+  <section class="step" id="s-calendar" data-s="calendar">
+    <div class="step__hd">
+      <button class="back" data-do="back"><svg viewBox="0 0 20 20" fill="none"><path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Back</button>
+      <h1 class="step__h1">Book Your Consultation</h1>
+      <p class="step__sub">Select a date and time that works for you. Consultations are typically 15-20 minutes, but we reserve a full hour.</p>
+    </div>
+    <div class="cal" id="calBox"></div>
+  </section>
+
+  <!-- ═══ DESIGNER COMPLETE ═══ -->
+  <section class="step" id="s-designer-complete" data-s="designer-complete">
+    <div class="step__hd">
+      <div class="success"><svg width="68" height="68" viewBox="0 0 68 68" fill="none"><circle cx="34" cy="34" r="31" stroke="var(--pri)" stroke-width="3"/><path d="M21 35L30 44L47 25" stroke="var(--pri)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <h1 class="step__h1">Appointment Booked!</h1>
+      <p class="step__sub" id="dcMsg">Your consultation has been confirmed. We'll be in touch shortly.</p>
+    </div>
+    <div class="acts acts--col">
+      <button class="btn btn--p btn--lg" data-do="goto-room" id="gotoRoomBtn" style="display:none">Tell Us About Your Room <svg viewBox="0 0 20 20" fill="none"><path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <a class="btn btn--o btn--lg" id="lnkDP2" href="#" target="_blank">Learn About Our Design Process <svg viewBox="0 0 16 16" fill="none"><path d="M6 3H3V13H13V10M9 3H13V7M13 3L7 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+    </div>
+  </section>
+
+  <!-- ═══ ALL DONE ═══ -->
+  <section class="step" id="s-done" data-s="done">
+    <div class="step__hd">
+      <div class="success"><svg width="84" height="84" viewBox="0 0 84 84" fill="none"><circle cx="42" cy="42" r="39" stroke="var(--pri)" stroke-width="3"/><path d="M25 44L36 55L59 30" stroke="var(--pri)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <h1 class="step__h1">You're All Set!</h1>
+      <p class="step__sub">Thank you for completing your booking. We've sent all the details to our design team and we'll be in touch very soon.</p>
+    </div>
+    <div class="acts acts--col">
+      <a class="btn btn--o btn--lg" id="lnkDB3" href="#" target="_blank">View Our Design Book <svg viewBox="0 0 16 16" fill="none"><path d="M6 3H3V13H13V10M9 3H13V7M13 3L7 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+      <a class="btn btn--o btn--lg" id="lnkDP3" href="#" target="_blank">Learn About Our Design Process <svg viewBox="0 0 16 16" fill="none"><path d="M6 3H3V13H13V10M9 3H13V7M13 3L7 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+      <button class="btn btn--g" data-do="restart">Start Over</button>
+    </div>
+  </section>
+
+</main>
+
+<script>
+/* ================================================================
+   CONFIG — Edit images, text, designers, calendar settings here
+   ================================================================ */
+var CONFIG = {
+  links: {
+    designBook:    "https://southpaw.co.uk/pages/design-book",
+    designProcess: "https://southpaw.co.uk/pages/design-process",
+  },
+  email: {
+    recipient:       "design-visit@somatogroup.co.uk",
+    emailjsPublicKey:  "",
+    emailjsServiceId:  "",
+    emailjsTemplateId: "",
+  },
+
+  roomTypes: [
+    { id:"si",            title:"Sensory Integration",  subtitle:"SI Room",         image:"images/room-si.jpg",            color:"#3BA8A0", icon:"🧩" },
+    { id:"mse",           title:"Multi-Sensory",        subtitle:"MSE Room",        image:"images/room-mse.jpg",           color:"#3A8FBF", icon:"✨" },
+    { id:"soft-play",     title:"Soft Play",            subtitle:"Soft Play Area",  image:"images/room-softplay.jpg",      color:"#6BBF8A", icon:"🎪" },
+    { id:"de-escalation", title:"De-escalation",        subtitle:"Calm Room",       image:"images/room-deescalation.jpg",  color:"#7ABFCF", icon:"🕊️" },
+    { id:"projection",    title:"Projection",           subtitle:"Immersive Room",  image:"images/room-projection.jpg",    color:"#6B52A8", icon:"🎬" },
+    { id:"mural",         title:"Mural",                subtitle:"Themed Room",     image:"images/room-mural.jpg",         color:"#CF6B82", icon:"🎨" },
+    { id:"other",         title:"Other / Multiple",     subtitle:"Multiple Rooms",  image:"images/room-other.jpg",         color:"#D4A843", icon:"🏗️" },
+  ],
+  ageRanges: [
+    { id:"0-5",   title:"0 – 5",   subtitle:"Early Years", image:"images/age-0-5.jpg",   color:"#E8918C", icon:"👶" },
+    { id:"6-12",  title:"6 – 12",  subtitle:"Primary",     image:"images/age-6-12.jpg",  color:"#E8B88C", icon:"🧒" },
+    { id:"13-18", title:"13 – 18", subtitle:"Secondary",   image:"images/age-13-18.jpg", color:"#8CCFA3", icon:"🧑" },
+    { id:"older", title:"Older",   subtitle:"Adult",       image:"images/age-older.jpg", color:"#8C9CD4", icon:"👤" },
+  ],
+  roomSizes: [
+    { id:"small",   title:"Small",   subtitle:"Up to 15m²",     image:"images/size-small.jpg",   color:"#A3C46B", icon:"🔹" },
+    { id:"medium",  title:"Medium",  subtitle:"15 – 30m²",      image:"images/size-medium.jpg",  color:"#D4B643", icon:"🔷" },
+    { id:"large",   title:"Large",   subtitle:"30m² +",         image:"images/size-large.jpg",   color:"#3BA8A0", icon:"⬛" },
+    { id:"various", title:"Various", subtitle:"Multiple Rooms", image:"images/size-various.jpg", color:"#CF5B3B", icon:"🔶" },
+  ],
+  equipment: [
+    { id:"bubble-tubes",      title:"Bubble Tubes",            image:"images/equip-bubble.jpg",      color:"#3A8FBF", icon:"🫧" },
+    { id:"swings",            title:"Swings",                  image:"images/equip-swings.jpg",      color:"#6BBF8A", icon:"🪢" },
+    { id:"projectors",        title:"Projector/s",             image:"images/equip-projector.jpg",   color:"#6B52A8", icon:"📽️" },
+    { id:"tactile-panels",    title:"Tactile Panels",          image:"images/equip-tactile.jpg",     color:"#CF6B82", icon:"🖐️" },
+    { id:"tactile-mural",     title:"Tactile Mural",           image:"images/equip-mural.jpg",       color:"#D47843", icon:"🎨" },
+    { id:"soft-play",         title:"Soft Play Elements",      image:"images/equip-softplay.jpg",    color:"#E8918C", icon:"🧸" },
+    { id:"padding",           title:"Padding",                 image:"images/equip-padding.jpg",     color:"#8CCFA3", icon:"🛡️" },
+    { id:"vibration",         title:"Vibration",               image:"images/equip-vibration.jpg",   color:"#E8B88C", icon:"〰️" },
+    { id:"music",             title:"Music",                   image:"images/equip-music.jpg",       color:"#8C9CD4", icon:"🎵" },
+    { id:"lighting",          title:"Lighting / Fibre Optics", image:"images/equip-lighting.jpg",    color:"#D4B643", icon:"💡" },
+    { id:"interactive",       title:"Interactive Panels",      image:"images/equip-interactive.jpg",  color:"#3BA8A0", icon:"🖥️" },
+    { id:"weight-resistance", title:"Weight / Resistance",     image:"images/equip-weight.jpg",      color:"#A3C46B", icon:"🏋️" },
+    { id:"balance",           title:"Balance",                 image:"images/equip-balance.jpg",     color:"#3BA8A0", icon:"⚖️" },
+    { id:"ball-pool",         title:"Ball Pool",               image:"images/equip-ballpool.jpg",    color:"#CF5B3B", icon:"🔴" },
+    { id:"climbing",          title:"Climbing",                image:"images/equip-climbing.jpg",    color:"#2A7B88", icon:"🧗" },
+    { id:"seating",           title:"Seating",                 image:"images/equip-seating.jpg",     color:"#7ABFCF", icon:"🪑" },
+  ],
+  designers: [
+    { id:"designer-1", name:"Sarah Mitchell",  role:"Lead Sensory Designer",     bio:"Sarah has over 12 years' experience designing sensory environments for schools, hospitals and care homes. She specialises in multi-sensory and SI rooms.", image:"images/designer-sarah.jpg", color:"#CF6B82", icon:"👩‍🎨" },
+    { id:"designer-2", name:"James Carter",    role:"Senior Design Consultant",  bio:"James brings a background in occupational therapy to his design work, ensuring every space is both therapeutic and engaging. He focuses on de-escalation and calm spaces.", image:"images/designer-james.jpg", color:"#3A8FBF", icon:"👨‍🎨" },
+    { id:"designer-3", name:"Emma Thompson",   role:"Creative Director",         bio:"Emma leads our creative team with a passion for immersive projection and mural designs. She transforms ordinary rooms into extraordinary sensory experiences.", image:"images/designer-emma.jpg", color:"#6BBF8A", icon:"👩‍💼" },
+    { id:"designer-4", name:"David Okonkwo",   role:"Design Consultant",         bio:"David specialises in soft play and active sensory spaces. With a background in inclusive design, he creates environments that are accessible and stimulating for all ages.", image:"images/designer-david.jpg", color:"#6B52A8", icon:"👨‍💼" },
+  ],
+  calendar: {
+    weekdaySlots: [
+      { start:9,  label:"9:00 AM – 10:00 AM" },
+      { start:10, label:"10:00 AM – 11:00 AM" },
+      { start:11, label:"11:00 AM – 12:00 PM" },
+      { start:13, label:"1:00 PM – 2:00 PM" },
+      { start:14, label:"2:00 PM – 3:00 PM" },
+      { start:15, label:"3:00 PM – 4:00 PM" },
+    ],
+    fridaySlots: [
+      { start:9,  label:"9:00 AM – 10:00 AM" },
+      { start:10, label:"10:00 AM – 11:00 AM" },
+      { start:11, label:"11:00 AM – 12:00 PM" },
+    ],
+    weeksAhead: 8,
+    bookedSlots: [],
+  },
+};
+
+/* ================================================================
+   APPLICATION
+   ================================================================ */
+(function(){
+"use strict";
+
+var S = {
+  path:null, done:[], hist:[],
+  roomType:null, age:null, size:null, equip:[],
+  designer:null, aDate:null, aTime:null,
+  hasCont:false,
+  contact:{name:"",email:"",phone:"",post:"",prem:"",notes:""},
+  cMo:null, cYr:null
+};
+
+var $w=document.getElementById("wiz"),
+    $pf=document.getElementById("progFill"),
+    $pt=document.getElementById("progTxt");
+
+var RSTEPS=["room-type","age","size","equipment","contact","room-complete"];
+var DSTEPS=["designer","calendar","contact","designer-complete"];
+
+/* ── helpers ── */
+function $(id){return document.getElementById(id)}
+function mkSVG(d){return '<svg viewBox="0 0 20 20" fill="none"><path d="'+d+'" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
+var ARROW_R=mkSVG("M7.5 5L12.5 10L7.5 15");
+var ARROW_L=mkSVG("M12.5 15L7.5 10L12.5 5");
+var EXT_ICO='<svg viewBox="0 0 16 16" fill="none"><path d="M6 3H3V13H13V10M9 3H13V7M13 3L7 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+/* ── build card HTML ── */
+function cardHTML(item, extra){
+  extra = extra||"";
+  return '<div class="card__imgw">'+
+    '<div class="card__ph" style="background:'+item.color+'">'+
+      '<span class="card__ico">'+item.icon+'</span>'+
+    '</div>'+
+  '</div>'+
+  '<div class="card__overlay">'+
+    (item.subtitle?'<div class="card__st">'+item.subtitle+'</div>':'')+
+    '<div class="card__t">'+item.title+'</div>'+
+    extra+
+  '</div>';
+}
+function ecardHTML(item){
+  return '<div class="ecard__imgw">'+
+    '<div class="card__ph" style="background:'+item.color+'">'+
+      '<span class="card__ico" style="font-size:2.2rem">'+item.icon+'</span>'+
+    '</div>'+
+  '</div>'+
+  '<div class="ecard__t">'+item.title+'</div>';
+}
+function desCardHTML(d){
+  return '<div class="card__imgw card--des__imgw">'+
+    '<div class="card__ph" style="background:'+d.color+'">'+
+      '<span class="card__ico" style="font-size:4rem">'+d.icon+'</span>'+
+    '</div>'+
+  '</div>'+
+  '<div class="card__body">'+
+    '<div class="card__name">'+d.name+'</div>'+
+    '<div class="card__role">'+d.role+'</div>'+
+    '<p class="card__bio">'+d.bio+'</p>'+
+  '</div>';
+}
+
+/* ── try load real images ── */
+function tryImg(el,src,alt){
+  var img=new Image();img.src=src;img.alt=alt||"";img.loading="lazy";
+  img.onload=function(){
+    var ph=el.querySelector(".card__ph");
+    if(ph){img.className="card__img";ph.replaceWith(img)}
+  };
+}
+
+/* ── init ── */
+function init(){
+  renderWelcome();
+  renderRooms();
+  renderAges();
+  renderSizes();
+  renderEquip();
+  renderDesigners();
+  setLinks();
+  $w.addEventListener("click",onClick);
+  $("cForm").addEventListener("submit",onSubmit);
+  show("welcome");
+}
+
+function setLinks(){
+  ["lnkDB1","lnkDB2","lnkDB3"].forEach(function(id){var e=$(id);if(e)e.href=CONFIG.links.designBook});
+  ["lnkDP1","lnkDP2","lnkDP3"].forEach(function(id){var e=$(id);if(e)e.href=CONFIG.links.designProcess});
+}
+
+/* ── render grids ── */
+function renderWelcome(){
+  var g=$("welcomeGrid");
+  var items=[
+    {title:"Choose Your Room Type",subtitle:"Room Preferences",icon:"🏠",color:"#2A7B88",desc:"Tell us about the sensory space you need",act:"start-room"},
+    {title:"Choose Your Designer",subtitle:"Book Appointment",icon:"👤",color:"#E8734A",desc:"Pick a designer and book a consultation",act:"start-designer"}
+  ];
+  items.forEach(function(it){
+    var b=document.createElement("button");
+    b.className="card card--hero";b.dataset.do=it.act;
+    b.innerHTML='<div class="card__imgw"><div class="card__ph" style="background:'+it.color+'"><span class="card__ico">'+it.icon+'</span></div></div>'+
+      '<div class="card__overlay"><div class="card__st">'+it.subtitle+'</div><div class="card__t">'+it.title+'</div><div class="card__desc">'+it.desc+'</div></div>';
+    g.appendChild(b);
+  });
+}
+
+function renderRooms(){
+  var g=$("roomGrid");
+  CONFIG.roomTypes.forEach(function(r){
+    var b=document.createElement("button");
+    b.className="card";b.dataset.do="pick-room";b.dataset.id=r.id;
+    b.innerHTML=cardHTML(r);tryImg(b,r.image,r.title);g.appendChild(b);
+  });
+}
+function renderAges(){
+  var g=$("ageGrid");
+  CONFIG.ageRanges.forEach(function(a){
+    var b=document.createElement("button");
+    b.className="card";b.dataset.do="pick-age";b.dataset.id=a.id;
+    b.innerHTML=cardHTML(a);tryImg(b,a.image,a.title);g.appendChild(b);
+  });
+}
+function renderSizes(){
+  var g=$("sizeGrid");
+  CONFIG.roomSizes.forEach(function(s){
+    var b=document.createElement("button");
+    b.className="card";b.dataset.do="pick-size";b.dataset.id=s.id;
+    b.innerHTML=cardHTML(s);tryImg(b,s.image,s.title);g.appendChild(b);
+  });
+}
+function renderEquip(){
+  var g=$("equipGrid");
+  CONFIG.equipment.forEach(function(e){
+    var b=document.createElement("button");
+    b.className="ecard";b.dataset.do="tog-equip";b.dataset.id=e.id;
+    b.innerHTML=ecardHTML(e);tryImg(b,e.image,e.title);g.appendChild(b);
+  });
+}
+function renderDesigners(){
+  var g=$("desGrid");
+  CONFIG.designers.forEach(function(d){
+    var b=document.createElement("button");
+    b.className="card card--des";b.dataset.do="pick-des";b.dataset.id=d.id;
+    b.innerHTML=desCardHTML(d);tryImg(b,d.image,d.name);g.appendChild(b);
+  });
+}
+
+/* ── navigation ── */
+function show(id){
+  document.querySelectorAll(".step").forEach(function(s){s.classList.remove("on")});
+  var t=$("s-"+id);
+  if(t){t.classList.add("on");t.style.animation="none";t.offsetHeight;t.style.animation=""}
+  window.scrollTo({top:0,behavior:"smooth"});
+  progress(id);
+  if(id==="calendar")initCal();
+  if(id==="contact")prefill();
+  if(id==="designer-complete")updateDC();
+  if(id==="room-complete"&&S.done.indexOf("designer")>-1){show("done");return}
+  if(id==="designer-complete"){
+    var rb=$("gotoRoomBtn");
+    if(rb)rb.style.display=S.done.indexOf("room")>-1?"none":"inline-flex";
+    if(S.done.indexOf("room")>-1){show("done");return}
+  }
+}
+function nav(id){var c=cur();if(c)S.hist.push(c);show(id)}
+function goBack(){if(S.hist.length)show(S.hist.pop())}
+function cur(){var a=document.querySelector(".step.on");return a?a.dataset.s:null}
+
+/* ── progress ── */
+function progress(id){
+  var p=0,l="";
+  if(id==="welcome"){p=0;l=""}
+  else if(S.path==="room"||RSTEPS.indexOf(id)>-1){
+    var i=RSTEPS.indexOf(id);
+    if(i>=0){var b=S.done.indexOf("designer")>-1?50:0;p=b+((i+1)/RSTEPS.length)*50}
+    l="Step "+(i+1)+" of "+RSTEPS.length;
+  }else if(S.path==="designer"||DSTEPS.indexOf(id)>-1){
+    var i=DSTEPS.indexOf(id);
+    if(i>=0){var b=S.done.indexOf("room")>-1?50:0;p=b+((i+1)/DSTEPS.length)*50}
+    l="Step "+(i+1)+" of "+DSTEPS.length;
+  }
+  if(id==="done"){p=100;l="Complete"}
+  $pf.style.width=Math.min(p,100)+"%";
+  $pt.textContent=l;
+}
+
+/* ── events ── */
+function onClick(e){
+  var b=e.target.closest("[data-do]");if(!b)return;
+  var a=b.dataset.do;
+  switch(a){
+    case"start-room":S.path="room";nav("room-type");break;
+    case"start-designer":S.path="designer";nav("designer");break;
+    case"back":goBack();break;
+    case"pick-room":S.roomType=b.dataset.id;sel(b,".card");setTimeout(function(){nav("age")},280);break;
+    case"pick-age":S.age=b.dataset.id;sel(b,".card");setTimeout(function(){nav("size")},280);break;
+    case"pick-size":S.size=b.dataset.id;sel(b,".card");setTimeout(function(){nav("equipment")},280);break;
+    case"tog-equip":togEquip(b);break;
+    case"equip-next":
+      if(S.hasCont){email("room");S.done.push("room");nav("room-complete")}
+      else nav("contact");
+      break;
+    case"goto-designer":S.path="designer";nav("designer");break;
+    case"goto-room":S.path="room";nav("room-type");break;
+    case"pick-des":S.designer=b.dataset.id;sel(b,".card");setTimeout(function(){nav("calendar")},280);break;
+    case"confirm-booking":confirmBook();break;
+    case"restart":location.reload();break;
+  }
+}
+function sel(c,cls){c.parentElement.querySelectorAll(cls).forEach(function(s){s.classList.remove("sel")});c.classList.add("sel")}
+function togEquip(c){var id=c.dataset.id;c.classList.toggle("sel");var i=S.equip.indexOf(id);if(i>-1)S.equip.splice(i,1);else S.equip.push(id)}
+
+/* ── contact ── */
+function prefill(){
+  if(S.hasCont){
+    $("cName").value=S.contact.name;$("cEmail").value=S.contact.email;$("cPhone").value=S.contact.phone;
+    $("cPost").value=S.contact.post;$("cPrem").value=S.contact.prem;$("cNotes").value=S.contact.notes;
+  }
+  var t=$("cBtnTxt");
+  if(t)t.textContent=S.path==="designer"?"Submit & Book Appointment":"Submit & Continue";
+}
+function onSubmit(e){
+  e.preventDefault();
+  if(!validate())return;
+  S.contact.name=$("cName").value.trim();
+  S.contact.email=$("cEmail").value.trim();
+  S.contact.phone=$("cPhone").value.trim();
+  S.contact.post=$("cPost").value.trim();
+  S.contact.prem=$("cPrem").value.trim();
+  S.contact.notes=$("cNotes").value.trim();
+  S.hasCont=true;
+  if(S.path==="room"){email("room");S.done.push("room");nav("room-complete")}
+  else if(S.path==="designer"){email("designer");S.done.push("designer");nav("designer-complete")}
+}
+function validate(){
+  var ok=true,n=$("cName"),em=$("cEmail"),ph=$("cPhone");
+  [n,em,ph].forEach(function(f){f.classList.remove("err")});
+  $("eName").textContent="";$("eEmail").textContent="";$("ePhone").textContent="";
+  if(!n.value.trim()){n.classList.add("err");$("eName").textContent="Please enter your name";ok=false}
+  if(!em.value.trim()||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em.value.trim())){em.classList.add("err");$("eEmail").textContent="Please enter a valid email";ok=false}
+  if(!ph.value.trim()){ph.classList.add("err");$("ePhone").textContent="Please enter your phone number";ok=false}
+  return ok;
+}
+
+/* ── calendar ── */
+function initCal(){
+  var now=new Date();
+  if(S.cMo===null){S.cMo=now.getMonth();S.cYr=now.getFullYear()}
+  drawCal();
+}
+function drawCal(){
+  var box=$("calBox"),y=S.cYr,m=S.cMo,today=new Date();today.setHours(0,0,0,0);
+  var MN=["January","February","March","April","May","June","July","August","September","October","November","December"];
+  var DN=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+  var mx=new Date();mx.setDate(mx.getDate()+CONFIG.calendar.weeksAhead*7);
+  var canP=new Date(y,m,1)>today, canN=new Date(y,m+1,1)<=mx;
+
+  var h='<div class="cal-nav">'+
+    '<button class="cal-nav__b" '+(canP?"":"disabled")+' onclick="App.calP()">'+ARROW_L+'</button>'+
+    '<div class="cal-nav__t">'+MN[m]+" "+y+'</div>'+
+    '<button class="cal-nav__b" '+(canN?"":"disabled")+' onclick="App.calN()">'+ARROW_R+'</button>'+
+  '</div><div class="cal-g">';
+  DN.forEach(function(d){h+='<div class="cal-g__h">'+d+'</div>'});
+
+  var fd=new Date(y,m,1).getDay(), mf=fd===0?6:fd-1, dim=new Date(y,m+1,0).getDate();
+  for(var i=0;i<mf;i++) h+='<div class="cal-d cal-d--e"></div>';
+  for(var d=1;d<=dim;d++){
+    var dt=new Date(y,m,d),dw=dt.getDay(),past=dt<today,far=dt>mx,wknd=dw===0||dw===6;
+    var isTd=dt.getTime()===today.getTime();
+    var isSel=S.aDate&&S.aDate.getTime()===dt.getTime();
+    var off=past||far||wknd;
+    var cls="cal-d";if(off)cls+=" cal-d--off";if(isTd)cls+=" cal-d--today";if(isSel)cls+=" cal-d--sel";
+    var ds=y+"-"+String(m+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");
+    h+='<div class="'+cls+'" '+(off?"":'onclick="App.selD(\''+ds+'\')"')+'>'+d+'</div>';
+  }
+  h+='</div>';
+  if(S.aDate)h+=drawSlots();
+  box.innerHTML=h;
+}
+function drawSlots(){
+  if(!S.aDate)return"";
+  var dw=S.aDate.getDay(),fri=dw===5;
+  var slots=fri?CONFIG.calendar.fridaySlots:CONFIG.calendar.weekdaySlots;
+  var ds=S.aDate.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  var h='<div class="tslots"><div class="tslots__h">'+ds+'</div><div class="tslots__g">';
+  slots.forEach(function(sl){
+    var dk=fmtDK(S.aDate)+"T"+sl.start;
+    var bk=CONFIG.calendar.bookedSlots.indexOf(dk)>-1;
+    var isSel=S.aTime===sl.start;
+    var cls="tslot";if(isSel)cls+=" tslot--sel";if(bk)cls+=" tslot--bk";
+    h+='<button class="'+cls+'" '+(bk?"disabled":"")+' onclick="App.selT('+sl.start+')">'+sl.label+'</button>';
+  });
+  h+='</div>';
+  if(S.aTime!==null){
+    var lbl=S.hasCont?"Confirm Booking":"Continue to Your Details";
+    h+='<div class="cal-cfm"><button class="btn btn--p btn--lg" data-do="confirm-booking">'+lbl+' '+ARROW_R+'</button></div>';
+  }
+  h+='</div>';return h;
+}
+function fmtDK(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function selD(ds){var p=ds.split("-");S.aDate=new Date(+p[0],+p[1]-1,+p[2]);S.aTime=null;drawCal()}
+function selT(h){S.aTime=h;drawCal()}
+function calP(){S.cMo=S.cMo===0?(S.cYr--,11):S.cMo-1;drawCal()}
+function calN(){S.cMo=S.cMo===11?(S.cYr++,0):S.cMo+1;drawCal()}
+
+function confirmBook(){
+  if(!S.aDate||S.aTime===null)return;
+  if(S.hasCont){email("designer");S.done.push("designer");nav("designer-complete")}
+  else nav("contact");
+}
+function updateDC(){
+  var msg=$("dcMsg");
+  if(msg&&S.aDate&&S.aTime!==null){
+    var dd=CONFIG.designers.find(function(x){return x.id===S.designer});
+    var dn=dd?dd.name:"our team";
+    var ds=S.aDate.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+    var all=CONFIG.calendar.weekdaySlots.concat(CONFIG.calendar.fridaySlots);
+    var sl=all.find(function(x){return x.start===S.aTime});
+    msg.textContent="Your consultation with "+dn+" is booked for "+ds+", "+(sl?sl.label:"")+". We'll be in touch shortly to confirm.";
+  }
+}
+
+/* ── email ── */
+function email(type){
+  var d=buildData(type);
+  if(CONFIG.email.emailjsPublicKey&&CONFIG.email.emailjsServiceId){
+    try{
+      emailjs.init(CONFIG.email.emailjsPublicKey);
+      emailjs.send(CONFIG.email.emailjsServiceId,CONFIG.email.emailjsTemplateId,d)
+        .then(function(){console.log("Email sent")})
+        .catch(function(e){console.error("EmailJS error:",e);fallback(d)});
+    }catch(e){console.error(e);fallback(d)}
+  }else fallback(d);
+}
+function buildData(type){
+  var d={to:CONFIG.email.recipient,from_name:S.contact.name||"N/A",from_email:S.contact.email||"N/A",phone:S.contact.phone||"N/A",postcode:S.contact.post||"N/A",premises:S.contact.prem||"N/A",notes:S.contact.notes||""};
+  if(S.roomType||S.done.indexOf("room")>-1){
+    var ro=CONFIG.roomTypes.find(function(x){return x.id===S.roomType});
+    var ag=CONFIG.ageRanges.find(function(x){return x.id===S.age});
+    var sz=CONFIG.roomSizes.find(function(x){return x.id===S.size});
+    var eq=S.equip.map(function(id){var e=CONFIG.equipment.find(function(x){return x.id===id});return e?e.title:id});
+    d.room_type=ro?ro.title:"N/A";d.age_range=ag?ag.title:"N/A";d.room_size=sz?sz.title:"N/A";
+    d.equipment=eq.length?eq.join(", "):"None selected";
+  }
+  if(S.designer||S.done.indexOf("designer")>-1){
+    var dd=CONFIG.designers.find(function(x){return x.id===S.designer});
+    d.designer=dd?dd.name:"N/A";
+    if(S.aDate&&S.aTime!==null){
+      d.appointment_date=S.aDate.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+      var all=CONFIG.calendar.weekdaySlots.concat(CONFIG.calendar.fridaySlots);
+      var sl=all.find(function(x){return x.start===S.aTime});
+      d.appointment_time=sl?sl.label:"";
+    }
+  }
+  var m="=== SOUTHPAW DESIGN CONSULTATION BOOKING ===\n\n--- Contact Details ---\nName: "+d.from_name+"\nEmail: "+d.from_email+"\nPhone: "+d.phone+"\nPostcode: "+d.postcode+"\nPremises: "+d.premises+"\n";
+  if(d.notes)m+="Notes: "+d.notes+"\n";
+  if(d.room_type)m+="\n--- Room Preferences ---\nRoom Type: "+d.room_type+"\nAge Range: "+d.age_range+"\nRoom Size: "+d.room_size+"\nEquipment: "+d.equipment+"\n";
+  if(d.designer){m+="\n--- Designer & Appointment ---\nDesigner: "+d.designer+"\n";if(d.appointment_date)m+="Date: "+d.appointment_date+"\nTime: "+d.appointment_time+"\n"}
+  d.message=m;return d;
+}
+function fallback(d){
+  console.log("=== BOOKING DATA ===\n"+d.message+"\n====================");
+  console.log("Configure EmailJS in the CONFIG section to send emails automatically.");
+}
+
+/* ── public API ── */
+window.App={selD:selD,selT:selT,calP:calP,calN:calN};
+
+document.addEventListener("DOMContentLoaded",init);
+})();
+</script>
+</body>
+</html>
