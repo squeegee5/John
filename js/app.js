@@ -51,7 +51,8 @@
     'de-escalation': `<svg viewBox="0 0 80 80" class="placeholder-icon"><circle cx="40" cy="40" r="22" fill="none" stroke="currentColor" stroke-width="2"/><path d="M32 38c2-4 6-6 8-3s2 8-1 10-7 1-8-3" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M48 38c-2-4-6-6-8-3s-2 8 1 10 7 1 8-3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>`,
     'projection': `<svg viewBox="0 0 80 80" class="placeholder-icon"><rect x="10" y="25" width="25" height="18" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="22" cy="34" r="4" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M35 34l30-12v24z" fill="none" stroke="currentColor" stroke-width="2"/></svg>`,
     'mural': `<svg viewBox="0 0 80 80" class="placeholder-icon"><rect x="12" y="15" width="56" height="42" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 45l15-12 10 8 15-15 16 12" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="28" cy="28" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M30 57h20" fill="none" stroke="currentColor" stroke-width="2"/></svg>`,
-    'other-multiple': `<svg viewBox="0 0 80 80" class="placeholder-icon"><rect x="10" y="18" width="28" height="20" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><rect x="42" y="18" width="28" height="20" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><rect x="10" y="42" width="28" height="20" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><rect x="42" y="42" width="28" height="20" rx="3" fill="none" stroke="currentColor" stroke-width="2"/></svg>`,
+    'other': `<svg viewBox="0 0 80 80" class="placeholder-icon"><circle cx="40" cy="34" r="16" fill="none" stroke="currentColor" stroke-width="2"/><path d="M36 28c0-4 3-6 5-6s4 2 4 4c0 3-3 4-4 6v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="40" cy="43" r="1.5" fill="currentColor"/><path d="M22 58h36" stroke="currentColor" stroke-width="1.5"/></svg>`,
+    'multiple-rooms': `<svg viewBox="0 0 80 80" class="placeholder-icon"><rect x="10" y="18" width="28" height="20" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><rect x="42" y="18" width="28" height="20" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><rect x="10" y="42" width="28" height="20" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><rect x="42" y="42" width="28" height="20" rx="3" fill="none" stroke="currentColor" stroke-width="2"/></svg>`,
 
     // Age groups
     '0-5': `<svg viewBox="0 0 80 80" class="placeholder-icon"><circle cx="40" cy="28" r="10" fill="none" stroke="currentColor" stroke-width="2"/><path d="M28 65c0-8 5-16 12-18m0 0c7 2 12 10 12 18" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="36" cy="26" r="1.5" fill="currentColor"/><circle cx="44" cy="26" r="1.5" fill="currentColor"/><path d="M36 31c2 2 6 2 8 0" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>`,
@@ -74,7 +75,6 @@
     'soft-play-elements': `<svg viewBox="0 0 80 80" class="placeholder-icon"><circle cx="28" cy="48" r="14" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="52" cy="42" r="10" fill="none" stroke="currentColor" stroke-width="2"/><rect x="20" y="18" width="24" height="14" rx="7" fill="none" stroke="currentColor" stroke-width="2"/></svg>`,
     'padding': `<svg viewBox="0 0 80 80" class="placeholder-icon"><rect x="12" y="12" width="56" height="56" rx="6" fill="none" stroke="currentColor" stroke-width="2"/><rect x="18" y="18" width="44" height="44" rx="4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="4 2"/></svg>`,
     'vibration': `<svg viewBox="0 0 80 80" class="placeholder-icon"><rect x="30" y="20" width="20" height="40" rx="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M24 28c-4 4-4 16 0 20M56 28c4 4 4 16 0 20" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M18 24c-6 6-6 22 0 28M62 24c6 6 6 22 0 28" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>`,
-    'music': `<svg viewBox="0 0 80 80" class="placeholder-icon"><path d="M30 55V22l30-8v33" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="24" cy="55" r="7" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="54" cy="47" r="7" fill="none" stroke="currentColor" stroke-width="2"/></svg>`,
     'lighting': `<svg viewBox="0 0 80 80" class="placeholder-icon"><path d="M40 12v8M18 22l5 5M62 22l-5 5M12 40h8M60 40h8" stroke="currentColor" stroke-width="2"/><circle cx="40" cy="40" r="14" fill="none" stroke="currentColor" stroke-width="2"/><path d="M34 54v6h12v-6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M34 62h12M36 66h8" stroke="currentColor" stroke-width="1.5"/></svg>`,
     'interactive-panels': `<svg viewBox="0 0 80 80" class="placeholder-icon"><rect x="14" y="14" width="52" height="40" rx="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M14 54h52M32 54v10M48 54v10M28 64h24" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="40" cy="34" r="3" fill="currentColor"/><path d="M40 34l-6 8h12z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>`,
     'weight-resistance': `<svg viewBox="0 0 80 80" class="placeholder-icon"><rect x="34" y="20" width="12" height="40" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="14" y="28" width="12" height="24" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="54" y="28" width="12" height="24" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M26 40h8M46 40h8" stroke="currentColor" stroke-width="2"/></svg>`,
@@ -198,6 +198,7 @@
   function populateRoomTypeCards() {
     const container = document.getElementById('roomTypeCards');
     container.innerHTML = '';
+    container.classList.add('room-type-grid');
     CONFIG.roomTypes.forEach(item => {
       container.appendChild(createChoiceCard(item, item.id, false, (selected) => {
         state.roomType = selected;
@@ -232,12 +233,6 @@
   function populateEquipmentCards() {
     const container = document.getElementById('equipmentCards');
     container.innerHTML = '';
-
-    // Add hint before cards
-    const hintWrapper = document.createElement('div');
-    hintWrapper.className = 'equipment-hint-wrapper';
-    hintWrapper.innerHTML = '<span class="multi-select-hint">Select all that apply</span>';
-    container.parentElement.insertBefore(hintWrapper, container);
 
     CONFIG.equipment.forEach(item => {
       container.appendChild(createChoiceCard(item, item.id, true, () => {
@@ -286,7 +281,12 @@
         container.querySelectorAll('.choice-card').forEach(c => c.classList.remove('selected'));
         card.classList.add('selected');
         state.designer = item;
-        setTimeout(() => navigateTo('designer-calendar'), 350);
+        // If designer-first path, go through room selections before calendar
+        if (state.firstPath === 'designer') {
+          setTimeout(() => navigateTo('room-type'), 350);
+        } else {
+          setTimeout(() => navigateTo('designer-calendar'), 350);
+        }
       });
 
       container.appendChild(card);
@@ -313,8 +313,6 @@
   }
 
   function setDesignBookLinks() {
-    const linkDesigner = document.getElementById('designBookLinkDesigner');
-    if (linkDesigner) linkDesigner.href = CONFIG.designBookUrl;
     const linkRoom = document.getElementById('designBookLinkRoom');
     if (linkRoom) linkRoom.href = CONFIG.designBookUrl;
   }
@@ -334,9 +332,11 @@
         if (!calendarInstance) {
           calendarInstance = new CalendarBooking(container, (slotData) => {
             state.appointmentSlot = slotData;
-            // Auto-advance to contact or confirmation
+            // Auto-advance after slot selection
             setTimeout(() => {
               if (state.contactFilled) {
+                // Already have contact details, submit
+                state.completedPaths.add('designer');
                 submitAndConfirm();
               } else {
                 navigateTo('contact');
@@ -385,7 +385,8 @@
     if (state.firstPath === 'room') {
       steps.push('room-type', 'room-age', 'room-size', 'room-equipment', 'contact', 'confirmation');
     } else if (state.firstPath === 'designer') {
-      steps.push('designer-select', 'designer-calendar', 'contact', 'confirmation');
+      // Designer-first: designer → room path → contact → calendar → confirmation
+      steps.push('designer-select', 'room-type', 'room-age', 'room-size', 'room-equipment', 'contact', 'designer-calendar', 'confirmation');
     } else {
       steps.push('room-type', 'room-age', 'room-size', 'room-equipment',
                   'designer-select', 'designer-calendar', 'contact', 'confirmation');
@@ -405,14 +406,8 @@
     const equipNext = document.querySelector('[data-action="equipment-next"]');
     if (equipNext) {
       equipNext.addEventListener('click', () => {
-        // After equipment, go to contact (room path ending)
-        if (state.contactFilled) {
-          // Already have contact, go straight to confirm
-          state.completedPaths.add('room');
-          submitAndConfirm();
-        } else {
-          navigateTo('contact');
-        }
+        // After equipment, go to contact details
+        navigateTo('contact');
       });
     }
 
@@ -425,11 +420,19 @@
           collectContactData();
           state.contactFilled = true;
 
-          // Determine which path we're completing
-          const currentPath = getCurrentPath();
-          if (currentPath) state.completedPaths.add(currentPath);
-
-          submitAndConfirm();
+          // If designer-first path, go to calendar after contact
+          if (state.firstPath === 'designer' && state.designer && !state.appointmentSlot) {
+            navigateTo('designer-calendar');
+          } else if (state.firstPath === 'room' && !state.completedPaths.has('room')) {
+            // Room-first path: submit room data
+            state.completedPaths.add('room');
+            submitAndConfirm();
+          } else {
+            // Fallback: submit whatever we have
+            const currentPath = getCurrentPath();
+            if (currentPath) state.completedPaths.add(currentPath);
+            submitAndConfirm();
+          }
         }
       });
     }
@@ -502,6 +505,51 @@
       document.getElementById('contactPhone').value = state.contact.phone;
       document.getElementById('contactPostcode').value = state.contact.postcode;
       document.getElementById('contactPremises').value = state.contact.premises;
+    }
+  }
+
+  // Populate contact page options (Choose Designer / Book a call)
+  function populateContactOptions() {
+    const container = document.getElementById('contactOptions');
+    if (!container) return;
+
+    let html = '';
+    // Only show options on room-first path when designer not yet chosen
+    if (state.firstPath === 'room' && !state.completedPaths.has('designer') && !state.designer) {
+      html += `
+        <button class="btn btn-outline" id="contactChooseDesigner">Choose Your Designer</button>
+        <span class="contact-options-divider">or</span>
+        <button class="btn btn-secondary" id="contactBookCall">Book a Phone / Video Call</button>
+        <span class="contact-options-divider">or just submit your details below</span>
+      `;
+    }
+    container.innerHTML = html;
+
+    // Bind buttons
+    const chooseDesigner = document.getElementById('contactChooseDesigner');
+    if (chooseDesigner) {
+      chooseDesigner.addEventListener('click', () => {
+        // Collect contact data first if form is filled
+        if (validateContactForm()) {
+          collectContactData();
+          state.contactFilled = true;
+          state.completedPaths.add('room');
+        }
+        navigateTo('designer-select');
+      });
+    }
+
+    const bookCall = document.getElementById('contactBookCall');
+    if (bookCall) {
+      bookCall.addEventListener('click', () => {
+        // Collect contact data first if form is filled
+        if (validateContactForm()) {
+          collectContactData();
+          state.contactFilled = true;
+          state.completedPaths.add('room');
+        }
+        navigateTo('designer-calendar');
+      });
     }
   }
 
@@ -677,6 +725,7 @@
     const contactStep = document.querySelector('.step[data-step="contact"]');
     if (contactStep && contactStep.classList.contains('active')) {
       prefillContactForm();
+      populateContactOptions();
     }
   });
 

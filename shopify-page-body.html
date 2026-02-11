@@ -1,22 +1,13 @@
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap">
 <style>
-/* ============================================================
-   SENSORY ROOM BOOKING SYSTEM - STYLES
-   ============================================================
-   Color palette and spacing can be adjusted via CSS variables
-   below. The design follows a clean, modern aesthetic similar
-   to Magnet's kitchen style finder.
-   ============================================================ */
 
-/* ── CSS Variables (edit these to change theme) ────────────── */
+/* ── CSS Variables ─────────────────────────────────────────── */
 :root {
-  /* Primary brand colors */
   --color-primary: #2c3e50;
   --color-primary-light: #3d566e;
   --color-accent: #e8a87c;
   --color-accent-light: #f5d5c0;
   --color-accent-dark: #d4956a;
-
-  /* Neutrals */
   --color-bg: #ffffff;
   --color-bg-soft: #f8f6f3;
   --color-bg-card: #ffffff;
@@ -25,14 +16,10 @@
   --color-text-muted: #9ba8b4;
   --color-border: #e2ddd8;
   --color-border-light: #f0ece8;
-
-  /* Feedback */
   --color-success: #4a9e6f;
   --color-error: #d94f4f;
   --color-selected: #2c3e50;
   --color-selected-bg: #f0ece8;
-
-  /* Spacing */
   --space-xs: 0.25rem;
   --space-sm: 0.5rem;
   --space-md: 1rem;
@@ -40,89 +27,50 @@
   --space-xl: 2rem;
   --space-2xl: 3rem;
   --space-3xl: 4rem;
-
-  /* Typography */
   --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --font-family-heading: 'Georgia', 'Times New Roman', serif;
+  --font-family-heading: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-size-sm: 0.875rem;
   --font-size-base: 1rem;
   --font-size-lg: 1.125rem;
   --font-size-xl: 1.5rem;
   --font-size-2xl: 2rem;
   --font-size-3xl: 2.5rem;
-
-  /* Layout */
-  --max-width: 1100px;
+  --max-width: 960px;
   --border-radius: 8px;
   --border-radius-lg: 12px;
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
   --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
   --shadow-lg: 0 8px 24px rgba(0,0,0,0.1);
-  --transition: 0.25s ease;
+  --transition: 0.3s ease;
 }
 
 /* ── Reset & Base ──────────────────────────────────────────── */
-#sensory-app *, #sensory-app *::before, #sensory-app *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-
-
-#sensory-app img {
-  max-width: 100%;
-  height: auto;
-  display: block;
-}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+body { font-family: var(--font-family); color: var(--color-text); background: var(--color-bg); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+img { max-width: 100%; height: auto; display: block; }
 
 /* ── App Container ─────────────────────────────────────────── */
 #sensory-app {
   position: relative;
-  min-height: 600px;
-  font-family: var(--font-family);
-  color: var(--color-text);
-  line-height: 1.6;
+  min-height: 100vh;
   overflow-x: hidden;
 }
 
 /* ── Progress Bar ──────────────────────────────────────────── */
-.progress-container {
-  position: sticky;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: var(--color-border-light);
-  z-index: 100;
-}
-
-.progress-bar {
-  height: 100%;
-  background: var(--color-accent);
-  width: 0%;
-  transition: width 0.4s ease;
-}
+.progress-container { position: fixed; top: 0; left: 0; right: 0; height: 4px; background: var(--color-border-light); z-index: 100; }
+.progress-bar { height: 100%; background: var(--color-accent); width: 0%; transition: width 0.4s ease; }
 
 /* ── Steps ─────────────────────────────────────────────────── */
-.step {
-  display: none;
-  animation: fadeIn 0.4s ease;
-}
-
-.step.active {
-  display: block;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
+.step { display: none; animation: fadeIn 0.4s ease; }
+.step.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 
 .step-content {
   max-width: var(--max-width);
   margin: 0 auto;
-  padding: var(--space-3xl) var(--space-lg) var(--space-2xl);
+  padding: var(--space-3xl) var(--space-xl) var(--space-2xl);
+  text-align: center;
 }
 
 /* ── Hero / Headings ───────────────────────────────────────── */
@@ -140,7 +88,7 @@
   color: var(--color-text-light);
   text-align: center;
   max-width: 600px;
-  margin: 0 auto var(--space-2xl);
+  margin: 0 auto var(--space-3xl);
 }
 
 .step-header {
@@ -166,15 +114,15 @@
   display: grid;
   gap: var(--space-lg);
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  margin-bottom: var(--space-xl);
+  margin: 0 auto var(--space-xl);
+  text-align: center;
 }
 
 .card-grid.two-col {
   grid-template-columns: repeat(2, 1fr);
-  max-width: 700px;
-  margin-left: auto;
-  margin-right: auto;
-  margin-bottom: var(--space-xl);
+  max-width: var(--max-width);
+  margin: 0 auto var(--space-xl);
+  gap: var(--space-xl);
 }
 
 .card-grid.four-col {
@@ -182,21 +130,20 @@
 }
 
 .card-grid.equipment-grid {
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-md);
 }
 
 .card-grid.designer-grid {
   grid-template-columns: repeat(2, 1fr);
   max-width: 800px;
-  margin-left: auto;
-  margin-right: auto;
-  margin-bottom: var(--space-xl);
+  margin: 0 auto var(--space-xl);
 }
 
 /* ── Choice Cards ──────────────────────────────────────────── */
 .choice-card {
   background: var(--color-bg-card);
-  border: 2px solid var(--color-border);
+  border: 2px solid transparent;
   border-radius: var(--border-radius-lg);
   cursor: pointer;
   transition: all var(--transition);
@@ -206,9 +153,12 @@
 }
 
 .choice-card:hover {
-  border-color: var(--color-primary);
   box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
+}
+
+.choice-card:hover .card-image-container img,
+.choice-card:hover .card-image-container .placeholder-icon {
+  transform: scale(1.05);
 }
 
 .choice-card.selected {
@@ -248,12 +198,14 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.4s ease;
 }
 
 .card-image-container .placeholder-icon {
   width: 64px;
   height: 64px;
   color: var(--color-text-muted);
+  transition: transform 0.4s ease;
 }
 
 .card-body {
@@ -274,9 +226,9 @@
   line-height: 1.5;
 }
 
-/* Landing cards - larger */
+/* ── Landing cards - full width, larger ────────────────────── */
 .two-col .choice-card .card-image-container {
-  aspect-ratio: 3 / 2;
+  aspect-ratio: 16 / 9;
 }
 
 .two-col .choice-card .card-body {
@@ -288,6 +240,25 @@
 }
 
 .two-col .choice-card .card-body p {
+  font-size: var(--font-size-base);
+}
+
+/* ── Room Type cards (2-per-row, same style as landing) ────── */
+.room-type-grid {
+  grid-template-columns: repeat(2, 1fr) !important;
+  max-width: var(--max-width);
+  gap: var(--space-xl);
+}
+
+.room-type-grid .choice-card .card-image-container {
+  aspect-ratio: 16 / 9;
+}
+
+.room-type-grid .choice-card .card-body h3 {
+  font-size: var(--font-size-xl);
+}
+
+.room-type-grid .choice-card .card-body p {
   font-size: var(--font-size-base);
 }
 
@@ -370,68 +341,21 @@
   line-height: 1.4;
 }
 
-.btn-primary {
-  background: var(--color-primary);
-  color: #fff;
-  border-color: var(--color-primary);
-}
+.btn-primary { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+.btn-primary:hover { background: var(--color-primary-light); border-color: var(--color-primary-light); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.btn-primary:hover {
-  background: var(--color-primary-light);
-  border-color: var(--color-primary-light);
-}
+.btn-back { background: transparent; color: var(--color-text-light); border-color: var(--color-border); }
+.btn-back:hover { border-color: var(--color-text-light); color: var(--color-text); }
 
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+.btn-outline { background: transparent; color: var(--color-primary); border-color: var(--color-primary); }
+.btn-outline:hover { background: var(--color-primary); color: #fff; }
 
-.btn-back {
-  background: transparent;
-  color: var(--color-text-light);
-  border-color: var(--color-border);
-}
+.btn-accent { background: var(--color-accent); color: var(--color-primary); border-color: var(--color-accent); }
+.btn-accent:hover { background: var(--color-accent-dark); border-color: var(--color-accent-dark); color: #fff; }
 
-.btn-back:hover {
-  border-color: var(--color-text-light);
-  color: var(--color-text);
-}
-
-.btn-outline {
-  background: transparent;
-  color: var(--color-primary);
-  border-color: var(--color-primary);
-}
-
-.btn-outline:hover {
-  background: var(--color-primary);
-  color: #fff;
-}
-
-.btn-accent {
-  background: var(--color-accent);
-  color: var(--color-primary);
-  border-color: var(--color-accent);
-}
-
-.btn-accent:hover {
-  background: var(--color-accent-dark);
-  border-color: var(--color-accent-dark);
-  color: #fff;
-}
-
-.btn-link {
-  background: none;
-  border: none;
-  color: var(--color-primary);
-  text-decoration: underline;
-  padding: var(--space-sm) 0;
-  font-weight: 500;
-}
-
-.btn-link:hover {
-  color: var(--color-accent-dark);
-}
+.btn-secondary { background: var(--color-bg-soft); color: var(--color-primary); border-color: var(--color-border); }
+.btn-secondary:hover { background: var(--color-border-light); border-color: var(--color-primary); }
 
 /* ── Step Navigation ───────────────────────────────────────── */
 .step-nav {
@@ -443,20 +367,65 @@
   border-top: 1px solid var(--color-border-light);
 }
 
-.step-nav .btn:only-child {
-  margin-left: auto;
-}
+.step-nav .btn:only-child { margin-left: auto; }
 
 /* ── Design Book Link ──────────────────────────────────────── */
-.design-book-link {
-  display: inline-flex;
-  margin-bottom: var(--space-xl);
-}
-
 .step-links {
   text-align: center;
-  margin-top: var(--space-lg);
+  margin-top: var(--space-2xl);
+  margin-bottom: var(--space-md);
+}
+
+.design-book-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 0.875rem 2rem;
+  background: transparent;
+  color: var(--color-primary);
+  border: 2px solid var(--color-border);
+  border-radius: 50px;
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
+  text-decoration: none;
+  letter-spacing: 0.02em;
+}
+
+.design-book-btn:hover {
+  border-color: var(--color-primary);
+  background: var(--color-bg-soft);
+  color: var(--color-primary);
+}
+
+/* ── Ideas hint text ───────────────────────────────────────── */
+.ideas-hint {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
   margin-bottom: var(--space-sm);
+  font-style: italic;
+}
+
+/* ── Contact Options ───────────────────────────────────────── */
+.contact-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  max-width: 420px;
+  margin: 0 auto var(--space-2xl);
+}
+
+.contact-options .btn {
+  width: 100%;
+  padding: 1rem 1.5rem;
+}
+
+.contact-options-divider {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  text-align: center;
 }
 
 /* ── Calendar ──────────────────────────────────────────────── */
@@ -465,7 +434,8 @@
   border: 1px solid var(--color-border);
   border-radius: var(--border-radius-lg);
   overflow: hidden;
-  margin-bottom: var(--space-lg);
+  margin: 0 auto var(--space-lg);
+  max-width: 700px;
 }
 
 .calendar-header {
@@ -479,13 +449,13 @@
 
 .calendar-header h3 {
   font-family: var(--font-family-heading);
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-xl);
   font-weight: 600;
 }
 
 .calendar-nav-btn {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: 1px solid var(--color-border);
   background: var(--color-bg-card);
@@ -497,35 +467,23 @@
   color: var(--color-text);
 }
 
-.calendar-nav-btn:hover:not(:disabled) {
-  background: var(--color-primary);
-  color: #fff;
-  border-color: var(--color-primary);
-}
+.calendar-nav-btn:hover:not(:disabled) { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+.calendar-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
-.calendar-nav-btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
-.calendar-grid {
-  display: flex;
-}
+.calendar-grid { display: flex; }
 
 .calendar-day {
   flex: 1;
   border-right: 1px solid var(--color-border-light);
 }
 
-.calendar-day:last-child {
-  border-right: none;
-}
+.calendar-day:last-child { border-right: none; }
 
 .calendar-day-header {
-  padding: var(--space-md);
+  padding: var(--space-md) var(--space-sm);
   text-align: center;
   font-weight: 600;
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-base);
   color: var(--color-primary);
   border-bottom: 1px solid var(--color-border-light);
   background: var(--color-bg-soft);
@@ -534,47 +492,28 @@
 .calendar-day-header .day-date {
   display: block;
   font-weight: 400;
-  font-size: 0.75rem;
+  font-size: var(--font-size-sm);
   color: var(--color-text-muted);
   margin-top: 2px;
 }
 
-.calendar-day-slots {
-  min-height: 200px;
-}
+.calendar-day-slots { min-height: 200px; }
 
 .calendar-slot {
-  padding: var(--space-sm) var(--space-sm);
+  padding: var(--space-md) var(--space-sm);
   text-align: center;
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-base);
+  font-weight: 500;
   color: var(--color-text-light);
   cursor: pointer;
   border-bottom: 1px solid var(--color-border-light);
   transition: all var(--transition);
 }
 
-.calendar-slot:hover {
-  background: var(--color-bg-soft);
-  color: var(--color-primary);
-}
-
-.calendar-slot.selected {
-  background: var(--color-primary);
-  color: #fff;
-  font-weight: 600;
-}
-
-.calendar-slot.unavailable {
-  color: var(--color-text-muted);
-  opacity: 0.4;
-  cursor: not-allowed;
-  text-decoration: line-through;
-}
-
-.calendar-slot.unavailable:hover {
-  background: transparent;
-  color: var(--color-text-muted);
-}
+.calendar-slot:hover { background: var(--color-bg-soft); color: var(--color-primary); }
+.calendar-slot.selected { background: var(--color-primary); color: #fff; font-weight: 600; }
+.calendar-slot.unavailable { color: var(--color-text-muted); opacity: 0.4; cursor: not-allowed; text-decoration: line-through; }
+.calendar-slot.unavailable:hover { background: transparent; color: var(--color-text-muted); }
 
 .calendar-note {
   font-size: var(--font-size-sm);
@@ -582,309 +521,79 @@
   font-style: italic;
   text-align: center;
   margin-bottom: var(--space-lg);
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* ── Contact Form ──────────────────────────────────────────── */
-.contact-form {
-  max-width: 560px;
-  margin: 0 auto;
-}
-
-.form-group {
-  margin-bottom: var(--space-lg);
-}
-
-.form-group label {
-  display: block;
-  font-weight: 600;
-  font-size: var(--font-size-sm);
-  color: var(--color-primary);
-  margin-bottom: var(--space-sm);
-}
-
-.form-group input {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border: 2px solid var(--color-border);
-  border-radius: var(--border-radius);
-  font-family: var(--font-family);
-  font-size: var(--font-size-base);
-  color: var(--color-text);
-  background: var(--color-bg-card);
-  transition: border-color var(--transition);
-}
-
-.form-group input::placeholder {
-  color: var(--color-text-muted);
-}
-
-.form-group input:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.1);
-}
-
-.form-group input.error {
-  border-color: var(--color-error);
-}
-
-.form-group .error-message {
-  color: var(--color-error);
-  font-size: var(--font-size-sm);
-  margin-top: var(--space-xs);
-  display: none;
-}
-
-.form-group input.error + .error-message {
-  display: block;
-}
+.contact-form { max-width: 560px; margin: 0 auto; text-align: left; }
+.form-group { margin-bottom: var(--space-lg); }
+.form-group label { display: block; font-weight: 600; font-size: var(--font-size-sm); color: var(--color-primary); margin-bottom: var(--space-sm); }
+.form-group input { width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--color-border); border-radius: var(--border-radius); font-family: var(--font-family); font-size: var(--font-size-base); color: var(--color-text); background: var(--color-bg-card); transition: border-color var(--transition); }
+.form-group input::placeholder { color: var(--color-text-muted); }
+.form-group input:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.1); }
+.form-group input.error { border-color: var(--color-error); }
+.form-group .error-message { color: var(--color-error); font-size: var(--font-size-sm); margin-top: var(--space-xs); display: none; }
+.form-group input.error + .error-message { display: block; }
 
 /* ── Confirmation Page ─────────────────────────────────────── */
-.confirmation-content {
-  text-align: center;
-  padding-top: var(--space-3xl);
-}
-
-.confirmation-icon {
-  color: var(--color-success);
-  margin-bottom: var(--space-lg);
-}
-
-.confirmation-content h2 {
-  font-family: var(--font-family-heading);
-  font-size: var(--font-size-2xl);
-  color: var(--color-primary);
-  margin-bottom: var(--space-md);
-}
-
-.confirmation-message {
-  font-size: var(--font-size-lg);
-  color: var(--color-text-light);
-  max-width: 500px;
-  margin: 0 auto var(--space-2xl);
-}
-
-.confirmation-summary {
-  background: var(--color-bg-soft);
-  border-radius: var(--border-radius-lg);
-  padding: var(--space-xl);
-  max-width: 560px;
-  margin: 0 auto var(--space-2xl);
-  text-align: left;
-}
-
-.confirmation-summary h3 {
-  font-family: var(--font-family-heading);
-  font-size: var(--font-size-lg);
-  margin-bottom: var(--space-md);
-  color: var(--color-primary);
-}
-
-.confirmation-summary .summary-item {
-  display: flex;
-  justify-content: space-between;
-  padding: var(--space-sm) 0;
-  border-bottom: 1px solid var(--color-border-light);
-  font-size: var(--font-size-sm);
-}
-
-.confirmation-summary .summary-item:last-child {
-  border-bottom: none;
-}
-
-.confirmation-summary .summary-label {
-  font-weight: 600;
-  color: var(--color-primary);
-}
-
-.confirmation-summary .summary-value {
-  color: var(--color-text-light);
-  text-align: right;
-  max-width: 60%;
-}
-
-.confirmation-actions {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-md);
-}
-
-.confirmation-actions .btn {
-  min-width: 260px;
-}
+.confirmation-content { text-align: center; padding-top: var(--space-3xl); }
+.confirmation-icon { color: var(--color-success); margin-bottom: var(--space-lg); }
+.confirmation-content h2 { font-family: var(--font-family-heading); font-size: var(--font-size-2xl); color: var(--color-primary); margin-bottom: var(--space-md); }
+.confirmation-message { font-size: var(--font-size-lg); color: var(--color-text-light); max-width: 500px; margin: 0 auto var(--space-2xl); }
+.confirmation-summary { background: var(--color-bg-soft); border-radius: var(--border-radius-lg); padding: var(--space-xl); max-width: 560px; margin: 0 auto var(--space-2xl); text-align: left; }
+.confirmation-summary h3 { font-family: var(--font-family-heading); font-size: var(--font-size-lg); margin-bottom: var(--space-md); color: var(--color-primary); }
+.confirmation-summary .summary-item { display: flex; justify-content: space-between; padding: var(--space-sm) 0; border-bottom: 1px solid var(--color-border-light); font-size: var(--font-size-sm); }
+.confirmation-summary .summary-item:last-child { border-bottom: none; }
+.confirmation-summary .summary-label { font-weight: 600; color: var(--color-primary); }
+.confirmation-summary .summary-value { color: var(--color-text-light); text-align: right; max-width: 60%; }
+.confirmation-actions { display: flex; flex-direction: column; align-items: center; gap: var(--space-md); }
+.confirmation-actions .btn { min-width: 260px; }
 
 /* ── Loading Overlay ───────────────────────────────────────── */
-.loading-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(255, 255, 255, 0.9);
-  z-index: 200;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-md);
-}
-
-.loading-overlay.active {
-  display: flex;
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--color-border);
-  border-top-color: var(--color-primary);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.loading-overlay p {
-  font-size: var(--font-size-base);
-  color: var(--color-text-light);
-}
-
-/* ── Multi-select hint ─────────────────────────────────────── */
-.multi-select-hint {
-  text-align: center;
-  font-size: var(--font-size-sm);
-  color: var(--color-accent-dark);
-  font-weight: 500;
-  margin-bottom: var(--space-md);
-  padding: var(--space-sm) var(--space-md);
-  background: var(--color-accent-light);
-  border-radius: var(--border-radius);
-  display: inline-block;
-}
-
-.equipment-hint-wrapper {
-  text-align: center;
-  margin-bottom: var(--space-lg);
-}
+.loading-overlay { display: none; position: fixed; inset: 0; background: rgba(255, 255, 255, 0.9); z-index: 200; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-md); }
+.loading-overlay.active { display: flex; }
+.spinner { width: 40px; height: 40px; border: 3px solid var(--color-border); border-top-color: var(--color-primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-overlay p { font-size: var(--font-size-base); color: var(--color-text-light); }
 
 /* ── Responsive ────────────────────────────────────────────── */
 @media (max-width: 900px) {
-  .card-grid.four-col {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .card-grid.designer-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .calendar-day-header {
-    padding: var(--space-sm);
-    font-size: 0.75rem;
-  }
-
-  .calendar-slot {
-    padding: var(--space-xs) 2px;
-    font-size: 0.75rem;
-  }
+  .card-grid.four-col { grid-template-columns: repeat(2, 1fr); }
+  .card-grid.equipment-grid { grid-template-columns: repeat(3, 1fr); }
+  .card-grid.designer-grid { grid-template-columns: repeat(2, 1fr); }
+  .room-type-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .calendar-day-header { padding: var(--space-sm); font-size: var(--font-size-sm); }
+  .calendar-slot { padding: var(--space-sm) 2px; font-size: var(--font-size-sm); }
 }
 
 @media (max-width: 640px) {
-  :root {
-    --font-size-3xl: 1.75rem;
-    --font-size-2xl: 1.5rem;
-    --font-size-xl: 1.25rem;
-  }
+  :root { --font-size-3xl: 1.75rem; --font-size-2xl: 1.5rem; --font-size-xl: 1.25rem; }
+  .step-content { padding: var(--space-2xl) var(--space-md) var(--space-xl); }
+  .card-grid.two-col { grid-template-columns: 1fr; }
+  .card-grid.four-col { grid-template-columns: repeat(2, 1fr); }
+  .card-grid.equipment-grid { grid-template-columns: repeat(2, 1fr); }
+  .card-grid.designer-grid { grid-template-columns: 1fr; max-width: 360px; }
+  .room-type-grid { grid-template-columns: 1fr !important; }
+  .designer-grid .choice-card .card-image-container { width: 120px; height: 120px; }
 
-  .step-content {
-    padding: var(--space-2xl) var(--space-md) var(--space-xl);
-  }
+  .calendar-grid { flex-direction: column; }
+  .calendar-day { border-right: none; border-bottom: 1px solid var(--color-border-light); }
+  .calendar-day:last-child { border-bottom: none; }
+  .calendar-day-header { border-bottom: none; background: var(--color-primary); color: #fff; padding: var(--space-sm) var(--space-md); text-align: left; }
+  .calendar-day-header .day-date { color: rgba(255,255,255,0.7); display: inline; margin-left: var(--space-sm); }
+  .calendar-day-slots { display: flex; flex-wrap: wrap; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); min-height: auto; }
+  .calendar-slot { border-bottom: none; border-radius: var(--border-radius); border: 1px solid var(--color-border); padding: var(--space-xs) var(--space-sm); font-size: var(--font-size-sm); }
+  .calendar-slot.selected { border-color: var(--color-primary); }
 
-  .card-grid.two-col {
-    grid-template-columns: 1fr;
-  }
-
-  .card-grid.four-col {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .card-grid.equipment-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .card-grid.designer-grid {
-    grid-template-columns: 1fr;
-    max-width: 360px;
-  }
-
-  .designer-grid .choice-card .card-image-container {
-    width: 120px;
-    height: 120px;
-  }
-
-  /* Calendar: stack vertically on small screens */
-  .calendar-grid {
-    flex-direction: column;
-  }
-
-  .calendar-day {
-    border-right: none;
-    border-bottom: 1px solid var(--color-border-light);
-  }
-
-  .calendar-day:last-child {
-    border-bottom: none;
-  }
-
-  .calendar-day-header {
-    border-bottom: none;
-    background: var(--color-primary);
-    color: #fff;
-    padding: var(--space-sm) var(--space-md);
-    text-align: left;
-  }
-
-  .calendar-day-header .day-date {
-    color: rgba(255,255,255,0.7);
-    display: inline;
-    margin-left: var(--space-sm);
-  }
-
-  .calendar-day-slots {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-xs);
-    padding: var(--space-sm) var(--space-md);
-    min-height: auto;
-  }
-
-  .calendar-slot {
-    border-bottom: none;
-    border-radius: var(--border-radius);
-    border: 1px solid var(--color-border);
-    padding: var(--space-xs) var(--space-sm);
-    font-size: var(--font-size-sm);
-  }
-
-  .calendar-slot.selected {
-    border-color: var(--color-primary);
-  }
-
-  .step-nav {
-    flex-direction: column-reverse;
-    gap: var(--space-md);
-  }
-
-  .step-nav .btn {
-    width: 100%;
-  }
-
-  .confirmation-actions .btn {
-    min-width: 100%;
-  }
+  .step-nav { flex-direction: column-reverse; gap: var(--space-md); }
+  .step-nav .btn { width: 100%; }
+  .confirmation-actions .btn { min-width: 100%; }
+  .contact-options { max-width: 100%; }
 }
 </style>
-
-<div id="sensory-app">
+  <div id="sensory-app">
 
     <!-- Progress Bar -->
     <div class="progress-container" id="progressContainer">
@@ -965,7 +674,8 @@
           <!-- Populated by JS -->
         </div>
         <div class="step-links">
-          <a href="#" class="btn btn-outline design-book-link" id="designBookLinkRoom" target="_blank">
+          <p class="ideas-hint">Need some ideas? Take a look at our Design Book for inspiration.</p>
+          <a href="#" class="design-book-btn" id="designBookLinkRoom" target="_blank">
             View Our Design Book
           </a>
         </div>
@@ -985,9 +695,6 @@
           <h2 id="designerTitle"></h2>
           <p id="designerSubtitle"></p>
         </div>
-        <a href="#" class="btn btn-outline design-book-link" id="designBookLinkDesigner" target="_blank">
-          View Our Design Book
-        </a>
         <div class="card-grid designer-grid" id="designerCards">
           <!-- Populated by JS -->
         </div>
@@ -1022,6 +729,9 @@
         <div class="step-header">
           <h2 id="contactTitle"></h2>
           <p id="contactSubtitle"></p>
+        </div>
+        <div class="contact-options" id="contactOptions">
+          <!-- Populated by JS based on which paths are completed -->
         </div>
         <form class="contact-form" id="contactForm" novalidate>
           <div class="form-group">
@@ -1085,28 +795,12 @@
       <p>Sending your details...</p>
     </div>
 
-  </div>
-
 <script>
 /**
  * ============================================================
  * SENSORY ROOM BOOKING SYSTEM - CONFIGURATION
  * ============================================================
- *
- * Edit this file to change:
- * - Quiz options (images, titles, descriptions)
- * - Designer profiles
- * - Calendar settings
- * - Contact form fields
- * - Email settings
- * - Link URLs
- *
- * IMAGE TIPS:
- * - Recommended image size: 400x300px (4:3 ratio)
- * - Use .jpg or .webp for photos, .svg for icons
- * - Upload images to Shopify Files (Settings > Files)
- *   then paste the URL here
- * - Or use any image hosting URL
+ * Edit this file to change all content, images, and settings.
  * ============================================================
  */
 
@@ -1117,39 +811,32 @@ const CONFIG = {
   heroTitle: 'Design Your Sensory Room',
   heroSubtitle: 'Start your journey to creating the perfect sensory environment. Choose where you\'d like to begin.',
   emailTo: 'design-visit@somatogroup.co.uk',
-
-  // FormSubmit.co endpoint (replace with your verified email hash if needed)
-  // First submission will require email verification from FormSubmit.co
   formAction: 'https://formsubmit.co/ajax/design-visit@somatogroup.co.uk',
 
   // ── External Links ────────────────────────────────────────
-  designBookUrl: '/pages/design-book',       // Change to your Design Book page URL
-  designProcessUrl: '/pages/design-process', // Change to your Design Process page URL
+  designBookUrl: '/pages/design-book',
+  designProcessUrl: '/pages/design-process',
 
   // ── Landing Page Cards ────────────────────────────────────
   landingCards: {
     room: {
-      title: 'Choose Your Room Type',
+      title: 'Choose Your Room',
       description: 'Tell us about the sensory room you\'d like to create and we\'ll help bring your vision to life.',
-      // Replace with your image URL:
-      image: '',
+      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/choose_your_room.jpg?v=1770835035',
     },
     designer: {
       title: 'Choose Your Designer',
       description: 'Meet our expert sensory room designers and book a free consultation at a time that suits you.',
-      // Replace with your image URL:
       image: '',
     }
   },
 
-  // ── Room Type Options ─────────────────────────────────────
-  // Section 1: Room Type
+  // ── Room Type Options (8 options, 2-per-row with photos) ──
   roomTypes: [
     {
       id: 'si',
       title: 'SI',
       description: 'Sensory Integration',
-      // Replace with your image URL:
       image: '',
     },
     {
@@ -1183,98 +870,62 @@ const CONFIG = {
       image: '',
     },
     {
-      id: 'other-multiple',
-      title: 'Other / Multiple Rooms',
-      description: 'Custom or Multiple Rooms',
+      id: 'other',
+      title: 'Other',
+      description: 'Custom Room Type',
+      image: '',
+    },
+    {
+      id: 'multiple-rooms',
+      title: 'Multiple Rooms',
+      description: 'More Than One Room',
       image: '',
     },
   ],
 
-  // Section 2: Age Group
+  // ── Age Groups ────────────────────────────────────────────
   ageGroups: [
-    {
-      id: '0-5',
-      title: '0 - 5',
-      description: 'Early Years',
-      image: '',
-    },
-    {
-      id: '6-12',
-      title: '6 - 12',
-      description: 'Primary',
-      image: '',
-    },
-    {
-      id: '13-18',
-      title: '13 - 18',
-      description: 'Secondary',
-      image: '',
-    },
-    {
-      id: 'older',
-      title: 'Older',
-      description: 'Adults',
-      image: '',
-    },
+    { id: '0-5',   title: '0 - 5',   description: 'Early Years', image: '' },
+    { id: '6-12',  title: '6 - 12',  description: 'Primary',     image: '' },
+    { id: '13-18', title: '13 - 18', description: 'Secondary',   image: '' },
+    { id: 'older', title: 'Older',   description: 'Adults',      image: '' },
   ],
 
-  // Section 3: Room Size
+  // ── Room Sizes ────────────────────────────────────────────
   roomSizes: [
-    {
-      id: 'small',
-      title: 'Small',
-      description: 'Compact space',
-      image: '',
-    },
-    {
-      id: 'medium',
-      title: 'Medium',
-      description: 'Standard room',
-      image: '',
-    },
-    {
-      id: 'large',
-      title: 'Large',
-      description: 'Spacious area',
-      image: '',
-    },
-    {
-      id: 'various',
-      title: 'Various',
-      description: 'Multiple sizes',
-      image: '',
-    },
+    { id: 'small',   title: 'Small',   description: 'Compact space',   image: '' },
+    { id: 'medium',  title: 'Medium',  description: 'Standard room',   image: '' },
+    { id: 'large',   title: 'Large',   description: 'Spacious area',   image: '' },
+    { id: 'various', title: 'Various', description: 'Multiple sizes',  image: '' },
   ],
 
-  // Section 4: Equipment (multi-select)
+  // ── Equipment (multi-select) - 15 items, 5 per row ───────
   equipment: [
-    { id: 'bubble-tubes',     title: 'Bubble Tubes',          image: '' },
-    { id: 'swings',           title: 'Swings',                image: '' },
-    { id: 'projectors',       title: 'Projector/s',           image: '' },
-    { id: 'tactile-panels',   title: 'Tactile Panels',        image: '' },
-    { id: 'tactile-mural',    title: 'Tactile Mural',         image: '' },
-    { id: 'soft-play-elements', title: 'Soft Play Elements',  image: '' },
-    { id: 'padding',          title: 'Padding',               image: '' },
-    { id: 'vibration',        title: 'Vibration',             image: '' },
-    { id: 'music',            title: 'Music',                 image: '' },
-    { id: 'lighting',         title: 'Lighting / Fibre Optics', image: '' },
-    { id: 'interactive-panels', title: 'Interactive Panels',   image: '' },
-    { id: 'weight-resistance', title: 'Weight / Resistance',   image: '' },
-    { id: 'balance',          title: 'Balance',               image: '' },
-    { id: 'ball-pool',        title: 'Ball Pool',             image: '' },
-    { id: 'climbing',         title: 'Climbing',              image: '' },
-    { id: 'seating',          title: 'Seating',               image: '' },
+    { id: 'bubble-tubes',       title: 'Bubble Tubes',            image: '' },
+    { id: 'swings',             title: 'Swings',                  image: '' },
+    { id: 'projectors',         title: 'Projector/s',             image: '' },
+    { id: 'tactile-panels',     title: 'Tactile Panels',          image: '' },
+    { id: 'tactile-mural',      title: 'Tactile Mural',           image: '' },
+    { id: 'soft-play-elements', title: 'Soft Play Elements',      image: '' },
+    { id: 'padding',            title: 'Padding',                 image: '' },
+    { id: 'vibration',          title: 'Vibration',               image: '' },
+    { id: 'lighting',           title: 'Lighting / Fibre Optics', image: '' },
+    { id: 'interactive-panels', title: 'Interactive Panels',       image: '' },
+    { id: 'weight-resistance',  title: 'Weight / Resistance',     image: '' },
+    { id: 'balance',            title: 'Balance',                 image: '' },
+    { id: 'ball-pool',          title: 'Ball Pool',               image: '' },
+    { id: 'climbing',           title: 'Climbing',                image: '' },
+    { id: 'seating',            title: 'Seating',                 image: '' },
   ],
 
   // ── Designers ─────────────────────────────────────────────
   designers: [
     {
       id: 'designer-1',
-      name: 'Designer One',
+      name: 'Gemma',
       role: 'Senior Sensory Room Designer',
       bio: 'With years of experience designing sensory environments, specialising in multi-sensory rooms and sensory integration spaces.',
-      // Replace with designer photo URL:
-      image: '',
+      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/gemma.webp?v=1770836704',
     },
     {
       id: 'designer-2',
@@ -1301,28 +952,22 @@ const CONFIG = {
 
   // ── Calendar Settings ─────────────────────────────────────
   calendar: {
-    // Number of weeks to show ahead
     weeksAhead: 4,
-    // Minimum days in advance for booking
-    minDaysAhead: 1,
-    // Schedule: day of week (0=Sun, 1=Mon, ..., 6=Sat)
+    minDaysAhead: 2,
+    daysToShow: 3,
     schedule: {
-      1: { start: 9, end: 16, label: 'Monday' },    // Mon 9am-4pm
-      2: { start: 9, end: 16, label: 'Tuesday' },    // Tue 9am-4pm
-      3: { start: 9, end: 16, label: 'Wednesday' },  // Wed 9am-4pm
-      4: { start: 9, end: 16, label: 'Thursday' },   // Thu 9am-4pm
-      5: { start: 9, end: 13, label: 'Friday' },     // Fri 9am-1pm
+      1: { start: 9, end: 16, label: 'Monday' },
+      2: { start: 9, end: 16, label: 'Tuesday' },
+      3: { start: 9, end: 16, label: 'Wednesday' },
+      4: { start: 9, end: 16, label: 'Thursday' },
+      5: { start: 9, end: 13, label: 'Friday' },
     },
-    // Blocked hours (lunch break)
-    blockedHours: [12], // 12:00-13:00 blocked
-    // Slot duration in minutes
+    blockedHours: [12],
     slotDuration: 60,
-    // Note shown below calendar
     calendarNote: 'Initial consultations typically last 15-20 minutes, but we book a full hour slot to ensure we have plenty of time to discuss your project.',
   },
 
   // ── Section Headings ──────────────────────────────────────
-  // Edit these to change the headings shown on each step
   headings: {
     roomType: {
       title: 'Choose Your Room Type',
@@ -1337,8 +982,8 @@ const CONFIG = {
       subtitle: 'The size of the space where your sensory room will be.',
     },
     equipment: {
-      title: 'What Equipment Do You Need?',
-      subtitle: 'Select all the equipment you\'re interested in.',
+      title: 'What Equipment Might You Need?',
+      subtitle: '',
     },
     designer: {
       title: 'Choose Your Designer',
@@ -1355,7 +1000,6 @@ const CONFIG = {
   },
 };
 </script>
-
 <script>
 /**
  * ============================================================
@@ -1377,38 +1021,59 @@ class CalendarBooking {
   }
 
   /**
-   * Get Monday of the target week based on weekOffset.
+   * Get the next N working days starting from minDaysAhead,
+   * offset by pageOffset pages of daysToShow.
    */
-  getWeekStart() {
+  getVisibleDays() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Find next Monday (or today if Monday)
-    const dayOfWeek = today.getDay(); // 0=Sun
-    const daysUntilMon = dayOfWeek === 0 ? 1 : (dayOfWeek === 1 ? 0 : 8 - dayOfWeek);
-    const monday = new Date(today);
-    monday.setDate(today.getDate() + daysUntilMon + (this.weekOffset * 7));
+    const daysToShow = this.config.daysToShow || 3;
+    const minAhead = this.config.minDaysAhead || 2;
+    const scheduleDays = Object.keys(this.config.schedule).map(Number);
 
-    // If today is a weekday and weekOffset is 0, start from today's week
-    if (this.weekOffset === 0 && dayOfWeek >= 1 && dayOfWeek <= 5) {
-      monday.setDate(today.getDate() - (dayOfWeek - 1));
+    // Collect all working days starting from minDaysAhead
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() + minAhead);
+
+    // Gather enough working days for all pages
+    const totalNeeded = (this.weekOffset + 1) * daysToShow;
+    const workingDays = [];
+    const maxLookahead = this.config.weeksAhead * 7 + 14;
+    let d = new Date(startDate);
+    for (let i = 0; i < maxLookahead && workingDays.length < totalNeeded; i++) {
+      if (scheduleDays.includes(d.getDay())) {
+        workingDays.push(new Date(d));
+      }
+      d.setDate(d.getDate() + 1);
     }
 
-    return monday;
+    // Return the page slice
+    const startIdx = this.weekOffset * daysToShow;
+    return workingDays.slice(startIdx, startIdx + daysToShow);
   }
 
   /**
-   * Generate the days for the current week view (Mon-Fri).
+   * Total pages available.
    */
-  getWeekDays() {
-    const monday = this.getWeekStart();
-    const days = [];
-    for (let i = 0; i < 5; i++) {
-      const day = new Date(monday);
-      day.setDate(monday.getDate() + i);
-      days.push(day);
+  getTotalPages() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const daysToShow = this.config.daysToShow || 3;
+    const minAhead = this.config.minDaysAhead || 2;
+    const scheduleDays = Object.keys(this.config.schedule).map(Number);
+
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() + minAhead);
+
+    const maxLookahead = this.config.weeksAhead * 7 + 14;
+    let count = 0;
+    let d = new Date(startDate);
+    for (let i = 0; i < maxLookahead; i++) {
+      if (scheduleDays.includes(d.getDay())) count++;
+      d.setDate(d.getDate() + 1);
     }
-    return days;
+    return Math.ceil(count / daysToShow);
   }
 
   /**
@@ -1489,26 +1154,27 @@ class CalendarBooking {
   }
 
   /**
-   * Check if we can go to the previous week.
+   * Check if we can go to the previous page.
    */
   canGoPrev() {
     return this.weekOffset > 0;
   }
 
   /**
-   * Check if we can go to the next week.
+   * Check if we can go to the next page.
    */
   canGoNext() {
-    return this.weekOffset < this.config.weeksAhead - 1;
+    return this.weekOffset < this.getTotalPages() - 1;
   }
 
   /**
    * Render the entire calendar.
    */
   render() {
-    const days = this.getWeekDays();
+    const days = this.getVisibleDays();
+    if (days.length === 0) return;
     const firstDay = days[0];
-    const lastDay = days[4];
+    const lastDay = days[days.length - 1];
 
     // Build header
     const monthLabel = this.getMonthLabel(firstDay, lastDay);
@@ -1651,7 +1317,6 @@ class CalendarBooking {
   }
 }
 </script>
-
 <script>
 /**
  * ============================================================
@@ -1706,7 +1371,8 @@ class CalendarBooking {
     'de-escalation': `<svg viewBox="0 0 80 80" class="placeholder-icon"><circle cx="40" cy="40" r="22" fill="none" stroke="currentColor" stroke-width="2"/><path d="M32 38c2-4 6-6 8-3s2 8-1 10-7 1-8-3" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M48 38c-2-4-6-6-8-3s-2 8 1 10 7 1 8-3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>`,
     'projection': `<svg viewBox="0 0 80 80" class="placeholder-icon"><rect x="10" y="25" width="25" height="18" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="22" cy="34" r="4" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M35 34l30-12v24z" fill="none" stroke="currentColor" stroke-width="2"/></svg>`,
     'mural': `<svg viewBox="0 0 80 80" class="placeholder-icon"><rect x="12" y="15" width="56" height="42" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 45l15-12 10 8 15-15 16 12" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="28" cy="28" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M30 57h20" fill="none" stroke="currentColor" stroke-width="2"/></svg>`,
-    'other-multiple': `<svg viewBox="0 0 80 80" class="placeholder-icon"><rect x="10" y="18" width="28" height="20" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><rect x="42" y="18" width="28" height="20" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><rect x="10" y="42" width="28" height="20" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><rect x="42" y="42" width="28" height="20" rx="3" fill="none" stroke="currentColor" stroke-width="2"/></svg>`,
+    'other': `<svg viewBox="0 0 80 80" class="placeholder-icon"><circle cx="40" cy="34" r="16" fill="none" stroke="currentColor" stroke-width="2"/><path d="M36 28c0-4 3-6 5-6s4 2 4 4c0 3-3 4-4 6v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="40" cy="43" r="1.5" fill="currentColor"/><path d="M22 58h36" stroke="currentColor" stroke-width="1.5"/></svg>`,
+    'multiple-rooms': `<svg viewBox="0 0 80 80" class="placeholder-icon"><rect x="10" y="18" width="28" height="20" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><rect x="42" y="18" width="28" height="20" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><rect x="10" y="42" width="28" height="20" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><rect x="42" y="42" width="28" height="20" rx="3" fill="none" stroke="currentColor" stroke-width="2"/></svg>`,
 
     // Age groups
     '0-5': `<svg viewBox="0 0 80 80" class="placeholder-icon"><circle cx="40" cy="28" r="10" fill="none" stroke="currentColor" stroke-width="2"/><path d="M28 65c0-8 5-16 12-18m0 0c7 2 12 10 12 18" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="36" cy="26" r="1.5" fill="currentColor"/><circle cx="44" cy="26" r="1.5" fill="currentColor"/><path d="M36 31c2 2 6 2 8 0" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>`,
@@ -1729,7 +1395,6 @@ class CalendarBooking {
     'soft-play-elements': `<svg viewBox="0 0 80 80" class="placeholder-icon"><circle cx="28" cy="48" r="14" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="52" cy="42" r="10" fill="none" stroke="currentColor" stroke-width="2"/><rect x="20" y="18" width="24" height="14" rx="7" fill="none" stroke="currentColor" stroke-width="2"/></svg>`,
     'padding': `<svg viewBox="0 0 80 80" class="placeholder-icon"><rect x="12" y="12" width="56" height="56" rx="6" fill="none" stroke="currentColor" stroke-width="2"/><rect x="18" y="18" width="44" height="44" rx="4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="4 2"/></svg>`,
     'vibration': `<svg viewBox="0 0 80 80" class="placeholder-icon"><rect x="30" y="20" width="20" height="40" rx="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M24 28c-4 4-4 16 0 20M56 28c4 4 4 16 0 20" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M18 24c-6 6-6 22 0 28M62 24c6 6 6 22 0 28" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>`,
-    'music': `<svg viewBox="0 0 80 80" class="placeholder-icon"><path d="M30 55V22l30-8v33" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="24" cy="55" r="7" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="54" cy="47" r="7" fill="none" stroke="currentColor" stroke-width="2"/></svg>`,
     'lighting': `<svg viewBox="0 0 80 80" class="placeholder-icon"><path d="M40 12v8M18 22l5 5M62 22l-5 5M12 40h8M60 40h8" stroke="currentColor" stroke-width="2"/><circle cx="40" cy="40" r="14" fill="none" stroke="currentColor" stroke-width="2"/><path d="M34 54v6h12v-6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M34 62h12M36 66h8" stroke="currentColor" stroke-width="1.5"/></svg>`,
     'interactive-panels': `<svg viewBox="0 0 80 80" class="placeholder-icon"><rect x="14" y="14" width="52" height="40" rx="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M14 54h52M32 54v10M48 54v10M28 64h24" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="40" cy="34" r="3" fill="currentColor"/><path d="M40 34l-6 8h12z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>`,
     'weight-resistance': `<svg viewBox="0 0 80 80" class="placeholder-icon"><rect x="34" y="20" width="12" height="40" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="14" y="28" width="12" height="24" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="54" y="28" width="12" height="24" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M26 40h8M46 40h8" stroke="currentColor" stroke-width="2"/></svg>`,
@@ -1853,6 +1518,7 @@ class CalendarBooking {
   function populateRoomTypeCards() {
     const container = document.getElementById('roomTypeCards');
     container.innerHTML = '';
+    container.classList.add('room-type-grid');
     CONFIG.roomTypes.forEach(item => {
       container.appendChild(createChoiceCard(item, item.id, false, (selected) => {
         state.roomType = selected;
@@ -1887,12 +1553,6 @@ class CalendarBooking {
   function populateEquipmentCards() {
     const container = document.getElementById('equipmentCards');
     container.innerHTML = '';
-
-    // Add hint before cards
-    const hintWrapper = document.createElement('div');
-    hintWrapper.className = 'equipment-hint-wrapper';
-    hintWrapper.innerHTML = '<span class="multi-select-hint">Select all that apply</span>';
-    container.parentElement.insertBefore(hintWrapper, container);
 
     CONFIG.equipment.forEach(item => {
       container.appendChild(createChoiceCard(item, item.id, true, () => {
@@ -1941,7 +1601,12 @@ class CalendarBooking {
         container.querySelectorAll('.choice-card').forEach(c => c.classList.remove('selected'));
         card.classList.add('selected');
         state.designer = item;
-        setTimeout(() => navigateTo('designer-calendar'), 350);
+        // If designer-first path, go through room selections before calendar
+        if (state.firstPath === 'designer') {
+          setTimeout(() => navigateTo('room-type'), 350);
+        } else {
+          setTimeout(() => navigateTo('designer-calendar'), 350);
+        }
       });
 
       container.appendChild(card);
@@ -1968,8 +1633,6 @@ class CalendarBooking {
   }
 
   function setDesignBookLinks() {
-    const linkDesigner = document.getElementById('designBookLinkDesigner');
-    if (linkDesigner) linkDesigner.href = CONFIG.designBookUrl;
     const linkRoom = document.getElementById('designBookLinkRoom');
     if (linkRoom) linkRoom.href = CONFIG.designBookUrl;
   }
@@ -1989,9 +1652,11 @@ class CalendarBooking {
         if (!calendarInstance) {
           calendarInstance = new CalendarBooking(container, (slotData) => {
             state.appointmentSlot = slotData;
-            // Auto-advance to contact or confirmation
+            // Auto-advance after slot selection
             setTimeout(() => {
               if (state.contactFilled) {
+                // Already have contact details, submit
+                state.completedPaths.add('designer');
                 submitAndConfirm();
               } else {
                 navigateTo('contact');
@@ -2040,7 +1705,8 @@ class CalendarBooking {
     if (state.firstPath === 'room') {
       steps.push('room-type', 'room-age', 'room-size', 'room-equipment', 'contact', 'confirmation');
     } else if (state.firstPath === 'designer') {
-      steps.push('designer-select', 'designer-calendar', 'contact', 'confirmation');
+      // Designer-first: designer → room path → contact → calendar → confirmation
+      steps.push('designer-select', 'room-type', 'room-age', 'room-size', 'room-equipment', 'contact', 'designer-calendar', 'confirmation');
     } else {
       steps.push('room-type', 'room-age', 'room-size', 'room-equipment',
                   'designer-select', 'designer-calendar', 'contact', 'confirmation');
@@ -2060,14 +1726,8 @@ class CalendarBooking {
     const equipNext = document.querySelector('[data-action="equipment-next"]');
     if (equipNext) {
       equipNext.addEventListener('click', () => {
-        // After equipment, go to contact (room path ending)
-        if (state.contactFilled) {
-          // Already have contact, go straight to confirm
-          state.completedPaths.add('room');
-          submitAndConfirm();
-        } else {
-          navigateTo('contact');
-        }
+        // After equipment, go to contact details
+        navigateTo('contact');
       });
     }
 
@@ -2080,11 +1740,19 @@ class CalendarBooking {
           collectContactData();
           state.contactFilled = true;
 
-          // Determine which path we're completing
-          const currentPath = getCurrentPath();
-          if (currentPath) state.completedPaths.add(currentPath);
-
-          submitAndConfirm();
+          // If designer-first path, go to calendar after contact
+          if (state.firstPath === 'designer' && state.designer && !state.appointmentSlot) {
+            navigateTo('designer-calendar');
+          } else if (state.firstPath === 'room' && !state.completedPaths.has('room')) {
+            // Room-first path: submit room data
+            state.completedPaths.add('room');
+            submitAndConfirm();
+          } else {
+            // Fallback: submit whatever we have
+            const currentPath = getCurrentPath();
+            if (currentPath) state.completedPaths.add(currentPath);
+            submitAndConfirm();
+          }
         }
       });
     }
@@ -2157,6 +1825,51 @@ class CalendarBooking {
       document.getElementById('contactPhone').value = state.contact.phone;
       document.getElementById('contactPostcode').value = state.contact.postcode;
       document.getElementById('contactPremises').value = state.contact.premises;
+    }
+  }
+
+  // Populate contact page options (Choose Designer / Book a call)
+  function populateContactOptions() {
+    const container = document.getElementById('contactOptions');
+    if (!container) return;
+
+    let html = '';
+    // Only show options on room-first path when designer not yet chosen
+    if (state.firstPath === 'room' && !state.completedPaths.has('designer') && !state.designer) {
+      html += `
+        <button class="btn btn-outline" id="contactChooseDesigner">Choose Your Designer</button>
+        <span class="contact-options-divider">or</span>
+        <button class="btn btn-secondary" id="contactBookCall">Book a Phone / Video Call</button>
+        <span class="contact-options-divider">or just submit your details below</span>
+      `;
+    }
+    container.innerHTML = html;
+
+    // Bind buttons
+    const chooseDesigner = document.getElementById('contactChooseDesigner');
+    if (chooseDesigner) {
+      chooseDesigner.addEventListener('click', () => {
+        // Collect contact data first if form is filled
+        if (validateContactForm()) {
+          collectContactData();
+          state.contactFilled = true;
+          state.completedPaths.add('room');
+        }
+        navigateTo('designer-select');
+      });
+    }
+
+    const bookCall = document.getElementById('contactBookCall');
+    if (bookCall) {
+      bookCall.addEventListener('click', () => {
+        // Collect contact data first if form is filled
+        if (validateContactForm()) {
+          collectContactData();
+          state.contactFilled = true;
+          state.completedPaths.add('room');
+        }
+        navigateTo('designer-calendar');
+      });
     }
   }
 
@@ -2332,6 +2045,7 @@ class CalendarBooking {
     const contactStep = document.querySelector('.step[data-step="contact"]');
     if (contactStep && contactStep.classList.contains('active')) {
       prefillContactForm();
+      populateContactOptions();
     }
   });
 

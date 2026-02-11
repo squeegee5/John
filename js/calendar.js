@@ -18,38 +18,59 @@ class CalendarBooking {
   }
 
   /**
-   * Get Monday of the target week based on weekOffset.
+   * Get the next N working days starting from minDaysAhead,
+   * offset by pageOffset pages of daysToShow.
    */
-  getWeekStart() {
+  getVisibleDays() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Find next Monday (or today if Monday)
-    const dayOfWeek = today.getDay(); // 0=Sun
-    const daysUntilMon = dayOfWeek === 0 ? 1 : (dayOfWeek === 1 ? 0 : 8 - dayOfWeek);
-    const monday = new Date(today);
-    monday.setDate(today.getDate() + daysUntilMon + (this.weekOffset * 7));
+    const daysToShow = this.config.daysToShow || 3;
+    const minAhead = this.config.minDaysAhead || 2;
+    const scheduleDays = Object.keys(this.config.schedule).map(Number);
 
-    // If today is a weekday and weekOffset is 0, start from today's week
-    if (this.weekOffset === 0 && dayOfWeek >= 1 && dayOfWeek <= 5) {
-      monday.setDate(today.getDate() - (dayOfWeek - 1));
+    // Collect all working days starting from minDaysAhead
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() + minAhead);
+
+    // Gather enough working days for all pages
+    const totalNeeded = (this.weekOffset + 1) * daysToShow;
+    const workingDays = [];
+    const maxLookahead = this.config.weeksAhead * 7 + 14;
+    let d = new Date(startDate);
+    for (let i = 0; i < maxLookahead && workingDays.length < totalNeeded; i++) {
+      if (scheduleDays.includes(d.getDay())) {
+        workingDays.push(new Date(d));
+      }
+      d.setDate(d.getDate() + 1);
     }
 
-    return monday;
+    // Return the page slice
+    const startIdx = this.weekOffset * daysToShow;
+    return workingDays.slice(startIdx, startIdx + daysToShow);
   }
 
   /**
-   * Generate the days for the current week view (Mon-Fri).
+   * Total pages available.
    */
-  getWeekDays() {
-    const monday = this.getWeekStart();
-    const days = [];
-    for (let i = 0; i < 5; i++) {
-      const day = new Date(monday);
-      day.setDate(monday.getDate() + i);
-      days.push(day);
+  getTotalPages() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const daysToShow = this.config.daysToShow || 3;
+    const minAhead = this.config.minDaysAhead || 2;
+    const scheduleDays = Object.keys(this.config.schedule).map(Number);
+
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() + minAhead);
+
+    const maxLookahead = this.config.weeksAhead * 7 + 14;
+    let count = 0;
+    let d = new Date(startDate);
+    for (let i = 0; i < maxLookahead; i++) {
+      if (scheduleDays.includes(d.getDay())) count++;
+      d.setDate(d.getDate() + 1);
     }
-    return days;
+    return Math.ceil(count / daysToShow);
   }
 
   /**
@@ -130,26 +151,27 @@ class CalendarBooking {
   }
 
   /**
-   * Check if we can go to the previous week.
+   * Check if we can go to the previous page.
    */
   canGoPrev() {
     return this.weekOffset > 0;
   }
 
   /**
-   * Check if we can go to the next week.
+   * Check if we can go to the next page.
    */
   canGoNext() {
-    return this.weekOffset < this.config.weeksAhead - 1;
+    return this.weekOffset < this.getTotalPages() - 1;
   }
 
   /**
    * Render the entire calendar.
    */
   render() {
-    const days = this.getWeekDays();
+    const days = this.getVisibleDays();
+    if (days.length === 0) return;
     const firstDay = days[0];
-    const lastDay = days[4];
+    const lastDay = days[days.length - 1];
 
     // Build header
     const monthLabel = this.getMonthLabel(firstDay, lastDay);

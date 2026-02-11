@@ -2,21 +2,7 @@
  * ============================================================
  * SENSORY ROOM BOOKING SYSTEM - CONFIGURATION
  * ============================================================
- *
- * Edit this file to change:
- * - Quiz options (images, titles, descriptions)
- * - Designer profiles
- * - Calendar settings
- * - Contact form fields
- * - Email settings
- * - Link URLs
- *
- * IMAGE TIPS:
- * - Recommended image size: 400x300px (4:3 ratio)
- * - Use .jpg or .webp for photos, .svg for icons
- * - Upload images to Shopify Files (Settings > Files)
- *   then paste the URL here
- * - Or use any image hosting URL
+ * Edit this file to change all content, images, and settings.
  * ============================================================
  */
 
@@ -27,39 +13,32 @@ const CONFIG = {
   heroTitle: 'Design Your Sensory Room',
   heroSubtitle: 'Start your journey to creating the perfect sensory environment. Choose where you\'d like to begin.',
   emailTo: 'design-visit@somatogroup.co.uk',
-
-  // FormSubmit.co endpoint (replace with your verified email hash if needed)
-  // First submission will require email verification from FormSubmit.co
   formAction: 'https://formsubmit.co/ajax/design-visit@somatogroup.co.uk',
 
   // ── External Links ────────────────────────────────────────
-  designBookUrl: '/pages/design-book',       // Change to your Design Book page URL
-  designProcessUrl: '/pages/design-process', // Change to your Design Process page URL
+  designBookUrl: '/pages/design-book',
+  designProcessUrl: '/pages/design-process',
 
   // ── Landing Page Cards ────────────────────────────────────
   landingCards: {
     room: {
-      title: 'Choose Your Room Type',
+      title: 'Choose Your Room',
       description: 'Tell us about the sensory room you\'d like to create and we\'ll help bring your vision to life.',
-      // Replace with your image URL:
-      image: '',
+      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/choose_your_room.jpg?v=1770835035',
     },
     designer: {
       title: 'Choose Your Designer',
       description: 'Meet our expert sensory room designers and book a free consultation at a time that suits you.',
-      // Replace with your image URL:
       image: '',
     }
   },
 
-  // ── Room Type Options ─────────────────────────────────────
-  // Section 1: Room Type
+  // ── Room Type Options (8 options, 2-per-row with photos) ──
   roomTypes: [
     {
       id: 'si',
       title: 'SI',
       description: 'Sensory Integration',
-      // Replace with your image URL:
       image: '',
     },
     {
@@ -93,98 +72,62 @@ const CONFIG = {
       image: '',
     },
     {
-      id: 'other-multiple',
-      title: 'Other / Multiple Rooms',
-      description: 'Custom or Multiple Rooms',
+      id: 'other',
+      title: 'Other',
+      description: 'Custom Room Type',
+      image: '',
+    },
+    {
+      id: 'multiple-rooms',
+      title: 'Multiple Rooms',
+      description: 'More Than One Room',
       image: '',
     },
   ],
 
-  // Section 2: Age Group
+  // ── Age Groups ────────────────────────────────────────────
   ageGroups: [
-    {
-      id: '0-5',
-      title: '0 - 5',
-      description: 'Early Years',
-      image: '',
-    },
-    {
-      id: '6-12',
-      title: '6 - 12',
-      description: 'Primary',
-      image: '',
-    },
-    {
-      id: '13-18',
-      title: '13 - 18',
-      description: 'Secondary',
-      image: '',
-    },
-    {
-      id: 'older',
-      title: 'Older',
-      description: 'Adults',
-      image: '',
-    },
+    { id: '0-5',   title: '0 - 5',   description: 'Early Years', image: '' },
+    { id: '6-12',  title: '6 - 12',  description: 'Primary',     image: '' },
+    { id: '13-18', title: '13 - 18', description: 'Secondary',   image: '' },
+    { id: 'older', title: 'Older',   description: 'Adults',      image: '' },
   ],
 
-  // Section 3: Room Size
+  // ── Room Sizes ────────────────────────────────────────────
   roomSizes: [
-    {
-      id: 'small',
-      title: 'Small',
-      description: 'Compact space',
-      image: '',
-    },
-    {
-      id: 'medium',
-      title: 'Medium',
-      description: 'Standard room',
-      image: '',
-    },
-    {
-      id: 'large',
-      title: 'Large',
-      description: 'Spacious area',
-      image: '',
-    },
-    {
-      id: 'various',
-      title: 'Various',
-      description: 'Multiple sizes',
-      image: '',
-    },
+    { id: 'small',   title: 'Small',   description: 'Compact space',   image: '' },
+    { id: 'medium',  title: 'Medium',  description: 'Standard room',   image: '' },
+    { id: 'large',   title: 'Large',   description: 'Spacious area',   image: '' },
+    { id: 'various', title: 'Various', description: 'Multiple sizes',  image: '' },
   ],
 
-  // Section 4: Equipment (multi-select)
+  // ── Equipment (multi-select) - 15 items, 5 per row ───────
   equipment: [
-    { id: 'bubble-tubes',     title: 'Bubble Tubes',          image: '' },
-    { id: 'swings',           title: 'Swings',                image: '' },
-    { id: 'projectors',       title: 'Projector/s',           image: '' },
-    { id: 'tactile-panels',   title: 'Tactile Panels',        image: '' },
-    { id: 'tactile-mural',    title: 'Tactile Mural',         image: '' },
-    { id: 'soft-play-elements', title: 'Soft Play Elements',  image: '' },
-    { id: 'padding',          title: 'Padding',               image: '' },
-    { id: 'vibration',        title: 'Vibration',             image: '' },
-    { id: 'music',            title: 'Music',                 image: '' },
-    { id: 'lighting',         title: 'Lighting / Fibre Optics', image: '' },
-    { id: 'interactive-panels', title: 'Interactive Panels',   image: '' },
-    { id: 'weight-resistance', title: 'Weight / Resistance',   image: '' },
-    { id: 'balance',          title: 'Balance',               image: '' },
-    { id: 'ball-pool',        title: 'Ball Pool',             image: '' },
-    { id: 'climbing',         title: 'Climbing',              image: '' },
-    { id: 'seating',          title: 'Seating',               image: '' },
+    { id: 'bubble-tubes',       title: 'Bubble Tubes',            image: '' },
+    { id: 'swings',             title: 'Swings',                  image: '' },
+    { id: 'projectors',         title: 'Projector/s',             image: '' },
+    { id: 'tactile-panels',     title: 'Tactile Panels',          image: '' },
+    { id: 'tactile-mural',      title: 'Tactile Mural',           image: '' },
+    { id: 'soft-play-elements', title: 'Soft Play Elements',      image: '' },
+    { id: 'padding',            title: 'Padding',                 image: '' },
+    { id: 'vibration',          title: 'Vibration',               image: '' },
+    { id: 'lighting',           title: 'Lighting / Fibre Optics', image: '' },
+    { id: 'interactive-panels', title: 'Interactive Panels',       image: '' },
+    { id: 'weight-resistance',  title: 'Weight / Resistance',     image: '' },
+    { id: 'balance',            title: 'Balance',                 image: '' },
+    { id: 'ball-pool',          title: 'Ball Pool',               image: '' },
+    { id: 'climbing',           title: 'Climbing',                image: '' },
+    { id: 'seating',            title: 'Seating',                 image: '' },
   ],
 
   // ── Designers ─────────────────────────────────────────────
   designers: [
     {
       id: 'designer-1',
-      name: 'Designer One',
+      name: 'Gemma',
       role: 'Senior Sensory Room Designer',
       bio: 'With years of experience designing sensory environments, specialising in multi-sensory rooms and sensory integration spaces.',
-      // Replace with designer photo URL:
-      image: '',
+      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/gemma.webp?v=1770836704',
     },
     {
       id: 'designer-2',
@@ -211,28 +154,22 @@ const CONFIG = {
 
   // ── Calendar Settings ─────────────────────────────────────
   calendar: {
-    // Number of weeks to show ahead
     weeksAhead: 4,
-    // Minimum days in advance for booking
-    minDaysAhead: 1,
-    // Schedule: day of week (0=Sun, 1=Mon, ..., 6=Sat)
+    minDaysAhead: 2,
+    daysToShow: 3,
     schedule: {
-      1: { start: 9, end: 16, label: 'Monday' },    // Mon 9am-4pm
-      2: { start: 9, end: 16, label: 'Tuesday' },    // Tue 9am-4pm
-      3: { start: 9, end: 16, label: 'Wednesday' },  // Wed 9am-4pm
-      4: { start: 9, end: 16, label: 'Thursday' },   // Thu 9am-4pm
-      5: { start: 9, end: 13, label: 'Friday' },     // Fri 9am-1pm
+      1: { start: 9, end: 16, label: 'Monday' },
+      2: { start: 9, end: 16, label: 'Tuesday' },
+      3: { start: 9, end: 16, label: 'Wednesday' },
+      4: { start: 9, end: 16, label: 'Thursday' },
+      5: { start: 9, end: 13, label: 'Friday' },
     },
-    // Blocked hours (lunch break)
-    blockedHours: [12], // 12:00-13:00 blocked
-    // Slot duration in minutes
+    blockedHours: [12],
     slotDuration: 60,
-    // Note shown below calendar
     calendarNote: 'Initial consultations typically last 15-20 minutes, but we book a full hour slot to ensure we have plenty of time to discuss your project.',
   },
 
   // ── Section Headings ──────────────────────────────────────
-  // Edit these to change the headings shown on each step
   headings: {
     roomType: {
       title: 'Choose Your Room Type',
@@ -247,8 +184,8 @@ const CONFIG = {
       subtitle: 'The size of the space where your sensory room will be.',
     },
     equipment: {
-      title: 'What Equipment Do You Need?',
-      subtitle: 'Select all the equipment you\'re interested in.',
+      title: 'What Equipment Might You Need?',
+      subtitle: '',
     },
     designer: {
       title: 'Choose Your Designer',
