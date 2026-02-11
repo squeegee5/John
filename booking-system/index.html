@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Book a Sensory Room Design Consultation | Southpaw</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- EmailJS SDK (free) — only needed if you configure EmailJS in config.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+</head>
+<body>
+
+  <!-- ─── Top Bar ─────────────────────────────────────────── -->
+  <header class="top-bar" id="topBar">
+    <div class="top-bar__inner">
+      <div class="top-bar__brand" id="brandLogo">Southpaw</div>
+      <div class="top-bar__progress">
+        <div class="progress-bar">
+          <div class="progress-bar__fill" id="progressFill"></div>
+        </div>
+        <span class="progress-bar__text" id="progressText"></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ─── Main Container ─────────────────────────────────── -->
+  <main class="wizard" id="wizard">
+
+    <!-- ═══ WELCOME SCREEN ═══════════════════════════════════ -->
+    <section class="step" id="step-welcome" data-step="welcome">
+      <div class="step__header">
+        <h1 class="step__title">Design Your Sensory Space</h1>
+        <p class="step__subtitle">Book a free design consultation with our expert team. Choose where you'd like to start.</p>
+      </div>
+      <div class="card-grid card-grid--2col">
+        <button class="choice-card choice-card--hero" data-action="start-room">
+          <div class="choice-card__image-wrap">
+            <div class="choice-card__placeholder" style="background:#2A7B88">
+              <span class="choice-card__icon">🏠</span>
+            </div>
+          </div>
+          <div class="choice-card__body">
+            <h2 class="choice-card__title">Choose Your Room Type</h2>
+            <p class="choice-card__desc">Tell us about the sensory space you need</p>
+          </div>
+        </button>
+        <button class="choice-card choice-card--hero" data-action="start-designer">
+          <div class="choice-card__image-wrap">
+            <div class="choice-card__placeholder" style="background:#E8734A">
+              <span class="choice-card__icon">👤</span>
+            </div>
+          </div>
+          <div class="choice-card__body">
+            <h2 class="choice-card__title">Choose Your Designer</h2>
+            <p class="choice-card__desc">Pick a designer and book an appointment</p>
+          </div>
+        </button>
+      </div>
+    </section>
+
+    <!-- ═══ ROOM TYPE ════════════════════════════════════════ -->
+    <section class="step" id="step-room-type" data-step="room-type">
+      <div class="step__header">
+        <button class="back-btn" data-action="back" aria-label="Go back">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Back
+        </button>
+        <h1 class="step__title">Choose Your Room Type</h1>
+        <p class="step__subtitle">What kind of sensory environment are you looking for?</p>
+      </div>
+      <div class="card-grid card-grid--room-type" id="roomTypeGrid">
+        <!-- Populated by JS -->
+      </div>
+    </section>
+
+    <!-- ═══ AGE RANGE ════════════════════════════════════════ -->
+    <section class="step" id="step-age" data-step="age">
+      <div class="step__header">
+        <button class="back-btn" data-action="back" aria-label="Go back">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Back
+        </button>
+        <h1 class="step__title">Age Range</h1>
+        <p class="step__subtitle">Who will be using the sensory space?</p>
+      </div>
+      <div class="card-grid card-grid--4col" id="ageGrid">
+        <!-- Populated by JS -->
+      </div>
+    </section>
+
+    <!-- ═══ ROOM SIZE ════════════════════════════════════════ -->
+    <section class="step" id="step-size" data-step="size">
+      <div class="step__header">
+        <button class="back-btn" data-action="back" aria-label="Go back">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Back
+        </button>
+        <h1 class="step__title">Room Size</h1>
+        <p class="step__subtitle">How large is the space you have available?</p>
+      </div>
+      <div class="card-grid card-grid--4col" id="sizeGrid">
+        <!-- Populated by JS -->
+      </div>
+    </section>
+
+    <!-- ═══ EQUIPMENT (multi-select) ═════════════════════════ -->
+    <section class="step" id="step-equipment" data-step="equipment">
+      <div class="step__header">
+        <button class="back-btn" data-action="back" aria-label="Go back">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Back
+        </button>
+        <h1 class="step__title">Equipment</h1>
+        <p class="step__subtitle">Select all the equipment you're interested in</p>
+      </div>
+      <div class="card-grid card-grid--equipment" id="equipmentGrid">
+        <!-- Populated by JS -->
+      </div>
+      <div class="step__actions">
+        <button class="btn btn--primary btn--lg" id="equipmentNext" data-action="equipment-next">
+          Continue
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- ═══ CONTACT DETAILS ══════════════════════════════════ -->
+    <section class="step" id="step-contact" data-step="contact">
+      <div class="step__header">
+        <button class="back-btn" data-action="back" aria-label="Go back">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Back
+        </button>
+        <h1 class="step__title">Your Details</h1>
+        <p class="step__subtitle">So we can get in touch about your consultation</p>
+      </div>
+      <form class="contact-form" id="contactForm" novalidate>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="contactName">Full Name *</label>
+            <input class="form-input" type="text" id="contactName" name="name" required placeholder="Your full name">
+            <span class="form-error" id="errorName"></span>
+          </div>
+        </div>
+        <div class="form-row form-row--2col">
+          <div class="form-group">
+            <label class="form-label" for="contactEmail">Email Address *</label>
+            <input class="form-input" type="email" id="contactEmail" name="email" required placeholder="you@example.com">
+            <span class="form-error" id="errorEmail"></span>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="contactPhone">Phone Number *</label>
+            <input class="form-input" type="tel" id="contactPhone" name="phone" required placeholder="07xxx xxxxxx">
+            <span class="form-error" id="errorPhone"></span>
+          </div>
+        </div>
+        <div class="form-row form-row--2col">
+          <div class="form-group">
+            <label class="form-label" for="contactPostcode">Postcode / Location</label>
+            <input class="form-input" type="text" id="contactPostcode" name="postcode" placeholder="e.g. M1 1AA">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="contactPremises">Premises Name</label>
+            <input class="form-input" type="text" id="contactPremises" name="premises" placeholder="e.g. Oak Hill School">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="contactNotes">Additional Notes</label>
+          <textarea class="form-input form-input--textarea" id="contactNotes" name="notes" rows="3" placeholder="Anything else you'd like us to know?"></textarea>
+        </div>
+        <div class="step__actions">
+          <button type="submit" class="btn btn--primary btn--lg" id="contactSubmit">
+            <span id="contactSubmitText">Submit &amp; Continue</span>
+            <span id="contactSubmitSpinner" class="spinner" style="display:none"></span>
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ═══ ROOM COMPLETE — offer designer path ═════════════ -->
+    <section class="step" id="step-room-complete" data-step="room-complete">
+      <div class="step__header">
+        <div class="success-icon">
+          <svg width="64" height="64" viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="30" stroke="#2A7B88" stroke-width="3"/><path d="M20 33L28 41L44 23" stroke="#2A7B88" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h1 class="step__title">Room Preferences Saved!</h1>
+        <p class="step__subtitle">We've received your room details. Would you also like to choose a designer and book an appointment?</p>
+      </div>
+      <div class="step__actions step__actions--stacked">
+        <button class="btn btn--primary btn--lg" data-action="goto-designer">
+          Choose a Designer &amp; Book Appointment
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <a class="btn btn--outline btn--lg" id="linkDesignBookRoom" href="#" target="_blank">
+          View Our Design Book
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3H3V13H13V10M9 3H13V7M13 3L7 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <a class="btn btn--outline btn--lg" id="linkDesignProcessRoom" href="#" target="_blank">
+          Learn About Our Design Process
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3H3V13H13V10M9 3H13V7M13 3L7 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+    </section>
+
+    <!-- ═══ CHOOSE DESIGNER ══════════════════════════════════ -->
+    <section class="step" id="step-designer" data-step="designer">
+      <div class="step__header">
+        <button class="back-btn" data-action="back" aria-label="Go back">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Back
+        </button>
+        <h1 class="step__title">Choose Your Designer</h1>
+        <p class="step__subtitle">Meet our design team and pick the right person for your project</p>
+      </div>
+      <div class="card-grid card-grid--designers" id="designerGrid">
+        <!-- Populated by JS -->
+      </div>
+      <div class="step__actions" style="margin-top:1rem">
+        <a class="btn btn--outline" id="linkDesignBookDesigner" href="#" target="_blank">
+          View Our Design Book
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3H3V13H13V10M9 3H13V7M13 3L7 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+    </section>
+
+    <!-- ═══ CALENDAR BOOKING ═════════════════════════════════ -->
+    <section class="step" id="step-calendar" data-step="calendar">
+      <div class="step__header">
+        <button class="back-btn" data-action="back" aria-label="Go back">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Back
+        </button>
+        <h1 class="step__title">Book Your Consultation</h1>
+        <p class="step__subtitle">Select a date and time that works for you. Consultations are typically 15–20 minutes, but we reserve a full hour.</p>
+      </div>
+      <div class="calendar-container" id="calendarContainer">
+        <!-- Calendar rendered by JS -->
+      </div>
+    </section>
+
+    <!-- ═══ DESIGNER COMPLETE — offer room path ═════════════ -->
+    <section class="step" id="step-designer-complete" data-step="designer-complete">
+      <div class="step__header">
+        <div class="success-icon">
+          <svg width="64" height="64" viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="30" stroke="#2A7B88" stroke-width="3"/><path d="M20 33L28 41L44 23" stroke="#2A7B88" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h1 class="step__title">Appointment Booked!</h1>
+        <p class="step__subtitle" id="designerCompleteMsg">Your consultation has been confirmed. We'll be in touch shortly.</p>
+      </div>
+      <div class="step__actions step__actions--stacked">
+        <button class="btn btn--primary btn--lg" data-action="goto-room" id="gotoRoomBtn" style="display:none">
+          Tell Us About Your Room
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <a class="btn btn--outline btn--lg" id="linkDesignProcessDesigner" href="#" target="_blank">
+          Learn About Our Design Process
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3H3V13H13V10M9 3H13V7M13 3L7 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+    </section>
+
+    <!-- ═══ ALL DONE ═════════════════════════════════════════ -->
+    <section class="step" id="step-done" data-step="done">
+      <div class="step__header">
+        <div class="success-icon success-icon--large">
+          <svg width="80" height="80" viewBox="0 0 80 80" fill="none"><circle cx="40" cy="40" r="38" stroke="#2A7B88" stroke-width="3"/><path d="M24 42L34 52L56 28" stroke="#2A7B88" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h1 class="step__title">You're All Set!</h1>
+        <p class="step__subtitle">Thank you for completing your booking. We've sent all the details to our design team and we'll be in touch very soon.</p>
+      </div>
+      <div class="step__actions step__actions--stacked">
+        <a class="btn btn--outline btn--lg" id="linkDesignBookFinal" href="#" target="_blank">
+          View Our Design Book
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3H3V13H13V10M9 3H13V7M13 3L7 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <a class="btn btn--outline btn--lg" id="linkDesignProcessFinal" href="#" target="_blank">
+          Learn About Our Design Process
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3H3V13H13V10M9 3H13V7M13 3L7 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <button class="btn btn--ghost" data-action="start-over">Start Over</button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ─── Scripts ─────────────────────────────────────────── -->
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+
+</body>
+</html>
