@@ -390,7 +390,14 @@
         break;
 
       case "equipment-next":
-        navigateTo("contact");
+        if (state.contactFilled) {
+          // Already have contact info — skip form, send and complete
+          sendEmail("room");
+          state.completedPaths.push("room");
+          navigateTo("room-complete");
+        } else {
+          navigateTo("contact");
+        }
         break;
 
       case "goto-designer":
@@ -450,6 +457,15 @@
       document.getElementById("contactPostcode").value = state.contact.postcode;
       document.getElementById("contactPremises").value = state.contact.premises;
       document.getElementById("contactNotes").value = state.contact.notes;
+    }
+    // Update submit button text based on context
+    const submitText = document.getElementById("contactSubmitText");
+    if (submitText) {
+      if (state.path === "room") {
+        submitText.textContent = "Submit & Continue";
+      } else if (state.path === "designer") {
+        submitText.textContent = "Submit & Book Appointment";
+      }
     }
   }
 
@@ -637,19 +653,15 @@
       html += `<button class="${classes}" ${isBooked ? "disabled" : ""} onclick="App.selectTime(${slot.start})">${slot.label}</button>`;
     });
 
-    // Show lunch break indicator between morning and afternoon (Mon-Thu only)
-    if (!isFriday) {
-      // lunch is implicitly excluded — no 12pm slot
-    }
-
     html += `</div>`;
 
     // Confirm button
     if (state.appointmentTime !== null) {
+      const btnLabel = state.contactFilled ? "Confirm Booking" : "Continue to Your Details";
       html += `
         <div class="calendar-confirm">
           <button class="btn btn--primary btn--lg" data-action="confirm-booking">
-            Confirm Booking
+            ${btnLabel}
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
         </div>
