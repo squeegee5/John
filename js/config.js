@@ -12,8 +12,8 @@ const CONFIG = {
   siteName: 'Southpaw Sensory Room Design',
   heroTitle: 'Design Your Sensory Room',
   heroSubtitle: 'Start your journey to creating the perfect sensory environment. Choose where you\'d like to begin.',
-  emailTo: 'design-visit@somatogroup.co.uk',
-  formAction: 'https://formsubmit.co/ajax/design-visit@somatogroup.co.uk',
+  emailTo: 'john@southpaw.co.uk',
+  formAction: 'https://formsubmit.co/ajax/john@southpaw.co.uk',
 
   // ── External Links ────────────────────────────────────────
   designBookUrl: '/pages/design-book',
@@ -25,8 +25,7 @@ const CONFIG = {
     apiKey: 'AIzaSyBOibqLNgZ_EojAKcdLH1_13zF819wSX3I',
     clientId: '',  // Set in Shopify page directly
     clientSecret: '',  // Set in Shopify page directly
-    // After running auth-setup.html once, paste your refresh token here:
-    refreshToken: '',
+    refreshToken: '',  // Set in Shopify page directly
   },
 
   // ── Landing Page Cards ────────────────────────────────────
@@ -39,11 +38,11 @@ const CONFIG = {
     designer: {
       title: 'Choose Your Designer',
       description: 'Meet our expert sensory room designers and book a free consultation at a time that suits you.',
-      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/choose1.png?v=1770893310',
+      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/designerchoice.png?v=1770933730',
     }
   },
 
-  // ── Room Type Options (7 options, multi-select, 2-per-row) ──
+  // ── Room Type Options (8 options, multi-select, 3-per-row) ──
   roomTypes: [
     {
       id: 'si',
@@ -61,7 +60,7 @@ const CONFIG = {
       id: 'soft-play',
       title: 'Soft Play',
       description: 'Soft Play Area',
-      image: '',
+      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/soft_play.jpg?v=1770915081',
     },
     {
       id: 'de-escalation',
@@ -80,6 +79,12 @@ const CONFIG = {
       title: 'Mural',
       description: 'Sensory Mural',
       image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/mural.webp?v=1770916099',
+    },
+    {
+      id: 'multiple-rooms',
+      title: 'Multiple Rooms',
+      description: 'More Than One Room',
+      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/multiple.webp?v=1770916637',
     },
     {
       id: 'other',
@@ -135,21 +140,21 @@ const CONFIG = {
     },
     {
       id: 'designer-2',
-      name: 'Designer Two',
+      name: 'Lili',
       role: 'Sensory Room Designer',
       bio: 'Passionate about creating engaging sensory spaces for children and young people, with expertise in soft play and interactive environments.',
       image: '',
     },
     {
       id: 'designer-3',
-      name: 'Designer Three',
+      name: 'Natalia',
       role: 'Sensory Room Designer',
       bio: 'Specialising in projection and immersive environments, bringing cutting-edge technology to sensory room design.',
       image: '',
     },
     {
       id: 'designer-4',
-      name: 'Designer Four',
+      name: 'Priya',
       role: 'Sensory Room Designer',
       bio: 'Expert in de-escalation and therapeutic environments, creating calming spaces that make a real difference.',
       image: '',

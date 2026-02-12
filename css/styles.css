@@ -247,23 +247,40 @@ img { max-width: 100%; height: auto; display: block; }
   font-size: var(--font-size-base);
 }
 
-/* ── Room Type cards (2-per-row, same style as landing) ────── */
+/* ── Room Type cards (3-per-row, wider layout) ────────────── */
 .room-type-grid {
-  grid-template-columns: repeat(2, 1fr) !important;
-  max-width: var(--max-width);
-  gap: var(--space-xl);
+  grid-template-columns: repeat(3, 1fr) !important;
+  max-width: 1200px;
+  gap: var(--space-lg);
+  justify-items: center;
+}
+
+/* Center the last row if it has fewer than 3 items */
+.room-type-grid .choice-card:last-child:nth-child(3n+1) {
+  grid-column: 2;
+}
+.room-type-grid .choice-card:nth-last-child(2):nth-child(3n+1) {
+  grid-column: 2;
+}
+.room-type-grid .choice-card:nth-last-child(2):nth-child(3n+1) ~ .choice-card {
+  grid-column: 3;
 }
 
 .room-type-grid .choice-card .card-image-container {
   aspect-ratio: 16 / 9;
 }
 
+.room-type-grid .choice-card .card-body {
+  padding: var(--space-sm) var(--space-md) var(--space-md);
+}
+
 .room-type-grid .choice-card .card-body h3 {
-  font-size: var(--font-size-xl);
+  font-size: var(--font-size-lg);
+  margin-bottom: 2px;
 }
 
 .room-type-grid .choice-card .card-body p {
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-sm);
 }
 
 /* ── Designer Cards ────────────────────────────────────────── */
@@ -579,6 +596,25 @@ img { max-width: 100%; height: auto; display: block; }
   padding-top: var(--space-xl);
 }
 
+/* Wider container for room type page (3-per-row layout) */
+[data-step="room-type"] .step-content {
+  max-width: 1200px;
+}
+
+/* Landing card titles on one line */
+.two-col .choice-card .card-body h3 {
+  white-space: nowrap;
+}
+
+/* Age group images - fit vertically, bigger */
+.four-col .choice-card .card-image-container {
+  aspect-ratio: 3 / 4;
+}
+.four-col .choice-card .card-image-container img {
+  object-fit: contain;
+  padding: var(--space-sm);
+}
+
 /* ── Confirmation Page ─────────────────────────────────────── */
 .confirmation-content { text-align: center; padding-top: var(--space-3xl); }
 .confirmation-icon { color: var(--color-success); margin-bottom: var(--space-lg); }
@@ -606,6 +642,7 @@ img { max-width: 100%; height: auto; display: block; }
   .card-grid.equipment-grid { grid-template-columns: repeat(3, 1fr); }
   .card-grid.designer-grid { grid-template-columns: repeat(2, 1fr); }
   .room-type-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  [data-step="room-type"] .step-content { max-width: var(--max-width); }
   .calendar-day-header { padding: var(--space-sm); font-size: var(--font-size-sm); }
   .calendar-slot { padding: var(--space-sm) 2px; font-size: var(--font-size-sm); }
 }
@@ -617,7 +654,7 @@ img { max-width: 100%; height: auto; display: block; }
   .card-grid.four-col { grid-template-columns: repeat(2, 1fr); }
   .card-grid.equipment-grid { grid-template-columns: repeat(2, 1fr); }
   .card-grid.designer-grid { grid-template-columns: 1fr; max-width: 360px; }
-  .room-type-grid { grid-template-columns: 1fr !important; }
+  .room-type-grid { grid-template-columns: repeat(2, 1fr) !important; }
   .designer-grid .choice-card .card-image-container { width: 120px; height: 120px; }
 
   .calendar-grid { flex-direction: column; }
