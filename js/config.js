@@ -19,33 +19,43 @@ const CONFIG = {
   designBookUrl: '/pages/design-book',
   designProcessUrl: '/pages/design-process',
 
+  // ── Google Calendar Integration ─────────────────────────
+  googleCalendar: {
+    calendarId: 'c_a5f29fda9f946928e38859e140e427d27c046af14517c7c3713ac7a1cd2d9aa0@group.calendar.google.com',
+    apiKey: 'AIzaSyBOibqLNgZ_EojAKcdLH1_13zF819wSX3I',
+    clientId: '',  // Set in Shopify page directly
+    clientSecret: '',  // Set in Shopify page directly
+    // After running auth-setup.html once, paste your refresh token here:
+    refreshToken: '',
+  },
+
   // ── Landing Page Cards ────────────────────────────────────
   landingCards: {
     room: {
       title: 'Choose Your Room',
-      description: 'Tell us about the sensory room you\'d like to create and we\'ll help bring your vision to life.',
+      description: 'Tell us about the type of sensory room you\'d like to create and we\'ll help bring your vision to life.',
       image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/choose_your_room.jpg?v=1770835035',
     },
     designer: {
       title: 'Choose Your Designer',
       description: 'Meet our expert sensory room designers and book a free consultation at a time that suits you.',
-      image: '',
+      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/choose1.png?v=1770893310',
     }
   },
 
-  // ── Room Type Options (8 options, 2-per-row with photos) ──
+  // ── Room Type Options (7 options, multi-select, 2-per-row) ──
   roomTypes: [
     {
       id: 'si',
       title: 'SI',
       description: 'Sensory Integration',
-      image: '',
+      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/SI.webp?v=1770914146',
     },
     {
       id: 'mse',
       title: 'MSE',
       description: 'Multi-Sensory Environment',
-      image: '',
+      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/MSE.webp?v=1770914161',
     },
     {
       id: 'soft-play',
@@ -57,40 +67,34 @@ const CONFIG = {
       id: 'de-escalation',
       title: 'De-escalation',
       description: 'De-escalation Room',
-      image: '',
+      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/de-escalation.png?v=1770916420',
     },
     {
       id: 'projection',
       title: 'Projection',
       description: 'Immersive Projection',
-      image: '',
+      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/projector.jpg?v=1770915105',
     },
     {
       id: 'mural',
       title: 'Mural',
       description: 'Sensory Mural',
-      image: '',
+      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/mural.webp?v=1770916099',
     },
     {
       id: 'other',
       title: 'Other',
       description: 'Custom Room Type',
-      image: '',
-    },
-    {
-      id: 'multiple-rooms',
-      title: 'Multiple Rooms',
-      description: 'More Than One Room',
-      image: '',
+      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/other.png?v=1770916776',
     },
   ],
 
   // ── Age Groups ────────────────────────────────────────────
   ageGroups: [
-    { id: '0-5',   title: '0 - 5',   description: 'Early Years', image: '' },
-    { id: '6-12',  title: '6 - 12',  description: 'Primary',     image: '' },
-    { id: '13-18', title: '13 - 18', description: 'Secondary',   image: '' },
-    { id: 'older', title: 'Older',   description: 'Adults',      image: '' },
+    { id: '0-5',   title: '0 - 5',   description: 'Early Years', image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/0-5.png?v=1770913562' },
+    { id: '6-12',  title: '6 - 12',  description: 'Primary',     image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/6-12.png?v=1770913561' },
+    { id: '13-18', title: '13 - 18', description: 'Secondary',   image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/18.png?v=1770913546' },
+    { id: 'older', title: 'Older',   description: 'Adults',      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/older.png?v=1770913546' },
   ],
 
   // ── Room Sizes ────────────────────────────────────────────

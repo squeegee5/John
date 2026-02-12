@@ -41,6 +41,7 @@
         </div>
         <div class="step-nav">
           <button class="btn btn-back" data-action="back">Back</button>
+          <button class="btn btn-primary" data-action="room-type-next">Continue</button>
         </div>
       </div>
     </section>
@@ -129,6 +130,10 @@
           <!-- Calendar populated by JS -->
         </div>
         <p class="calendar-note" id="calendarNote"></p>
+        <div class="anytime-container">
+          <button class="btn btn-accent" id="anytimeBtn">Anytime</button>
+          <p class="anytime-hint">Can't decide? We'll book you in at the next available slot.</p>
+        </div>
         <div class="step-nav">
           <button class="btn btn-back" data-action="back">Back</button>
         </div>
@@ -143,9 +148,6 @@
         <div class="step-header">
           <h2 id="contactTitle"></h2>
           <p id="contactSubtitle"></p>
-        </div>
-        <div class="contact-options" id="contactOptions">
-          <!-- Populated by JS based on which paths are completed -->
         </div>
         <form class="contact-form" id="contactForm" novalidate>
           <div class="form-group">
@@ -164,16 +166,25 @@
             <span class="error-message">Please enter your phone number</span>
           </div>
           <div class="form-group">
-            <label for="contactPostcode">Postcode / Location</label>
-            <input type="text" id="contactPostcode" name="postcode" placeholder="Your postcode or area">
+            <label for="contactPostcode">Postcode / Location *</label>
+            <input type="text" id="contactPostcode" name="postcode" required placeholder="Your postcode or area">
+            <span class="error-message">Please enter your postcode or location</span>
           </div>
           <div class="form-group">
-            <label for="contactPremises">Premises Name</label>
-            <input type="text" id="contactPremises" name="premises" placeholder="Name of the premises">
+            <label for="contactPremises">Premises Name *</label>
+            <input type="text" id="contactPremises" name="premises" required placeholder="Name of the premises">
+            <span class="error-message">Please enter the premises name</span>
+          </div>
+          <div class="form-group">
+            <label for="contactNotes">Anything else you'd like to tell us about your design project?</label>
+            <textarea id="contactNotes" name="notes" rows="4" placeholder="Any additional details about your project..."></textarea>
+          </div>
+          <div class="contact-options" id="contactOptions">
+            <!-- Populated by JS: Choose Your Designer / Next buttons -->
           </div>
           <div class="step-nav">
             <button type="button" class="btn btn-back" data-action="back">Back</button>
-            <button type="submit" class="btn btn-primary">Submit</button>
+            <button type="submit" class="btn btn-primary" id="contactSubmitBtn">Submit</button>
           </div>
         </form>
       </div>
