@@ -81,16 +81,16 @@ const CONFIG = {
       image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/mural.webp?v=1770916099',
     },
     {
-      id: 'multiple-rooms',
-      title: 'Multiple Rooms',
-      description: 'More Than One Room',
-      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/multiple.webp?v=1770916637',
-    },
-    {
       id: 'other',
       title: 'Other',
       description: 'Custom Room Type',
       image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/other.png?v=1770916776',
+    },
+    {
+      id: 'multiple-rooms',
+      title: 'Multiple Rooms',
+      description: 'More Than One Room',
+      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/multiple.webp?v=1770916637',
     },
   ],
 
@@ -193,7 +193,7 @@ const CONFIG = {
       subtitle: 'The size of the space where your sensory room will be.',
     },
     equipment: {
-      title: 'What Equipment Might You Need?',
+      title: 'What Sensory Equipment Might You Need?',
       subtitle: '',
     },
     designer: {
