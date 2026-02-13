@@ -332,7 +332,7 @@
             setTimeout(() => {
               if (state.contactFilled) {
                 state.completedPaths.add('designer');
-                submitAndConfirm();
+                createCalendarEventAndConfirm();
               } else {
                 navigateTo('contact');
               }
@@ -394,21 +394,19 @@
       btn.addEventListener('click', goBack);
     });
 
-    // Room type continue button (multi-select now)
-    const roomTypeNext = document.querySelector('[data-action="room-type-next"]');
-    if (roomTypeNext) {
-      roomTypeNext.addEventListener('click', () => {
+    // Room type continue buttons (top + bottom)
+    document.querySelectorAll('[data-action="room-type-next"]').forEach(btn => {
+      btn.addEventListener('click', () => {
         navigateTo('room-age');
       });
-    }
+    });
 
-    // Equipment continue button
-    const equipNext = document.querySelector('[data-action="equipment-next"]');
-    if (equipNext) {
-      equipNext.addEventListener('click', () => {
+    // Equipment continue buttons (top + bottom)
+    document.querySelectorAll('[data-action="equipment-next"]').forEach(btn => {
+      btn.addEventListener('click', () => {
         navigateTo('contact');
       });
-    }
+    });
 
     // Contact form
     const form = document.getElementById('contactForm');
@@ -420,14 +418,15 @@
           state.contactFilled = true;
 
           if (state.firstPath === 'designer' && state.designer && !state.appointmentSlot) {
-            navigateTo('designer-calendar');
+            // Designer-first: send email, then go to calendar
+            sendEmailAndContinue(() => navigateTo('designer-calendar'));
           } else if (state.firstPath === 'room' && !state.completedPaths.has('room')) {
             state.completedPaths.add('room');
-            submitAndConfirm();
+            sendEmailAndContinue(() => showConfirmation());
           } else {
             const currentPath = getCurrentPath();
             if (currentPath) state.completedPaths.add(currentPath);
-            submitAndConfirm();
+            sendEmailAndContinue(() => showConfirmation());
           }
         }
       });
@@ -443,7 +442,7 @@
         setTimeout(() => {
           if (state.contactFilled) {
             state.completedPaths.add('designer');
-            submitAndConfirm();
+            createCalendarEventAndConfirm();
           } else {
             navigateTo('contact');
           }
@@ -588,8 +587,8 @@
           collectContactData();
           state.contactFilled = true;
           state.completedPaths.add('room');
+          sendEmailAndContinue(() => navigateTo('designer-select'));
         }
-        navigateTo('designer-select');
       });
     }
 
@@ -600,7 +599,7 @@
           collectContactData();
           state.contactFilled = true;
           state.completedPaths.add('room');
-          navigateTo('designer-calendar');
+          sendEmailAndContinue(() => navigateTo('designer-calendar'));
         }
       });
     }
@@ -715,29 +714,26 @@
     });
   }
 
-  // ── Submit & Confirm ─────────────────────────────────────
+  // ── Submit Helpers ───────────────────────────────────────
 
-  function submitAndConfirm() {
+  // Send email only, then run callback (used on contact page Next)
+  function sendEmailAndContinue(callback) {
     const data = buildSubmissionData();
     showLoading(true);
-
-    // Send email and create calendar event in parallel
-    const emailPromise = sendEmail(data).catch(err => {
-      console.error('Email error:', err);
-    });
-
-    const calendarPromise = state.appointmentSlot
-      ? createCalendarEvent().catch(err => {
-          console.error('Calendar error:', err);
-        })
-      : Promise.resolve(null);
-
-    Promise.all([emailPromise, calendarPromise])
+    sendEmail(data)
+      .catch(err => { console.error('Email error:', err); })
       .then(() => {
         showLoading(false);
-        showConfirmation();
-      })
-      .catch(() => {
+        if (callback) callback();
+      });
+  }
+
+  // Create calendar event only, then show confirmation (used on calendar page)
+  function createCalendarEventAndConfirm() {
+    showLoading(true);
+    createCalendarEvent()
+      .catch(err => { console.error('Calendar error:', err); })
+      .then(() => {
         showLoading(false);
         showConfirmation();
       });

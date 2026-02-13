@@ -591,6 +591,19 @@ img { max-width: 100%; height: auto; display: block; }
   font-style: italic;
 }
 
+/* ── Top Continue Button ──────────────────────────────────── */
+.step-top-nav {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--space-md);
+}
+
+/* ── Age Group Height Gradient ────────────────────────────── */
+#ageCards .choice-card:nth-child(1) .card-image-container { aspect-ratio: 5 / 4; }
+#ageCards .choice-card:nth-child(2) .card-image-container { aspect-ratio: 1 / 1; }
+#ageCards .choice-card:nth-child(3) .card-image-container { aspect-ratio: 7 / 8; }
+/* 4th child (Older) keeps the default 3/4 aspect ratio */
+
 /* ── Compact padding for inner steps ─────────────────────── */
 [data-step="room-type"] .step-content,
 [data-step="room-equipment"] .step-content,
