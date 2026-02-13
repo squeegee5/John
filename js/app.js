@@ -17,8 +17,8 @@
     firstPath: null,
     completedPaths: new Set(),
 
-    // Room selections (roomType is now an array for multi-select)
-    roomType: [],
+    // Room selections
+    roomType: null,
     ageGroup: null,
     roomSize: null,
     equipment: [],
@@ -195,14 +195,8 @@
     container.innerHTML = '';
     container.classList.add('room-type-grid');
     CONFIG.roomTypes.forEach(item => {
-      // Room type is now multi-select
-      container.appendChild(createChoiceCard(item, item.id, true, () => {
-        // Update room type state from selected cards
-        state.roomType = [];
-        container.querySelectorAll('.choice-card.selected').forEach(card => {
-          const rt = CONFIG.roomTypes.find(r => r.id === card.dataset.id);
-          if (rt) state.roomType.push(rt);
-        });
+      container.appendChild(createChoiceCard(item, item.id, false, (selected) => {
+        state.roomType = selected;
       }));
     });
   }
@@ -640,7 +634,7 @@
     if (state.contact.premises) desc += `Premises: ${state.contact.premises}\n`;
 
     desc += '\n--- Selections ---\n';
-    if (state.roomType.length > 0) desc += `Room Type: ${state.roomType.map(r => r.title).join(', ')}\n`;
+    if (state.roomType) desc += `Room Type: ${state.roomType.title}\n`;
     if (state.ageGroup) desc += `Age Group: ${state.ageGroup.title}\n`;
     if (state.roomSize) desc += `Room Size: ${state.roomSize.title}\n`;
     if (state.equipment.length > 0) desc += `Equipment: ${state.equipment.map(e => e.title).join(', ')}\n`;
@@ -749,7 +743,7 @@
     if (state.contact.premises) data['Premises'] = state.contact.premises;
     if (state.contact.notes) data['Notes'] = state.contact.notes;
 
-    if (state.roomType.length > 0) data['Room Type'] = state.roomType.map(r => r.title).join(', ');
+    if (state.roomType) data['Room Type'] = state.roomType.title;
     if (state.ageGroup) data['Age Group'] = state.ageGroup.title;
     if (state.roomSize) data['Room Size'] = state.roomSize.title;
     if (state.equipment.length > 0) {
@@ -802,7 +796,7 @@
     if (state.contact.postcode) summaryHtml += summaryRow('Postcode', state.contact.postcode);
     if (state.contact.premises) summaryHtml += summaryRow('Premises', state.contact.premises);
     if (state.contact.notes) summaryHtml += summaryRow('Notes', state.contact.notes);
-    if (state.roomType.length > 0) summaryHtml += summaryRow('Room Type', state.roomType.map(r => r.title).join(', '));
+    if (state.roomType) summaryHtml += summaryRow('Room Type', state.roomType.title);
     if (state.ageGroup) summaryHtml += summaryRow('Age Group', state.ageGroup.title);
     if (state.roomSize) summaryHtml += summaryRow('Room Size', state.roomSize.title);
     if (state.equipment.length > 0) summaryHtml += summaryRow('Equipment', state.equipment.map(e => e.title).join(', '));
