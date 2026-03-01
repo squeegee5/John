@@ -38,7 +38,7 @@ const CONFIG = {
     designer: {
       title: 'Choose Your Designer',
       description: 'Meet our expert sensory room designers and book a free consultation at a time that suits you.',
-      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/designerchoice.png?v=1770933730',
+      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/timeline.png?v=1772221442',
     }
   },
 
@@ -72,7 +72,7 @@ const CONFIG = {
       id: 'projection',
       title: 'Projection',
       description: 'Immersive Projection',
-      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/projector.jpg?v=1770915105',
+      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/486309898_1393031628781579_1968299947873302313_n.jpg?v=1772324776',
     },
     {
       id: 'mural',
@@ -90,7 +90,7 @@ const CONFIG = {
       id: 'multiple-rooms',
       title: 'Multiple Rooms',
       description: 'More Than One Room',
-      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/multiple.webp?v=1770916637',
+      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/486760940_1232511201679375_685949428353330236_n.jpg?v=1772221577',
     },
   ],
 
@@ -136,7 +136,7 @@ const CONFIG = {
       name: 'Gemma',
       role: 'Senior Sensory Room Designer',
       bio: 'With years of experience designing sensory environments, specialising in multi-sensory rooms and sensory integration spaces.',
-      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/gemma.webp?v=1770836704',
+      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/gem.png?v=1772310022',
     },
     {
       id: 'designer-2',
@@ -157,7 +157,7 @@ const CONFIG = {
       name: 'Priya',
       role: 'Sensory Room Designer',
       bio: 'Expert in de-escalation and therapeutic environments, creating calming spaces that make a real difference.',
-      image: '',
+      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/1.png?v=1772216644',
     },
   ],
 
