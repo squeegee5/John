@@ -817,7 +817,7 @@
     }
 
     actionsHtml += `<p style="color:var(--color-text-light);font-size:var(--font-size-sm);margin-top:var(--space-md);">To learn more about our design process:</p>`;
-    actionsHtml += `<a href="${CONFIG.designBookUrl}" onclick="window.open(this.href, 'DesignBook', 'width=800,height=600,scrollbars=yes,resizable=yes'); return false;" class="btn btn-outline" style="text-decoration:none;">View Our Design Book</a>`;
+    actionsHtml += `<a href="${CONFIG.designBookUrl}" target="_blank" rel="noopener" class="btn btn-outline" style="text-decoration:none;">View Our Design Book</a>`;
 
     actionsEl.innerHTML = actionsHtml;
 

@@ -139,8 +139,8 @@ img { max-width: 100%; height: auto; display: block; }
 }
 
 .card-grid.designer-grid {
-  grid-template-columns: repeat(2, 1fr);
-  max-width: 800px;
+  grid-template-columns: repeat(3, 1fr);
+  max-width: 1000px;
   margin: 0 auto var(--space-xl);
 }
 
@@ -281,10 +281,14 @@ img { max-width: 100%; height: auto; display: block; }
 .designer-grid .choice-card .card-image-container {
   aspect-ratio: 1 / 1;
   border-radius: 50%;
-  width: 160px;
-  height: 160px;
+  width: 140px;
+  height: 140px;
   margin: var(--space-lg) auto var(--space-sm);
   border: 3px solid var(--color-border-light);
+}
+.designer-grid .choice-card .card-image-container img {
+  object-fit: cover;
+  object-position: center;
 }
 
 .designer-grid .choice-card.selected .card-image-container {
@@ -307,7 +311,7 @@ img { max-width: 100%; height: auto; display: block; }
 }
 
 .designer-grid .card-body {
-  padding: var(--space-sm) var(--space-lg) var(--space-lg);
+  padding: var(--space-sm) var(--space-md) var(--space-lg);
 }
 
 .designer-grid .card-body .designer-role {
@@ -652,7 +656,7 @@ img { max-width: 100%; height: auto; display: block; }
 @media (max-width: 900px) {
   .card-grid.four-col { grid-template-columns: repeat(2, 1fr); }
   .card-grid.equipment-grid { grid-template-columns: repeat(3, 1fr); }
-  .card-grid.designer-grid { grid-template-columns: repeat(2, 1fr); }
+  .card-grid.designer-grid { grid-template-columns: repeat(3, 1fr); }
   .room-type-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
   [data-step="room-type"] .step-content { max-width: var(--max-width); }
   .calendar-day-header { padding: var(--space-sm); font-size: var(--font-size-sm); }
@@ -665,7 +669,7 @@ img { max-width: 100%; height: auto; display: block; }
   .card-grid.two-col { grid-template-columns: 1fr; }
   .card-grid.four-col { grid-template-columns: repeat(2, 1fr); }
   .card-grid.equipment-grid { grid-template-columns: repeat(2, 1fr); }
-  .card-grid.designer-grid { grid-template-columns: 1fr; max-width: 360px; }
+  .card-grid.designer-grid { grid-template-columns: repeat(2, 1fr); max-width: 600px; }
   .room-type-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
   .designer-grid .choice-card .card-image-container { width: 120px; height: 120px; }
 

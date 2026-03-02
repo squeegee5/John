@@ -16,7 +16,7 @@ const CONFIG = {
   formAction: 'https://formsubmit.co/ajax/john@southpaw.co.uk',
 
   // ── External Links ────────────────────────────────────────
-  designBookUrl: '/pages/design-book',
+  designBookUrl: 'https://southpaw.co.uk/pages/sensory-room-photos#design-book',
   designProcessUrl: '/pages/design-process',
 
   // ── Google Calendar Integration ─────────────────────────
@@ -38,7 +38,7 @@ const CONFIG = {
     designer: {
       title: 'Choose Your Designer',
       description: 'Meet our expert sensory room designers and book a free consultation at a time that suits you.',
-      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/timeline.png?v=1772221442',
+      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/designerchoice.png?v=1770933730',
     }
   },
 
@@ -66,7 +66,7 @@ const CONFIG = {
       id: 'de-escalation',
       title: 'De-escalation',
       description: 'De-escalation Room',
-      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/de-escalation.png?v=1770916420',
+      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/deescalation_7.jpg?v=1772120397',
     },
     {
       id: 'projection',
@@ -149,8 +149,8 @@ const CONFIG = {
       id: 'designer-3',
       name: 'Natalia',
       role: 'Sensory Room Designer',
-      bio: 'Specialising in projection and immersive environments, bringing cutting-edge technology to sensory room design.',
-      image: '',
+      bio: 'Known for creating immersive sensory spaces for SEND settings, with a strong focus on combining technology and therapeutic principles.',
+      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/natailia3.png?v=1772451386',
     },
     {
       id: 'designer-4',
@@ -158,6 +158,27 @@ const CONFIG = {
       role: 'Sensory Room Designer',
       bio: 'Expert in de-escalation and therapeutic environments, creating calming spaces that make a real difference.',
       image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/1.png?v=1772216644',
+    },
+    {
+      id: 'designer-5',
+      name: 'John',
+      role: 'Sensory Room Designer',
+      bio: 'Expert in interactive multi-sensory rooms where programmable lighting and acoustic engineering empower users with complex needs.',
+      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/john.png?v=1772451311',
+    },
+    {
+      id: 'designer-6',
+      name: 'Mike',
+      role: 'Sensory Room Designer',
+      bio: 'Dedicated to designing inclusive environments that honour diverse sensory profiles, from high-energy soft play to tranquil retreat zones.',
+      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/mike.png?v=1772452114',
+    },
+    {
+      id: 'designer-any',
+      name: 'Any',
+      role: '',
+      bio: 'No preference — let us match you with the best available designer for your project.',
+      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/any.png?v=1772452309',
     },
   ],
 
