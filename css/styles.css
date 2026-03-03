@@ -687,3 +687,111 @@ img { max-width: 100%; height: auto; display: block; }
   .confirmation-actions .btn { min-width: 100%; }
   .contact-options { max-width: 100%; }
 }
+
+/* ── Hide Shopify Page Heading ────────────────────────────── */
+.page-title,
+.template-page .page-header h1,
+.template-page h1.page-title,
+.shopify-section .page-header,
+h1.page__title,
+.page__title-wrapper {
+  display: none !important;
+}
+
+/* ── Special Request Form (Calendar Page) ─────────────────── */
+.special-request-section {
+  text-align: center;
+  margin-top: var(--space-lg);
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.special-request-btn {
+  font-size: var(--font-size-sm);
+}
+
+.special-request-form {
+  background: var(--color-bg-soft);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  padding: var(--space-xl);
+  text-align: left;
+}
+
+.special-request-form h4 {
+  font-family: var(--font-family-heading);
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-bottom: var(--space-sm);
+}
+
+.special-hint {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-light);
+  margin-bottom: var(--space-lg);
+}
+
+.special-fields {
+  display: flex;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-sm);
+}
+
+.special-field {
+  flex: 1;
+}
+
+.special-field label {
+  display: block;
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  color: var(--color-primary);
+  margin-bottom: var(--space-xs);
+}
+
+.special-field select,
+.special-field input {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border: 2px solid var(--color-border);
+  border-radius: var(--border-radius);
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  background: var(--color-bg-card);
+  transition: border-color var(--transition);
+}
+
+.special-field select:focus,
+.special-field input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.1);
+}
+
+.special-actions {
+  display: flex;
+  gap: var(--space-md);
+  justify-content: flex-end;
+  margin-top: var(--space-lg);
+}
+
+.btn-sm {
+  padding: 0.5rem 1.25rem;
+  font-size: var(--font-size-sm);
+}
+
+@media (max-width: 640px) {
+  .special-fields {
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+  .special-actions {
+    flex-direction: column;
+  }
+  .special-actions .btn {
+    width: 100%;
+  }
+}

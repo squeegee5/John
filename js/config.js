@@ -12,8 +12,8 @@ const CONFIG = {
   siteName: 'Southpaw Sensory Room Design',
   heroTitle: 'Design Your Sensory Room',
   heroSubtitle: 'Start your journey to creating the perfect sensory environment. Choose where you\'d like to begin.',
-  emailTo: 'john@southpaw.co.uk',
-  formAction: 'https://formsubmit.co/ajax/john@southpaw.co.uk',
+  emailTo: 'design-visit@somatogroup.co.uk',
+  formAction: 'https://formsubmit.co/ajax/design-visit@somatogroup.co.uk',
 
   // ── External Links ────────────────────────────────────────
   designBookUrl: 'https://southpaw.co.uk/pages/sensory-room-photos#design-book',
@@ -188,6 +188,8 @@ const CONFIG = {
       5: { start: 9, end: 13, label: 'Friday' },
     },
     blockedHours: [12],
+    mondayBlockedHours: [13, 14],
+    slotsToShow: 5,
     slotDuration: 60,
     calendarNote: 'Initial consultations typically last 15-20 minutes, but we book a full hour slot to ensure we have plenty of time to discuss your project.',
   },

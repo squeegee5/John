@@ -19,7 +19,7 @@
 
     // Room selections
     roomType: null,
-    ageGroup: null,
+    ageGroup: [],
     roomSize: null,
     equipment: [],
 
@@ -206,9 +206,13 @@
     const container = document.getElementById('ageCards');
     container.innerHTML = '';
     CONFIG.ageGroups.forEach(item => {
-      container.appendChild(createChoiceCard(item, item.id, false, (selected) => {
-        state.ageGroup = selected;
-        setTimeout(() => navigateTo('room-size'), 350);
+      container.appendChild(createChoiceCard(item, item.id, true, () => {
+        // Update age group state from selected cards
+        state.ageGroup = [];
+        container.querySelectorAll('.choice-card.selected').forEach(card => {
+          const ag = CONFIG.ageGroups.find(a => a.id === card.dataset.id);
+          if (ag) state.ageGroup.push(ag);
+        });
       }));
     });
   }
@@ -327,7 +331,7 @@
             setTimeout(() => {
               if (state.contactFilled) {
                 state.completedPaths.add('designer');
-                createCalendarEventAndConfirm();
+                submitAndConfirm();
               } else {
                 navigateTo('contact');
               }
@@ -396,6 +400,13 @@
       });
     });
 
+    // Age continue button (multi-select needs explicit continue)
+    document.querySelectorAll('[data-action="age-next"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        navigateTo('room-size');
+      });
+    });
+
     // Equipment continue buttons (top + bottom)
     document.querySelectorAll('[data-action="equipment-next"]').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -413,15 +424,21 @@
           state.contactFilled = true;
 
           if (state.firstPath === 'designer' && state.designer && !state.appointmentSlot) {
-            // Designer-first: send email, then go to calendar
-            sendEmailAndContinue(() => navigateTo('designer-calendar'));
+            // Designer-first: go to calendar (email sent after slot selected)
+            navigateTo('designer-calendar');
           } else if (state.firstPath === 'room' && !state.completedPaths.has('room')) {
             state.completedPaths.add('room');
-            sendEmailAndContinue(() => showConfirmation());
+            // Room path submit: go to calendar (email sent after slot selected)
+            navigateTo('designer-calendar');
           } else {
             const currentPath = getCurrentPath();
             if (currentPath) state.completedPaths.add(currentPath);
-            sendEmailAndContinue(() => showConfirmation());
+            // Already has appointment: send email + calendar event
+            if (state.appointmentSlot) {
+              submitAndConfirm();
+            } else {
+              navigateTo('designer-calendar');
+            }
           }
         }
       });
@@ -437,7 +454,7 @@
         setTimeout(() => {
           if (state.contactFilled) {
             state.completedPaths.add('designer');
-            createCalendarEventAndConfirm();
+            submitAndConfirm();
           } else {
             navigateTo('contact');
           }
@@ -582,7 +599,7 @@
           collectContactData();
           state.contactFilled = true;
           state.completedPaths.add('room');
-          sendEmailAndContinue(() => navigateTo('designer-select'));
+          navigateTo('designer-select');
         }
       });
     }
@@ -594,7 +611,7 @@
           collectContactData();
           state.contactFilled = true;
           state.completedPaths.add('room');
-          sendEmailAndContinue(() => navigateTo('designer-calendar'));
+          navigateTo('designer-calendar');
         }
       });
     }
@@ -636,10 +653,14 @@
 
     desc += '\n--- Selections ---\n';
     if (state.roomType) desc += `Room Type: ${state.roomType.title}\n`;
-    if (state.ageGroup) desc += `Age Group: ${state.ageGroup.title}\n`;
+    if (state.ageGroup.length > 0) desc += `Age Group: ${state.ageGroup.map(a => a.title).join(', ')}\n`;
     if (state.roomSize) desc += `Room Size: ${state.roomSize.title}\n`;
     if (state.equipment.length > 0) desc += `Equipment: ${state.equipment.map(e => e.title).join(', ')}\n`;
     if (state.designer) desc += `Designer: ${state.designer.name}\n`;
+    if (state.appointmentSlot && state.appointmentSlot.isSpecial) {
+      desc += `Special Time Request: ${state.appointmentSlot.label}\n`;
+      if (state.appointmentSlot.specialInfo) desc += `Request Info: ${state.appointmentSlot.specialInfo}\n`;
+    }
     if (state.contact.notes) desc += `\nAdditional Notes: ${state.contact.notes}\n`;
 
     // Add clickable email and phone
@@ -665,13 +686,15 @@
       const gc = CONFIG.googleCalendar;
       const slot = state.appointmentSlot;
 
-      // Build event start/end
+      // Build event start/end (support special request with minute offset)
       const startDate = new Date(slot.date);
-      startDate.setHours(slot.hour, 0, 0, 0);
+      const minute = slot.minute || 0;
+      startDate.setHours(slot.hour, minute, 0, 0);
       const endDate = new Date(startDate);
-      endDate.setHours(slot.hour + 1, 0, 0, 0);
+      endDate.setTime(startDate.getTime() + 60 * 60 * 1000); // 1 hour
 
-      const eventTitle = `Consultation: ${state.contact.name} - ${state.contact.premises || 'No Premises'}`;
+      const specialTag = slot.isSpecial ? ' (Special Request)' : '';
+      const eventTitle = `Consultation: ${state.contact.name} - ${state.contact.premises || 'No Premises'}${specialTag}`;
 
       const event = {
         summary: eventTitle,
@@ -711,27 +734,18 @@
 
   // ── Submit Helpers ───────────────────────────────────────
 
-  // Send email only, then run callback (used on contact page Next)
-  function sendEmailAndContinue(callback) {
+  // Send email AND create calendar event in parallel, then show confirmation
+  function submitAndConfirm() {
     const data = buildSubmissionData();
     showLoading(true);
-    sendEmail(data)
-      .catch(err => { console.error('Email error:', err); })
-      .then(() => {
-        showLoading(false);
-        if (callback) callback();
-      });
-  }
-
-  // Create calendar event only, then show confirmation (used on calendar page)
-  function createCalendarEventAndConfirm() {
-    showLoading(true);
-    createCalendarEvent()
-      .catch(err => { console.error('Calendar error:', err); })
-      .then(() => {
-        showLoading(false);
-        showConfirmation();
-      });
+    const emailPromise = sendEmail(data).catch(err => { console.error('Email error:', err); });
+    const calendarPromise = state.appointmentSlot
+      ? createCalendarEvent().catch(err => { console.error('Calendar error:', err); })
+      : Promise.resolve(null);
+    Promise.all([emailPromise, calendarPromise]).then(() => {
+      showLoading(false);
+      showConfirmation();
+    });
   }
 
   function buildSubmissionData() {
@@ -745,7 +759,7 @@
     if (state.contact.notes) data['Notes'] = state.contact.notes;
 
     if (state.roomType) data['Room Type'] = state.roomType.title;
-    if (state.ageGroup) data['Age Group'] = state.ageGroup.title;
+    if (state.ageGroup.length > 0) data['Age Group'] = state.ageGroup.map(a => a.title).join(', ');
     if (state.roomSize) data['Room Size'] = state.roomSize.title;
     if (state.equipment.length > 0) {
       data['Equipment'] = state.equipment.map(e => e.title).join(', ');
@@ -754,9 +768,12 @@
     if (state.designer) data['Designer'] = state.designer.name;
     if (state.appointmentSlot) {
       data['Appointment'] = state.appointmentSlot.label;
+      if (state.appointmentSlot.isSpecial && state.appointmentSlot.specialInfo) {
+        data['Special Request Info'] = state.appointmentSlot.specialInfo;
+      }
     }
 
-    data['_subject'] = 'New Sensory Room Design Consultation Request';
+    data['_subject'] = 'Southpaw Design Consultation Booked';
 
     return data;
   }
@@ -798,7 +815,7 @@
     if (state.contact.premises) summaryHtml += summaryRow('Premises', state.contact.premises);
     if (state.contact.notes) summaryHtml += summaryRow('Notes', state.contact.notes);
     if (state.roomType) summaryHtml += summaryRow('Room Type', state.roomType.title);
-    if (state.ageGroup) summaryHtml += summaryRow('Age Group', state.ageGroup.title);
+    if (state.ageGroup.length > 0) summaryHtml += summaryRow('Age Group', state.ageGroup.map(a => a.title).join(', '));
     if (state.roomSize) summaryHtml += summaryRow('Room Size', state.roomSize.title);
     if (state.equipment.length > 0) summaryHtml += summaryRow('Equipment', state.equipment.map(e => e.title).join(', '));
     if (state.designer) summaryHtml += summaryRow('Designer', state.designer.name);
