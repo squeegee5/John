@@ -853,35 +853,32 @@
     const designerName = getDesignerFirstName();
     const sigImg = CONFIG.emailSignatureImage;
 
-    return `<!DOCTYPE html>
-<html><head><meta charset="utf-8"></head>
-<body style="font-family: Arial, Helvetica, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <p>Dear ${firstName},</p>
-  <p>Thank you for booking your initial design consultation, I'm really looking forward to speaking with you and learning more about your project.</p>
-  <p>Our discussion will take approximately 15\u201320 minutes and will give me a clearer understanding of your space, your vision, and how I can best support you.</p>
-  <p>To help me prepare ahead of our meeting, it would be greatly appreciated if you could share any of the following (where possible):</p>
-  <ul style="padding-left: 20px;">
-    <li>Photos of the room(s) as they currently are</li>
-    <li>Floor plans or measurements (if available)</li>
-    <li>Inspiration images, Pinterest boards, or styles you\u2019re drawn to</li>
-    <li>Whether this is an existing room being redesigned or a completely new space</li>
-    <li>Your approximate budget range</li>
-    <li>Your ideal timescale</li>
-    <li>Any other stakeholders involved in the decision-making process</li>
-    <li>Any particular challenges or requirements you\u2019d like me to be aware of</li>
-  </ul>
-  <p>If you\u2019re unable to gather all of this information, please don\u2019t worry, we can absolutely still have a valuable conversation. However, the more detail I have beforehand, the more productive and focused our time together will be.</p>
-  <p>Following our initial consultation, we may need to conduct a site visit to gather further details and additional information. This is where our Sales Director, Mike, will take you through the process in more detail. This initial step ensures we have everything required to move your project forward accurately and efficiently.</p>
-  <h3 style="color: #2c3e50; margin-top: 30px; font-size: 18px;">Meeting Details</h3>
-  <p>We are scheduled to meet via Google Meet at the following link:<br>
-  <a href="${meetLink}" style="color: #1a73e8; font-weight: bold;">${meetLink}</a></p>
-  <p>If you would prefer to speak via phone or WhatsApp instead, just let me know and I will happily arrange that.</p>
-  <p>If you have any questions ahead of our call, please feel free to get in touch. I look forward to speaking with you soon.</p>
-  <p>Warm regards,<br><strong>${designerName}</strong></p>
-  <br>
-  <img src="${sigImg}" alt="Southpaw - Embracing Sensory Therapies" style="max-width: 300px; height: auto;">
-</body>
-</html>`;
+    return '<div style="font-family: Arial, Helvetica, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px;">' +
+      '<p>Dear ' + firstName + ',<\/p>' +
+      '<p>Thank you for booking your initial design consultation, I\u2019m really looking forward to speaking with you and learning more about your project.<\/p>' +
+      '<p>Our discussion will take approximately 15\u201320 minutes and will give me a clearer understanding of your space, your vision, and how I can best support you.<\/p>' +
+      '<p>To help me prepare ahead of our meeting, it would be greatly appreciated if you could share any of the following (where possible):<\/p>' +
+      '<ul style="padding-left: 20px;">' +
+        '<li>Photos of the room(s) as they currently are<\/li>' +
+        '<li>Floor plans or measurements (if available)<\/li>' +
+        '<li>Inspiration images, Pinterest boards, or styles you\u2019re drawn to<\/li>' +
+        '<li>Whether this is an existing room being redesigned or a completely new space<\/li>' +
+        '<li>Your approximate budget range<\/li>' +
+        '<li>Your ideal timescale<\/li>' +
+        '<li>Any other stakeholders involved in the decision-making process<\/li>' +
+        '<li>Any particular challenges or requirements you\u2019d like me to be aware of<\/li>' +
+      '<\/ul>' +
+      '<p>If you\u2019re unable to gather all of this information, please don\u2019t worry, we can absolutely still have a valuable conversation. However, the more detail I have beforehand, the more productive and focused our time together will be.<\/p>' +
+      '<p>Following our initial consultation, we may need to conduct a site visit to gather further details and additional information. This is where our Sales Director, Mike, will take you through the process in more detail. This initial step ensures we have everything required to move your project forward accurately and efficiently.<\/p>' +
+      '<h3 style="color: #2c3e50; margin-top: 30px; font-size: 18px;">Meeting Details<\/h3>' +
+      '<p>We are scheduled to meet via Google Meet at the following link:<br>' +
+      '<a href="' + meetLink + '" style="color: #1a73e8; font-weight: bold;">' + meetLink + '<\/a><\/p>' +
+      '<p>If you would prefer to speak via phone or WhatsApp instead, just let me know and I will happily arrange that.<\/p>' +
+      '<p>If you have any questions ahead of our call, please feel free to get in touch. I look forward to speaking with you soon.<\/p>' +
+      '<p>Warm regards,<br><strong>' + designerName + '<\/strong><\/p>' +
+      '<br>' +
+      '<img src="' + sigImg + '" alt="Southpaw - Embracing Sensory Therapies" style="max-width: 300px; height: auto;">' +
+    '<\/div>';
   }
 
   function sendCustomerEmail(meetLink) {
