@@ -701,12 +701,25 @@ img { max-width: 100%; height: auto; display: block; }
 
 /* ── Hide Shopify Page Heading ────────────────────────────── */
 .page-title,
+.page__title,
+h1.page-title,
+h1.page__title,
+.page-header,
+.page-header h1,
+.page__title-wrapper,
+.template-page .page-header,
 .template-page .page-header h1,
 .template-page h1.page-title,
 .shopify-section .page-header,
-h1.page__title,
-.page__title-wrapper {
+.shopify-section--page-header,
+.article-template .article-template__hero,
+#sensory-app ~ *:not(script):not(style) {
   display: none !important;
+}
+
+/* Also hide anything that appears before the app container */
+#sensory-app {
+  position: relative;
 }
 
 /* ── Special Request Form (Calendar Page) ─────────────────── */

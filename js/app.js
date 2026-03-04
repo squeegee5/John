@@ -664,21 +664,25 @@
     if (state.ageGroup.length > 0) desc += `Age Group: ${state.ageGroup.map(a => a.title).join(', ')}\n`;
     if (state.roomSize) desc += `Room Size: ${state.roomSize.title}\n`;
     if (state.equipment.length > 0) desc += `Equipment: ${state.equipment.map(e => e.title).join(', ')}\n`;
-    if (state.designer) desc += `Designer: ${state.designer.name}\n`;
+    if (state.designer) {
+      const designerLabel = state.designer.id === 'designer-any' ? 'Any (No Preference)' : state.designer.name;
+      desc += `Designer: ${designerLabel}\n`;
+    }
     if (state.appointmentSlot && state.appointmentSlot.isSpecial) {
       desc += `Special Time Request: ${state.appointmentSlot.label}\n`;
       if (state.appointmentSlot.specialInfo) desc += `Request Info: ${state.appointmentSlot.specialInfo}\n`;
     }
     if (state.contact.notes) desc += `\nAdditional Notes: ${state.contact.notes}\n`;
 
-    // Add clickable email and phone
+    // Add clickable Gmail compose links
     desc += '\n--- Quick Actions ---\n';
     if (state.contact.email) {
-      const emailLabel = encodeURIComponent([fullName, state.contact.premises].filter(Boolean).join(' - '));
-      desc += `<a href="mailto:${state.contact.email}?subject=Sensory Room Consultation&to=${emailLabel} <${state.contact.email}>">${fullName || state.contact.email}</a>\n`;
+      const subject = encodeURIComponent(`Sensory Room Consultation - ${fullName}`);
+      const gmailLink = `https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(state.contact.email)}&su=${subject}`;
+      desc += `Email: ${gmailLink}\n`;
     }
     if (state.contact.phone) {
-      desc += `<a href="tel:${state.contact.phone}">${state.contact.phone}</a>\n`;
+      desc += `Phone: ${state.contact.phone}\n`;
     }
 
     return desc;
@@ -805,7 +809,9 @@
       data['Equipment'] = state.equipment.map(e => e.title).join(', ');
     }
 
-    if (state.designer) data['Designer'] = state.designer.name;
+    if (state.designer) {
+      data['Designer'] = state.designer.id === 'designer-any' ? 'Any (No Preference)' : state.designer.name;
+    }
     if (state.appointmentSlot) {
       data['Appointment'] = state.appointmentSlot.label;
       if (state.appointmentSlot.isSpecial && state.appointmentSlot.specialInfo) {
@@ -814,6 +820,7 @@
     }
 
     data['_subject'] = 'Southpaw Design Consultation Booked';
+    data['_replyto'] = state.contact.email;
 
     return data;
   }
@@ -955,7 +962,10 @@
     if (state.ageGroup.length > 0) summaryHtml += summaryRow('Age Group', state.ageGroup.map(a => a.title).join(', '));
     if (state.roomSize) summaryHtml += summaryRow('Room Size', state.roomSize.title);
     if (state.equipment.length > 0) summaryHtml += summaryRow('Equipment', state.equipment.map(e => e.title).join(', '));
-    if (state.designer) summaryHtml += summaryRow('Designer', state.designer.name);
+    if (state.designer) {
+      const designerLabel = state.designer.id === 'designer-any' ? 'Any (No Preference)' : state.designer.name;
+      summaryHtml += summaryRow('Designer', designerLabel);
+    }
     if (state.appointmentSlot) summaryHtml += summaryRow('Appointment', state.appointmentSlot.label);
 
     summaryEl.innerHTML = summaryHtml;
@@ -1011,8 +1021,39 @@
     }
   });
 
+  // ── Hide Shopify Page Heading (JS fallback) ──────────────
+  function hidePageHeading() {
+    const app = document.getElementById('sensory-app');
+    if (!app) return;
+    // Hide any h1/h2 elements that appear before the app container
+    let el = app.previousElementSibling;
+    while (el) {
+      if (el.tagName === 'H1' || el.tagName === 'H2' || el.classList.contains('page-header') || el.classList.contains('page__title-wrapper')) {
+        el.style.display = 'none';
+      }
+      el = el.previousElementSibling;
+    }
+    // Also hide parent section headers if the app is inside a Shopify section
+    const parent = app.parentElement;
+    if (parent) {
+      const headings = parent.querySelectorAll('h1, h2.page-title, .page-header');
+      headings.forEach(h => {
+        if (!app.contains(h)) h.style.display = 'none';
+      });
+    }
+    // Hide anything after the app that's part of the template
+    let sibling = app.nextElementSibling;
+    while (sibling) {
+      if (sibling.tagName !== 'SCRIPT' && sibling.tagName !== 'STYLE') {
+        sibling.style.display = 'none';
+      }
+      sibling = sibling.nextElementSibling;
+    }
+  }
+
   // ── Boot ─────────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', () => {
+    hidePageHeading();
     init();
 
     const contactStep = document.querySelector('.step[data-step="contact"]');
