@@ -678,10 +678,8 @@
     if (state.ageGroup.length > 0) desc += `Age Group: ${state.ageGroup.map(a => a.title).join(', ')}\n`;
     if (state.roomSize) desc += `Room Size: ${state.roomSize.title}\n`;
     if (state.equipment.length > 0) desc += `Equipment: ${state.equipment.map(e => e.title).join(', ')}\n`;
-    if (state.designer) {
-      const designerLabel = state.designer.id === 'designer-any' ? 'Any (No Preference)' : state.designer.name;
-      desc += `Designer: ${designerLabel}\n`;
-    }
+    const designerLabel = !state.designer || state.designer.id === 'designer-any' ? 'Any (No Preference)' : state.designer.name;
+    desc += `Designer: ${designerLabel}\n`;
     if (state.appointmentSlot && state.appointmentSlot.isSpecial) {
       desc += `Special Time Request: ${state.appointmentSlot.label}\n`;
       if (state.appointmentSlot.specialInfo) desc += `Request Info: ${state.appointmentSlot.specialInfo}\n`;
@@ -747,7 +745,7 @@
         ],
       };
 
-      return fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(gc.calendarId)}/events?key=${gc.apiKey}&conferenceDataVersion=1&sendUpdates=all`, {
+      return fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(gc.calendarId)}/events?conferenceDataVersion=1&sendUpdates=all`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -836,9 +834,7 @@
       data['Equipment'] = state.equipment.map(e => e.title).join(', ');
     }
 
-    if (state.designer) {
-      data['Designer'] = state.designer.id === 'designer-any' ? 'Any (No Preference)' : state.designer.name;
-    }
+    data['Designer'] = (!state.designer || state.designer.id === 'designer-any') ? 'Any (No Preference)' : state.designer.name;
     if (state.appointmentSlot) {
       data['Appointment'] = state.appointmentSlot.label;
       if (state.appointmentSlot.isSpecial && state.appointmentSlot.specialInfo) {
@@ -1009,10 +1005,8 @@
     if (state.ageGroup.length > 0) summaryHtml += summaryRow('Age Group', state.ageGroup.map(a => a.title).join(', '));
     if (state.roomSize) summaryHtml += summaryRow('Room Size', state.roomSize.title);
     if (state.equipment.length > 0) summaryHtml += summaryRow('Equipment', state.equipment.map(e => e.title).join(', '));
-    if (state.designer) {
-      const designerLabel = state.designer.id === 'designer-any' ? 'Any (No Preference)' : state.designer.name;
-      summaryHtml += summaryRow('Designer', designerLabel);
-    }
+    const designerConfLabel = (!state.designer || state.designer.id === 'designer-any') ? 'Any (No Preference)' : state.designer.name;
+    summaryHtml += summaryRow('Designer', designerConfLabel);
     if (state.appointmentSlot) summaryHtml += summaryRow('Appointment', state.appointmentSlot.label);
 
     summaryEl.innerHTML = summaryHtml;

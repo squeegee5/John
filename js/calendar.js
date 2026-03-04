@@ -26,13 +26,20 @@ class CalendarBooking {
   }
 
   /**
-   * Calculate the dynamic minimum days ahead based on time of day.
-   * Morning (<12): tomorrow is earliest (1 day ahead)
-   * Afternoon (>=12): day after tomorrow (2 days ahead)
+   * Minimum days ahead for calendar display.
+   * Always start from tomorrow; individual slots are filtered
+   * by the 28-hour minimum notice rule in getSlotsForDay().
    */
   getMinDaysAhead() {
+    return 1;
+  }
+
+  /**
+   * Returns the earliest allowed booking time (28 hours from now).
+   */
+  getEarliestBookingTime() {
     const now = new Date();
-    return now.getHours() >= 12 ? 2 : 1;
+    return new Date(now.getTime() + 28 * 60 * 60 * 1000);
   }
 
   /**
@@ -106,13 +113,7 @@ class CalendarBooking {
     const schedule = this.config.schedule[dayOfWeek];
     if (!schedule) return [];
 
-    const today = new Date();
-    const minAhead = this.getMinDaysAhead();
-    const minDate = new Date(today);
-    minDate.setDate(today.getDate() + minAhead);
-    minDate.setHours(0, 0, 0, 0);
-
-    const isPast = date < minDate;
+    const earliest = this.getEarliestBookingTime(); // 28 hours from now
     const isMonday = dayOfWeek === 1;
     const mondayBlocked = this.config.mondayBlockedHours || [];
 
@@ -121,7 +122,13 @@ class CalendarBooking {
     for (let hour = schedule.start; hour < schedule.end; hour++) {
       const isBlocked = this.config.blockedHours.includes(hour);
       const isMondayBlocked = isMonday && mondayBlocked.includes(hour);
-      let isUnavailable = isPast || isBlocked || isMondayBlocked;
+
+      // Check 28-hour minimum: slot start time must be >= earliest
+      const slotStart = new Date(date);
+      slotStart.setHours(hour, 0, 0, 0);
+      const tooSoon = slotStart < earliest;
+
+      let isUnavailable = tooSoon || isBlocked || isMondayBlocked;
 
       allSlots.push({
         hour,
