@@ -887,11 +887,12 @@
       const fullName = getFullName();
       const emailHtml = buildCustomerEmailHtml(meetLink);
 
-      // Construct MIME message
+      // Construct MIME message (From uses the alias configured in Gmail)
       const message = [
         'MIME-Version: 1.0',
         'Content-Type: text/html; charset=utf-8',
         `From: Southpaw Design <${CONFIG.emailTo}>`,
+        `Reply-To: Southpaw Design <${CONFIG.emailTo}>`,
         `To: ${fullName} <${state.contact.email}>`,
         'Subject: Your Southpaw Design Consultation',
         '',
