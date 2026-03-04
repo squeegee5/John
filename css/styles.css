@@ -458,6 +458,15 @@ img { max-width: 100%; height: auto; display: block; }
   padding: 1rem 1.5rem;
 }
 
+.form-row.name-row {
+  display: flex;
+  gap: var(--space-md);
+}
+
+.form-row.name-row .form-group {
+  flex: 1;
+}
+
 .contact-options-divider {
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
@@ -672,6 +681,8 @@ img { max-width: 100%; height: auto; display: block; }
   .card-grid.designer-grid { grid-template-columns: repeat(2, 1fr); max-width: 600px; }
   .room-type-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
   .designer-grid .choice-card .card-image-container { width: 120px; height: 120px; }
+
+  .form-row.name-row { flex-direction: column; gap: 0; }
 
   .calendar-grid { flex-direction: column; }
   .calendar-day { border-right: none; border-bottom: 1px solid var(--color-border-light); }

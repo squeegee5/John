@@ -29,7 +29,8 @@
 
     // Contact details
     contact: {
-      name: '',
+      firstName: '',
+      surname: '',
       email: '',
       phone: '',
       postcode: '',
@@ -510,7 +511,8 @@
   function validateContactForm() {
     let valid = true;
     const fields = [
-      { id: 'contactName', required: true },
+      { id: 'contactFirstName', required: true },
+      { id: 'contactSurname', required: true },
       { id: 'contactEmail', required: true, type: 'email' },
       { id: 'contactPhone', required: true },
       { id: 'contactPostcode', required: true },
@@ -551,7 +553,8 @@
 
   function collectContactData() {
     state.contact = {
-      name: document.getElementById('contactName').value.trim(),
+      firstName: document.getElementById('contactFirstName').value.trim(),
+      surname: document.getElementById('contactSurname').value.trim(),
       email: document.getElementById('contactEmail').value.trim(),
       phone: document.getElementById('contactPhone').value.trim(),
       postcode: document.getElementById('contactPostcode').value.trim(),
@@ -560,9 +563,14 @@
     };
   }
 
+  function getFullName() {
+    return `${state.contact.firstName} ${state.contact.surname}`.trim();
+  }
+
   function prefillContactForm() {
     if (state.contactFilled) {
-      document.getElementById('contactName').value = state.contact.name;
+      document.getElementById('contactFirstName').value = state.contact.firstName;
+      document.getElementById('contactSurname').value = state.contact.surname;
       document.getElementById('contactEmail').value = state.contact.email;
       document.getElementById('contactPhone').value = state.contact.phone;
       document.getElementById('contactPostcode').value = state.contact.postcode;
@@ -642,9 +650,9 @@
     let desc = '';
 
     // Contact details with clickable links
-    if (state.contact.name) desc += `Name: ${state.contact.name}\n`;
+    const fullName = getFullName();
+    if (fullName) desc += `Name: ${fullName}\n`;
     if (state.contact.email) {
-      const emailName = [state.contact.name, state.contact.premises].filter(Boolean).join(' - ');
       desc += `Email: ${state.contact.email}\n`;
     }
     if (state.contact.phone) desc += `Phone: ${state.contact.phone}\n`;
@@ -666,8 +674,8 @@
     // Add clickable email and phone
     desc += '\n--- Quick Actions ---\n';
     if (state.contact.email) {
-      const emailName = encodeURIComponent([state.contact.name, state.contact.premises].filter(Boolean).join(' - '));
-      desc += `<a href="mailto:${state.contact.email}?subject=Sensory Room Consultation&to=${emailName} <${state.contact.email}>">${state.contact.name || state.contact.email}</a>\n`;
+      const emailLabel = encodeURIComponent([fullName, state.contact.premises].filter(Boolean).join(' - '));
+      desc += `<a href="mailto:${state.contact.email}?subject=Sensory Room Consultation&to=${emailLabel} <${state.contact.email}>">${fullName || state.contact.email}</a>\n`;
     }
     if (state.contact.phone) {
       desc += `<a href="tel:${state.contact.phone}">${state.contact.phone}</a>\n`;
@@ -694,7 +702,8 @@
       endDate.setTime(startDate.getTime() + 60 * 60 * 1000); // 1 hour
 
       const specialTag = slot.isSpecial ? ' (Special Request)' : '';
-      const eventTitle = `Consultation: ${state.contact.name} - ${state.contact.premises || 'No Premises'}${specialTag}`;
+      const fullName = getFullName();
+      const eventTitle = `Consultation: ${fullName} - ${state.contact.premises || 'No Premises'}${specialTag}`;
 
       const event = {
         summary: eventTitle,
@@ -707,9 +716,20 @@
           dateTime: endDate.toISOString(),
           timeZone: 'Europe/London',
         },
+        // Google Meet video conference
+        conferenceData: {
+          createRequest: {
+            requestId: `consult-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+            conferenceSolutionKey: { type: 'hangoutsMeet' },
+          },
+        },
+        // Invite the customer
+        attendees: [
+          { email: state.contact.email, displayName: fullName },
+        ],
       };
 
-      return fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(gc.calendarId)}/events?key=${gc.apiKey}`, {
+      return fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(gc.calendarId)}/events?key=${gc.apiKey}&conferenceDataVersion=1&sendUpdates=all`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -734,15 +754,35 @@
 
   // ── Submit Helpers ───────────────────────────────────────
 
-  // Send email AND create calendar event in parallel, then show confirmation
+  // Create calendar event first (for Meet link), then send both emails
   function submitAndConfirm() {
-    const data = buildSubmissionData();
     showLoading(true);
-    const emailPromise = sendEmail(data).catch(err => { console.error('Email error:', err); });
+
+    // Step 1: Create calendar event (needed for Meet link)
     const calendarPromise = state.appointmentSlot
-      ? createCalendarEvent().catch(err => { console.error('Calendar error:', err); })
+      ? createCalendarEvent().catch(err => { console.error('Calendar error:', err); return null; })
       : Promise.resolve(null);
-    Promise.all([emailPromise, calendarPromise]).then(() => {
+
+    calendarPromise.then(eventData => {
+      // Extract Google Meet link from event response
+      let meetLink = null;
+      if (eventData && eventData.conferenceData && eventData.conferenceData.entryPoints) {
+        const videoEntry = eventData.conferenceData.entryPoints.find(e => e.entryPointType === 'video');
+        if (videoEntry) meetLink = videoEntry.uri;
+      }
+
+      // Include Meet link in submission data
+      const data = buildSubmissionData();
+      if (meetLink) data['Google Meet'] = meetLink;
+
+      // Step 2: Send company email + customer email in parallel
+      const companyEmail = sendEmail(data).catch(err => { console.error('Company email error:', err); });
+      const customerEmail = meetLink
+        ? sendCustomerEmail(meetLink).catch(err => { console.error('Customer email error:', err); })
+        : Promise.resolve(null);
+
+      return Promise.all([companyEmail, customerEmail]);
+    }).then(() => {
       showLoading(false);
       showConfirmation();
     });
@@ -751,7 +791,7 @@
   function buildSubmissionData() {
     const data = {};
 
-    data['Name'] = state.contact.name;
+    data['Name'] = getFullName();
     data['Email'] = state.contact.email;
     data['Phone'] = state.contact.phone;
     if (state.contact.postcode) data['Postcode'] = state.contact.postcode;
@@ -792,6 +832,101 @@
     });
   }
 
+  // ── Customer Email (via Gmail API) ──────────────────────
+
+  function getDesignerFirstName() {
+    if (!state.designer || state.designer.id === 'designer-any') {
+      return 'The Southpaw Design Team';
+    }
+    return state.designer.name.split(' ')[0];
+  }
+
+  function buildCustomerEmailHtml(meetLink) {
+    const firstName = state.contact.firstName;
+    const designerName = getDesignerFirstName();
+    const sigImg = CONFIG.emailSignatureImage;
+
+    return `<!DOCTYPE html>
+<html><head><meta charset="utf-8"></head>
+<body style="font-family: Arial, Helvetica, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <p>Dear ${firstName},</p>
+  <p>Thank you for booking your initial design consultation, I'm really looking forward to speaking with you and learning more about your project.</p>
+  <p>Our discussion will take approximately 15\u201320 minutes and will give me a clearer understanding of your space, your vision, and how I can best support you.</p>
+  <p>To help me prepare ahead of our meeting, it would be greatly appreciated if you could share any of the following (where possible):</p>
+  <ul style="padding-left: 20px;">
+    <li>Photos of the room(s) as they currently are</li>
+    <li>Floor plans or measurements (if available)</li>
+    <li>Inspiration images, Pinterest boards, or styles you\u2019re drawn to</li>
+    <li>Whether this is an existing room being redesigned or a completely new space</li>
+    <li>Your approximate budget range</li>
+    <li>Your ideal timescale</li>
+    <li>Any other stakeholders involved in the decision-making process</li>
+    <li>Any particular challenges or requirements you\u2019d like me to be aware of</li>
+  </ul>
+  <p>If you\u2019re unable to gather all of this information, please don\u2019t worry, we can absolutely still have a valuable conversation. However, the more detail I have beforehand, the more productive and focused our time together will be.</p>
+  <p>Following our initial consultation, we may need to conduct a site visit to gather further details and additional information. This is where our Sales Director, Mike, will take you through the process in more detail. This initial step ensures we have everything required to move your project forward accurately and efficiently.</p>
+  <h3 style="color: #2c3e50; margin-top: 30px; font-size: 18px;">Meeting Details</h3>
+  <p>We are scheduled to meet via Google Meet at the following link:<br>
+  <a href="${meetLink}" style="color: #1a73e8; font-weight: bold;">${meetLink}</a></p>
+  <p>If you would prefer to speak via phone or WhatsApp instead, just let me know and I will happily arrange that.</p>
+  <p>If you have any questions ahead of our call, please feel free to get in touch. I look forward to speaking with you soon.</p>
+  <p>Warm regards,<br><strong>${designerName}</strong></p>
+  <br>
+  <img src="${sigImg}" alt="Southpaw - Embracing Sensory Therapies" style="max-width: 300px; height: auto;">
+</body>
+</html>`;
+  }
+
+  function sendCustomerEmail(meetLink) {
+    return getAccessToken().then(token => {
+      if (!token) {
+        console.warn('No access token - skipping customer email');
+        return null;
+      }
+
+      const fullName = getFullName();
+      const emailHtml = buildCustomerEmailHtml(meetLink);
+
+      // Construct MIME message
+      const message = [
+        'MIME-Version: 1.0',
+        'Content-Type: text/html; charset=utf-8',
+        `From: Southpaw Design <${CONFIG.emailTo}>`,
+        `To: ${fullName} <${state.contact.email}>`,
+        'Subject: Your Southpaw Design Consultation',
+        '',
+        emailHtml,
+      ].join('\r\n');
+
+      // Base64url encode
+      const encoded = btoa(unescape(encodeURIComponent(message)))
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+
+      return fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ raw: encoded }),
+      })
+      .then(res => {
+        if (!res.ok) throw new Error(`Gmail API error: ${res.status}`);
+        return res.json();
+      })
+      .then(data => {
+        console.log('Customer email sent:', data.id);
+        return data;
+      })
+      .catch(err => {
+        console.error('Failed to send customer email:', err);
+        return null;
+      });
+    });
+  }
+
   function showLoading(show) {
     const overlay = document.getElementById('loadingOverlay');
     if (show) {
@@ -808,7 +943,8 @@
     const summaryEl = document.getElementById('confirmationSummary');
     let summaryHtml = '<h3>Your Selections</h3>';
 
-    if (state.contact.name) summaryHtml += summaryRow('Name', state.contact.name);
+    const fullName = getFullName();
+    if (fullName) summaryHtml += summaryRow('Name', fullName);
     if (state.contact.email) summaryHtml += summaryRow('Email', state.contact.email);
     if (state.contact.phone) summaryHtml += summaryRow('Phone', state.contact.phone);
     if (state.contact.postcode) summaryHtml += summaryRow('Postcode', state.contact.postcode);

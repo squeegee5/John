@@ -12,12 +12,15 @@ const CONFIG = {
   siteName: 'Southpaw Sensory Room Design',
   heroTitle: 'Design Your Sensory Room',
   heroSubtitle: 'Start your journey to creating the perfect sensory environment. Choose where you\'d like to begin.',
-  emailTo: 'design-visit@somatogroup.co.uk',
-  formAction: 'https://formsubmit.co/ajax/design-visit@somatogroup.co.uk',
+  emailTo: 'design-visit@southpaw.co.uk',
+  formAction: 'https://formsubmit.co/ajax/design-visit@southpaw.co.uk',
 
   // ── External Links ────────────────────────────────────────
   designBookUrl: 'https://southpaw.co.uk/pages/sensory-room-photos#design-book',
   designProcessUrl: '/pages/design-process',
+
+  // ── Email Signature Image ────────────────────────────────
+  emailSignatureImage: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/SP_Email_Signature_3cd2d1d3-13f3-4fd4-b527-fb98fe4ace70.png?v=1772620100',
 
   // ── Google Calendar Integration ─────────────────────────
   googleCalendar: {

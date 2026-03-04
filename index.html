@@ -146,10 +146,17 @@
           <p id="contactSubtitle"></p>
         </div>
         <form class="contact-form" id="contactForm" novalidate>
-          <div class="form-group">
-            <label for="contactName">Full Name *</label>
-            <input type="text" id="contactName" name="name" required placeholder="Your full name">
-            <span class="error-message">Please enter your name</span>
+          <div class="form-row name-row">
+            <div class="form-group">
+              <label for="contactFirstName">First Name *</label>
+              <input type="text" id="contactFirstName" name="firstName" required placeholder="First name">
+              <span class="error-message">Please enter your first name</span>
+            </div>
+            <div class="form-group">
+              <label for="contactSurname">Surname *</label>
+              <input type="text" id="contactSurname" name="surname" required placeholder="Surname">
+              <span class="error-message">Please enter your surname</span>
+            </div>
           </div>
           <div class="form-group">
             <label for="contactEmail">Email Address *</label>
