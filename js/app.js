@@ -629,7 +629,10 @@
 
   function getAccessToken() {
     const gc = CONFIG.googleCalendar;
-    if (!gc.refreshToken) return Promise.resolve(null);
+    if (!gc.refreshToken) {
+      console.warn('No refresh token configured');
+      return Promise.resolve(null);
+    }
 
     return fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
@@ -642,8 +645,19 @@
       }),
     })
     .then(res => res.json())
-    .then(data => data.access_token || null)
-    .catch(() => null);
+    .then(data => {
+      if (data.error) {
+        console.error('OAuth token error:', data.error, data.error_description);
+        showApiError('OAuth: ' + (data.error_description || data.error));
+        return null;
+      }
+      return data.access_token || null;
+    })
+    .catch(err => {
+      console.error('OAuth fetch error:', err);
+      showApiError('OAuth fetch failed: ' + err.message);
+      return null;
+    });
   }
 
   function buildCalendarDescription() {
@@ -742,15 +756,23 @@
         body: JSON.stringify(event),
       })
       .then(res => {
-        if (!res.ok) throw new Error(`Calendar API error: ${res.status}`);
+        if (!res.ok) {
+          return res.json().then(errData => {
+            const msg = errData.error ? errData.error.message : ('HTTP ' + res.status);
+            console.error('Calendar API error:', msg, errData);
+            showApiError('Calendar: ' + msg);
+            return null;
+          });
+        }
         return res.json();
       })
       .then(data => {
-        console.log('Calendar event created:', data.htmlLink);
+        if (data && data.htmlLink) console.log('Calendar event created:', data.htmlLink);
         return data;
       })
       .catch(err => {
         console.error('Failed to create calendar event:', err);
+        showApiError('Calendar: ' + err.message);
         return null;
       });
     });
@@ -780,10 +802,15 @@
       if (meetLink) data['Google Meet'] = meetLink;
 
       // Step 2: Send company email + customer email in parallel
-      const companyEmail = sendEmail(data).catch(err => { console.error('Company email error:', err); });
-      const customerEmail = meetLink
-        ? sendCustomerEmail(meetLink).catch(err => { console.error('Customer email error:', err); })
-        : Promise.resolve(null);
+      const companyEmail = sendEmail(data).catch(err => {
+        console.error('Company email error:', err);
+        showApiError('Company email: ' + err.message);
+      });
+      // Always send customer email (with or without Meet link)
+      const customerEmail = sendCustomerEmail(meetLink).catch(err => {
+        console.error('Customer email error:', err);
+        showApiError('Customer email: ' + err.message);
+      });
 
       return Promise.all([companyEmail, customerEmail]);
     }).then(() => {
@@ -871,8 +898,10 @@
       '<p>If you\u2019re unable to gather all of this information, please don\u2019t worry, we can absolutely still have a valuable conversation. However, the more detail I have beforehand, the more productive and focused our time together will be.<\/p>' +
       '<p>Following our initial consultation, we may need to conduct a site visit to gather further details and additional information. This is where our Sales Director, Mike, will take you through the process in more detail. This initial step ensures we have everything required to move your project forward accurately and efficiently.<\/p>' +
       '<h3 style="color: #2c3e50; margin-top: 30px; font-size: 18px;">Meeting Details<\/h3>' +
-      '<p>We are scheduled to meet via Google Meet at the following link:<br>' +
-      '<a href="' + meetLink + '" style="color: #1a73e8; font-weight: bold;">' + meetLink + '<\/a><\/p>' +
+      (meetLink
+        ? '<p>We are scheduled to meet via Google Meet at the following link:<br>' +
+          '<a href="' + meetLink + '" style="color: #1a73e8; font-weight: bold;">' + meetLink + '<\/a><\/p>'
+        : '<p>We will send you a Google Meet link for your consultation shortly.<\/p>') +
       '<p>If you would prefer to speak via phone or WhatsApp instead, just let me know and I will happily arrange that.<\/p>' +
       '<p>If you have any questions ahead of our call, please feel free to get in touch. I look forward to speaking with you soon.<\/p>' +
       '<p>Warm regards,<br><strong>' + designerName + '<\/strong><\/p>' +
@@ -918,15 +947,23 @@
         body: JSON.stringify({ raw: encoded }),
       })
       .then(res => {
-        if (!res.ok) throw new Error(`Gmail API error: ${res.status}`);
+        if (!res.ok) {
+          return res.json().then(errData => {
+            const msg = errData.error ? (errData.error.message || errData.error.status) : ('HTTP ' + res.status);
+            console.error('Gmail API error:', msg, errData);
+            showApiError('Gmail: ' + msg);
+            return null;
+          });
+        }
         return res.json();
       })
       .then(data => {
-        console.log('Customer email sent:', data.id);
+        if (data && data.id) console.log('Customer email sent:', data.id);
         return data;
       })
       .catch(err => {
         console.error('Failed to send customer email:', err);
+        showApiError('Gmail: ' + err.message);
         return null;
       });
     });
@@ -939,6 +976,19 @@
     } else {
       overlay.classList.remove('active');
     }
+  }
+
+  // Show API errors visually (temporary debug banner)
+  function showApiError(msg) {
+    let banner = document.getElementById('apiErrorBanner');
+    if (!banner) {
+      banner = document.createElement('div');
+      banner.id = 'apiErrorBanner';
+      banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:10000;background:#c0392b;color:#fff;padding:12px 20px;font-size:14px;font-family:Arial,sans-serif;';
+      banner.innerHTML = '<strong>API Errors (debug):</strong><br>';
+      document.body.appendChild(banner);
+    }
+    banner.innerHTML += msg + '<br>';
   }
 
   function showConfirmation() {
