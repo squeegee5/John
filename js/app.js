@@ -739,6 +739,11 @@
             conferenceSolutionKey: { type: 'hangoutsMeet' },
           },
         },
+        // Set organizer display name
+        organizer: {
+          email: CONFIG.emailTo,
+          displayName: 'Southpaw Design Video/Call',
+        },
         // Invite the customer
         attendees: [
           { email: state.contact.email, displayName: fullName },
@@ -842,7 +847,7 @@
       }
     }
 
-    data['_subject'] = 'Southpaw Design Consultation Booked';
+    data['_subject'] = 'Next steps on your Southpaw Design Journey\u2026';
     data['_replyto'] = state.contact.email;
 
     return data;
@@ -873,36 +878,32 @@
 
   function buildCustomerEmailHtml(meetLink) {
     const firstName = state.contact.firstName;
-    const designerName = getDesignerFirstName();
-    const sigImg = CONFIG.emailSignatureImage;
 
     return '<div style="font-family: Arial, Helvetica, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px;">' +
       '<p>Dear ' + firstName + ',<\/p>' +
-      '<p>Thank you for booking your initial design consultation, I\u2019m really looking forward to speaking with you and learning more about your project.<\/p>' +
-      '<p>Our discussion will take approximately 15\u201320 minutes and will give me a clearer understanding of your space, your vision, and how I can best support you.<\/p>' +
-      '<p>To help me prepare ahead of our meeting, it would be greatly appreciated if you could share any of the following (where possible):<\/p>' +
+      '<p>Thank you for booking your initial design consultation, we\u2019re really looking forward to speaking with you and learning more about your project.<\/p>' +
+      '<p>Our discussion will take approximately 15\u201320 minutes and will give us a clearer understanding of your space, your vision, and how we can best support you.<\/p>' +
+      '<p>To help us prepare ahead of our meeting, it would be greatly appreciated if you could share any of the following (where possible):<\/p>' +
       '<ul style="padding-left: 20px;">' +
         '<li>Photos of the room(s) as they currently are<\/li>' +
         '<li>Floor plans or measurements (if available)<\/li>' +
-        '<li>Inspiration images, Pinterest boards, or styles you\u2019re drawn to<\/li>' +
+        '<li>Inspiration images, Pinterest boards, or styles you\u2019re drawn to \u2013 you can browse our <a href="https:\/\/southpaw.co.uk\/pages\/sensory-room-photos" style="color: #1a73e8;">sensory room photos<\/a> for ideas<\/li>' +
         '<li>Whether this is an existing room being redesigned or a completely new space<\/li>' +
         '<li>Your approximate budget range<\/li>' +
         '<li>Your ideal timescale<\/li>' +
         '<li>Any other stakeholders involved in the decision-making process<\/li>' +
-        '<li>Any particular challenges or requirements you\u2019d like me to be aware of<\/li>' +
+        '<li>Any particular challenges or requirements you\u2019d like us to be aware of<\/li>' +
       '<\/ul>' +
-      '<p>If you\u2019re unable to gather all of this information, please don\u2019t worry, we can absolutely still have a valuable conversation. However, the more detail I have beforehand, the more productive and focused our time together will be.<\/p>' +
+      '<p>If you\u2019re unable to gather all of this information, please don\u2019t worry, we can absolutely still have a valuable conversation. However, the more detail we have beforehand, the more productive and focused our time together will be.<\/p>' +
       '<p>Following our initial consultation, we may need to conduct a site visit to gather further details and additional information. This is where our Sales Director, Mike, will take you through the process in more detail. This initial step ensures we have everything required to move your project forward accurately and efficiently.<\/p>' +
       '<h3 style="color: #2c3e50; margin-top: 30px; font-size: 18px;">Meeting Details<\/h3>' +
       (meetLink
         ? '<p>We are scheduled to meet via Google Meet at the following link:<br>' +
           '<a href="' + meetLink + '" style="color: #1a73e8; font-weight: bold;">' + meetLink + '<\/a><\/p>'
         : '<p>We will send you a Google Meet link for your consultation shortly.<\/p>') +
-      '<p>If you would prefer to speak via phone or WhatsApp instead, just let me know and I will happily arrange that.<\/p>' +
-      '<p>If you have any questions ahead of our call, please feel free to get in touch. I look forward to speaking with you soon.<\/p>' +
-      '<p>Warm regards,<br><strong>' + designerName + '<\/strong><\/p>' +
-      '<br>' +
-      '<img src="' + sigImg + '" alt="Southpaw - Embracing Sensory Therapies" style="max-width: 300px; height: auto;">' +
+      '<p>If you would prefer to speak via phone or WhatsApp instead, just let us know and we will happily arrange that.<\/p>' +
+      '<p>If you have any questions ahead of our call, please feel free to get in touch. We look forward to speaking with you soon.<\/p>' +
+      '<p>Warm regards,<br><strong>The Southpaw Team<\/strong><\/p>' +
     '<\/div>';
   }
 
@@ -920,10 +921,10 @@
       const message = [
         'MIME-Version: 1.0',
         'Content-Type: text/html; charset=utf-8',
-        `From: Southpaw Design <${CONFIG.emailTo}>`,
-        `Reply-To: Southpaw Design <${CONFIG.emailTo}>`,
+        `From: Southpaw Design Team <${CONFIG.emailTo}>`,
+        `Reply-To: Southpaw Design Team <${CONFIG.emailTo}>`,
         `To: ${fullName} <${state.contact.email}>`,
-        'Subject: Your Southpaw Design Consultation',
+        'Subject: =?UTF-8?B?' + btoa(unescape(encodeURIComponent('Next steps on your Southpaw Design Journey\u2026'))) + '?=',
         '',
         emailHtml,
       ].join('\r\n');
