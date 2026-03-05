@@ -847,7 +847,7 @@
       }
     }
 
-    data['_subject'] = 'Next steps on your Southpaw Design Journey\u2026';
+    data['_subject'] = 'Southpaw Design Consultation Booked';
     data['_replyto'] = state.contact.email;
 
     return data;
