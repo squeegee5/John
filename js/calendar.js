@@ -22,15 +22,102 @@ class CalendarBooking {
     this.selectedSlot = null;
     this.config = CONFIG.calendar;
     this.showSpecialRequest = false;
-    this.render();
+    this.busySlots = []; // [{start: Date, end: Date}, ...]
+    this.busyLoaded = false;
+    this.loadBusyTimes().then(() => this.render());
+  }
+
+  /**
+   * Fetch busy times from Google Calendar to prevent double booking.
+   */
+  loadBusyTimes() {
+    const gc = CONFIG.googleCalendar;
+    if (!gc.refreshToken) {
+      this.busyLoaded = true;
+      this.render();
+      return Promise.resolve();
+    }
+
+    // Get access token
+    return fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: gc.clientId,
+        client_secret: gc.clientSecret,
+        refresh_token: gc.refreshToken,
+        grant_type: 'refresh_token',
+      }),
+    })
+    .then(res => res.json())
+    .then(tokenData => {
+      if (tokenData.error || !tokenData.access_token) {
+        console.warn('Could not get token for busy times:', tokenData.error);
+        return;
+      }
+
+      // Fetch events for the next 5 weeks
+      const now = new Date();
+      const timeMin = now.toISOString();
+      const end = new Date(now);
+      end.setDate(end.getDate() + 35);
+      const timeMax = end.toISOString();
+
+      return fetch(
+        `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(gc.calendarId)}/events?` +
+        `timeMin=${encodeURIComponent(timeMin)}&timeMax=${encodeURIComponent(timeMax)}` +
+        `&singleEvents=true&orderBy=startTime&fields=items(start,end,status)`,
+        {
+          headers: { 'Authorization': `Bearer ${tokenData.access_token}` },
+        }
+      )
+      .then(res => res.json())
+      .then(data => {
+        if (data.items) {
+          this.busySlots = data.items
+            .filter(ev => ev.status !== 'cancelled')
+            .map(ev => ({
+              start: new Date(ev.start.dateTime || ev.start.date),
+              end: new Date(ev.end.dateTime || ev.end.date),
+            }));
+        }
+      });
+    })
+    .catch(err => {
+      console.warn('Failed to load busy times:', err);
+    })
+    .finally(() => {
+      this.busyLoaded = true;
+    });
+  }
+
+  /**
+   * Check if a given hour slot on a date overlaps with any busy time.
+   */
+  isSlotBusy(date, hour) {
+    const slotStart = new Date(date);
+    slotStart.setHours(hour, 0, 0, 0);
+    const slotEnd = new Date(date);
+    slotEnd.setHours(hour + 1, 0, 0, 0);
+
+    return this.busySlots.some(busy =>
+      slotStart < busy.end && slotEnd > busy.start
+    );
   }
 
   /**
    * Minimum days ahead for calendar display.
    * Always start from tomorrow; individual slots are filtered
    * by the 28-hour minimum notice rule in getSlotsForDay().
+   * If today is Friday, earliest is Tuesday (skip Monday for prep).
    */
   getMinDaysAhead() {
+    const today = new Date();
+    const dow = today.getDay(); // 0=Sun … 5=Fri 6=Sat
+    // Friday bookings → earliest Tuesday (skip Mon for prep)
+    if (dow === 5) return 4; // Fri → Tue
+    if (dow === 6) return 3; // Sat → Tue
+    if (dow === 0) return 2; // Sun → Tue
     return 1;
   }
 
@@ -128,7 +215,8 @@ class CalendarBooking {
       slotStart.setHours(hour, 0, 0, 0);
       const tooSoon = slotStart < earliest;
 
-      let isUnavailable = tooSoon || isBlocked || isMondayBlocked;
+      const isBusy = this.isSlotBusy(date, hour);
+      let isUnavailable = tooSoon || isBlocked || isMondayBlocked || isBusy;
 
       allSlots.push({
         hour,
@@ -136,6 +224,7 @@ class CalendarBooking {
         date: new Date(date),
         unavailable: isUnavailable,
         blocked: isBlocked || isMondayBlocked,
+        booked: isBusy,
       });
     }
 
@@ -163,10 +252,10 @@ class CalendarBooking {
   }
 
   formatHour(h) {
-    if (h === 0 || h === 24) return '12:00';
-    if (h < 12) return `${h}:00`;
-    if (h === 12) return '12:00';
-    return `${h - 12}:00`;
+    if (h === 0 || h === 24) return '12am';
+    if (h < 12) return `${h}:00am`;
+    if (h === 12) return '12:00pm';
+    return `${h - 12}:00pm`;
   }
 
   formatHour24(h) {

@@ -989,65 +989,25 @@
   }
 
   function showConfirmation() {
-    const currentPath = getCurrentPath();
-    state.completedPaths.add(currentPath);
-
-    const summaryEl = document.getElementById('confirmationSummary');
-    let summaryHtml = '<h3>Your Selections</h3>';
-
+    // Store summary data for the thank you page
+    const summaryData = {};
     const fullName = getFullName();
-    if (fullName) summaryHtml += summaryRow('Name', fullName);
-    if (state.contact.email) summaryHtml += summaryRow('Email', state.contact.email);
-    if (state.contact.phone) summaryHtml += summaryRow('Phone', state.contact.phone);
-    if (state.contact.postcode) summaryHtml += summaryRow('Postcode', state.contact.postcode);
-    if (state.contact.premises) summaryHtml += summaryRow('Premises', state.contact.premises);
-    if (state.contact.notes) summaryHtml += summaryRow('Notes', state.contact.notes);
-    if (state.roomType) summaryHtml += summaryRow('Room Type', state.roomType.title);
-    if (state.ageGroup.length > 0) summaryHtml += summaryRow('Age Group', state.ageGroup.map(a => a.title).join(', '));
-    if (state.roomSize) summaryHtml += summaryRow('Room Size', state.roomSize.title);
-    if (state.equipment.length > 0) summaryHtml += summaryRow('Equipment', state.equipment.map(e => e.title).join(', '));
+    if (fullName) summaryData.name = fullName;
+    if (state.contact.email) summaryData.email = state.contact.email;
+    if (state.roomType) summaryData.roomType = state.roomType.title;
+    if (state.ageGroup.length > 0) summaryData.ageGroup = state.ageGroup.map(a => a.title).join(', ');
+    if (state.roomSize) summaryData.roomSize = state.roomSize.title;
+    if (state.equipment.length > 0) summaryData.equipment = state.equipment.map(e => e.title).join(', ');
     const designerConfLabel = (!state.designer || state.designer.id === 'designer-any') ? 'Any (No Preference)' : state.designer.name;
-    summaryHtml += summaryRow('Designer', designerConfLabel);
-    if (state.appointmentSlot) summaryHtml += summaryRow('Appointment', state.appointmentSlot.label);
+    summaryData.designer = designerConfLabel;
+    if (state.appointmentSlot) summaryData.appointment = state.appointmentSlot.label;
 
-    summaryEl.innerHTML = summaryHtml;
+    try {
+      sessionStorage.setItem('southpaw_booking', JSON.stringify(summaryData));
+    } catch (e) { /* ignore storage errors */ }
 
-    const actionsEl = document.getElementById('confirmationActions');
-    let actionsHtml = '';
-
-    if (!state.completedPaths.has('designer') && currentPath === 'room') {
-      actionsHtml += `<button class="btn btn-primary" id="continueToDesigner">Choose Your Designer</button>`;
-    }
-    if (!state.completedPaths.has('room') && currentPath === 'designer') {
-      actionsHtml += `<button class="btn btn-primary" id="continueToRoom">Choose Your Room Type</button>`;
-    }
-
-    actionsHtml += `<p style="color:var(--color-text-light);font-size:var(--font-size-sm);margin-top:var(--space-md);">To learn more about our design process:</p>`;
-    actionsHtml += `<a href="${CONFIG.designBookUrl}" target="_blank" rel="noopener" class="btn btn-outline" style="text-decoration:none;">View Our Design Book</a>`;
-
-    actionsEl.innerHTML = actionsHtml;
-
-    const continueDesigner = document.getElementById('continueToDesigner');
-    if (continueDesigner) {
-      continueDesigner.addEventListener('click', () => {
-        state.history = [];
-        navigateTo('designer-select');
-      });
-    }
-
-    const continueRoom = document.getElementById('continueToRoom');
-    if (continueRoom) {
-      continueRoom.addEventListener('click', () => {
-        state.history = [];
-        navigateTo('room-type');
-      });
-    }
-
-    state.history.push(state.currentStep);
-    state.currentStep = 'confirmation';
-    showStep('confirmation');
-    updateProgress();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Redirect to the thank you page (for Google Ads conversion tracking)
+    window.location.href = 'https://southpaw.co.uk/pages/thank-you';
   }
 
   function summaryRow(label, value) {

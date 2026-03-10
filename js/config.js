@@ -146,7 +146,7 @@ const CONFIG = {
       name: 'Natalia',
       role: 'Sensory Room Designer',
       bio: 'Known for creating immersive sensory spaces for SEND settings, with a strong focus on combining technology and therapeutic principles.',
-      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/natailia3.png?v=1772451386',
+      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/natalia_4.png?v=1772620086',
     },
     {
       id: 'designer-3',
@@ -221,7 +221,7 @@ const CONFIG = {
     },
     calendar: {
       title: 'Book Your Consultation',
-      subtitle: 'Select a convenient date and time for your free design consultation.',
+      subtitle: 'Select a convenient date and time for your initial design consultation.',
     },
     contact: {
       title: 'Your Details',

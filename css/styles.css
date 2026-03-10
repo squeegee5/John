@@ -565,6 +565,7 @@ img { max-width: 100%; height: auto; display: block; }
   color: var(--color-text-light);
   font-style: italic;
   text-align: center;
+  margin-top: var(--space-2xl);
   margin-bottom: var(--space-lg);
   max-width: 700px;
   margin-left: auto;
