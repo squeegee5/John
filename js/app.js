@@ -719,11 +719,12 @@
 
       const specialTag = slot.isSpecial ? ' (Special Request)' : '';
       const fullName = getFullName();
-      const eventTitle = `Consultation: ${fullName} - ${state.contact.premises || 'No Premises'}${specialTag}`;
+      const eventTitle = `Southpaw Design Call: ${fullName} - ${state.contact.premises || 'No Premises'}${specialTag}`;
 
       const event = {
         summary: eventTitle,
         description: buildCalendarDescription(),
+        colorId: '11', // Red (Tomato) dot on calendar
         start: {
           dateTime: startDate.toISOString(),
           timeZone: 'Europe/London',
