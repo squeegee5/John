@@ -899,7 +899,7 @@
       '<p>Following our initial consultation, we may need to conduct a site visit to gather further details and additional information. This is where our Sales Director, Mike, will take you through the process in more detail. This initial step ensures we have everything required to move your project forward accurately and efficiently.<\/p>' +
       '<h3 style="color: #2c3e50; margin-top: 30px; font-size: 18px;">Meeting Details<\/h3>' +
       (meetLink
-        ? '<p>We are scheduled to meet via Google Meet at the following link:<br>' +
+        ? '<p>We are scheduled to meet on <strong>' + state.appointmentSlot.dateFormatted + '</strong> at <strong>' + state.appointmentSlot.timeFormatted + '</strong> via Google Meet:<br>' +
           '<a href="' + meetLink + '" style="color: #1a73e8; font-weight: bold;">' + meetLink + '<\/a><\/p>'
         : '<p>We will send you a Google Meet link for your consultation shortly.<\/p>') +
       '<p>If you would prefer to speak via phone or WhatsApp instead, just let us know and we will happily arrange that.<\/p>' +
