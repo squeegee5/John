@@ -36,7 +36,13 @@ const CONFIG = {
     room: {
       title: 'Choose Your Room',
       description: 'Tell us about the type of sensory room you\'d like to create and we\'ll help bring your vision to life.',
-      image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/choose_your_room.jpg?v=1770835035',
+      images: [
+        'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/thumbnail_one.jpg?v=1774348336',
+        'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/thumbnail_three.jpg?v=1774348336',
+        'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/thumbnail_four.jpg?v=1774348336',
+        'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/thumbnail_six.jpg?v=1774348336',
+        'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/thumbnail_two.jpg?v=1774348336',
+      ],
     },
     designer: {
       title: 'Choose Your Designer',
@@ -195,6 +201,27 @@ const CONFIG = {
     slotsToShow: 5,
     slotDuration: 60,
     calendarNote: 'Initial consultations typically last 15-20 minutes, but we book a full hour slot to ensure we have plenty of time to discuss your project.',
+    // UK Bank Holidays & Christmas closures (YYYY-MM-DD)
+    blockedDates: [
+      // 2026
+      '2026-01-01', // New Year's Day
+      '2026-04-03', // Good Friday
+      '2026-04-06', // Easter Monday
+      '2026-05-04', // Early May Bank Holiday
+      '2026-05-25', // Spring Bank Holiday
+      '2026-08-31', // Summer Bank Holiday
+      '2026-12-23','2026-12-24','2026-12-25','2026-12-26','2026-12-27',
+      '2026-12-28','2026-12-29','2026-12-30','2026-12-31',
+      // 2027
+      '2027-01-01', // New Year's Day
+      '2027-03-26', // Good Friday
+      '2027-03-29', // Easter Monday
+      '2027-05-03', // Early May Bank Holiday
+      '2027-05-31', // Spring Bank Holiday
+      '2027-08-30', // Summer Bank Holiday
+      '2027-12-23','2027-12-24','2027-12-25','2027-12-26','2027-12-27',
+      '2027-12-28','2027-12-29','2027-12-30','2027-12-31',
+    ],
   },
 
   // ── Section Headings ──────────────────────────────────────

@@ -124,7 +124,27 @@
 
     const imgContainer = document.createElement('div');
     imgContainer.className = 'card-image-container';
-    if (data.image) {
+    if (data.images && data.images.length > 1) {
+      // Slideshow: stack images, fade between them
+      data.images.forEach((src, i) => {
+        const img = document.createElement('img');
+        img.src = src;
+        img.alt = data.title;
+        img.loading = i === 0 ? 'eager' : 'lazy';
+        img.className = 'slideshow-img';
+        img.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;transition:opacity 1s ease;opacity:' + (i === 0 ? '1' : '0') + ';';
+        imgContainer.appendChild(img);
+      });
+      imgContainer.style.position = 'relative';
+      // Start slideshow
+      let current = 0;
+      const imgs = imgContainer.querySelectorAll('.slideshow-img');
+      setInterval(() => {
+        imgs[current].style.opacity = '0';
+        current = (current + 1) % imgs.length;
+        imgs[current].style.opacity = '1';
+      }, 3000);
+    } else if (data.image) {
       const img = document.createElement('img');
       img.src = data.image;
       img.alt = data.title;

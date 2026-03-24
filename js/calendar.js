@@ -143,6 +143,17 @@ class CalendarBooking {
   }
 
   /**
+   * Check if a date falls on a blocked date (bank holiday, Christmas, etc).
+   */
+  isBlockedDate(date) {
+    const blockedDates = this.config.blockedDates || [];
+    const dateStr = date.getFullYear() + '-' +
+      String(date.getMonth() + 1).padStart(2, '0') + '-' +
+      String(date.getDate()).padStart(2, '0');
+    return blockedDates.includes(dateStr);
+  }
+
+  /**
    * Get visible working days for the current page.
    */
   getVisibleDays() {
@@ -161,7 +172,7 @@ class CalendarBooking {
     const maxLookahead = this.config.weeksAhead * 7 + 14;
     let d = new Date(startDate);
     for (let i = 0; i < maxLookahead && workingDays.length < totalNeeded; i++) {
-      if (scheduleDays.includes(d.getDay())) {
+      if (scheduleDays.includes(d.getDay()) && !this.isBlockedDate(d)) {
         workingDays.push(new Date(d));
       }
       d.setDate(d.getDate() + 1);
@@ -185,7 +196,7 @@ class CalendarBooking {
     let count = 0;
     let d = new Date(startDate);
     for (let i = 0; i < maxLookahead; i++) {
-      if (scheduleDays.includes(d.getDay())) count++;
+      if (scheduleDays.includes(d.getDay()) && !this.isBlockedDate(d)) count++;
       d.setDate(d.getDate() + 1);
     }
     return Math.ceil(count / daysToShow);
@@ -384,7 +395,7 @@ class CalendarBooking {
       const datOpts = [];
       let d = new Date(startDate);
       for (let i = 0; i < 28; i++) {
-        if (scheduleDays.includes(d.getDay())) {
+        if (scheduleDays.includes(d.getDay()) && !this.isBlockedDate(d)) {
           datOpts.push(new Date(d));
         }
         d.setDate(d.getDate() + 1);
