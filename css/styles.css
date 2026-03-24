@@ -210,6 +210,17 @@ img { max-width: 100%; height: auto; display: block; }
   transition: transform 0.4s ease;
 }
 
+/* Slideshow images: stacked, smooth fade, preserve hover zoom */
+.card-image-container .slideshow-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 1.8s ease, transform 0.4s ease;
+}
+
 .card-image-container .placeholder-icon {
   width: 64px;
   height: 64px;
