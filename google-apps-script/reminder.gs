@@ -1,35 +1,57 @@
 /**
  * ============================================================
- * SOUTHPAW DESIGN – 24-HOUR CONSULTATION REMINDER
+ * SENSORY DESIGN – 24-HOUR CONSULTATION REMINDER
  * ============================================================
  * Google Apps Script that runs daily via a time-driven trigger.
- * It checks the Southpaw design calendar for events happening
+ * It checks the shared design calendar for events happening
  * tomorrow and sends a branded reminder email to the customer.
+ *
+ * Supports BOTH brands:
+ *  - Southpaw (events starting with "Southpaw Design Call:")
+ *    → sends from design-visit@southpaw.co.uk
+ *  - Mike Ayres Design (events starting with "Mike Ayres Design Call:")
+ *    → sends from design-visit@mikeayresdesign.co.uk
  *
  * SETUP:
  *  1. Go to https://script.google.com and create a new project
  *  2. Paste this entire file into the editor
- *  3. Update CALENDAR_ID and SEND_AS_EMAIL below if needed
- *  4. Run sendReminders() once manually and authorise the permissions
+ *  3. Run sendReminders() once manually and authorise the permissions
+ *  4. Click Services (+) → add Google Calendar API
  *  5. Set up a daily trigger:
  *     - Click the clock icon (Triggers) in the left sidebar
  *     - Click "+ Add Trigger"
  *     - Function: sendReminders
  *     - Event source: Time-driven
  *     - Type: Day timer
- *     - Time of day: 9am to 10am (so reminders go out morning before)
+ *     - Time of day: 9am to 10am
  *     - Click Save
- *
- * The script reads each event's description to extract the
- * customer name and email, then sends the reminder via Gmail
- * using the design-visit@southpaw.co.uk alias.
  * ============================================================
  */
 
 // ── Configuration ────────────────────────────────────────────
 var CALENDAR_ID = 'c_a5f29fda9f946928e38859e140e427d27c046af14517c7c3713ac7a1cd2d9aa0@group.calendar.google.com';
-var SEND_AS_EMAIL = 'design-visit@southpaw.co.uk';
-var SUBJECT = 'Reminder: your Southpaw design consultation is tomorrow';
+
+// Brand configurations
+var BRANDS = {
+  southpaw: {
+    prefix: 'Southpaw Design Call:',
+    email: 'design-visit@southpaw.co.uk',
+    name: 'Southpaw Design Team',
+    subject: 'Reminder: your Southpaw design consultation is tomorrow',
+    teamName: 'The Southpaw Team',
+    galleryUrl: 'https://southpaw.co.uk/pages/sensory-room-photos',
+    brandName: 'Southpaw',
+  },
+  mad: {
+    prefix: 'Mike Ayres Design Call:',
+    email: 'design-visit@mikeayresdesign.co.uk',
+    name: 'Mike Ayres Design Team',
+    subject: 'Reminder: your Mike Ayres Design consultation is tomorrow',
+    teamName: 'The Mike Ayres Design Team',
+    galleryUrl: 'https://mikeayresdesign.co.uk/pages/sensory-room-photos',
+    brandName: 'Mike Ayres Design',
+  },
+};
 
 // ── Main function (called by trigger) ────────────────────────
 function sendReminders() {
@@ -52,9 +74,20 @@ function sendReminders() {
     var event = events[i];
     var title = event.getTitle();
 
-    // Only process Southpaw Design Call events
-    if (title.indexOf('Southpaw Design Call:') !== 0 &&
-        title.indexOf('Consultation:') !== 0) {
+    // Determine which brand this event belongs to
+    var brand = null;
+    for (var key in BRANDS) {
+      if (title.indexOf(BRANDS[key].prefix) === 0) {
+        brand = BRANDS[key];
+        break;
+      }
+    }
+    // Also support legacy "Consultation:" prefix (treat as Southpaw)
+    if (!brand && title.indexOf('Consultation:') === 0) {
+      brand = BRANDS.southpaw;
+    }
+
+    if (!brand) {
       Logger.log('Skipping non-consultation event: ' + title);
       continue;
     }
@@ -82,19 +115,19 @@ function sendReminders() {
     var meetLink = getMeetLink(event);
 
     // Build and send the email
-    var html = buildReminderHtml(customerInfo.firstName, dateStr, timeStr, meetLink);
+    var html = buildReminderHtml(customerInfo.firstName, dateStr, timeStr, meetLink, brand);
 
     try {
-      GmailApp.sendEmail(customerInfo.email, SUBJECT, '', {
+      GmailApp.sendEmail(customerInfo.email, brand.subject, '', {
         htmlBody: html,
-        from: SEND_AS_EMAIL,
-        name: 'Southpaw Design Team',
-        replyTo: SEND_AS_EMAIL,
+        from: brand.email,
+        name: brand.name,
+        replyTo: brand.email,
       });
 
       // Mark as sent so we don't send duplicates
       event.setTag('reminderSent', 'true');
-      Logger.log('Reminder sent to ' + customerInfo.email + ' for ' + title);
+      Logger.log('[' + brand.brandName + '] Reminder sent to ' + customerInfo.email + ' for ' + title);
     } catch (e) {
       Logger.log('Failed to send reminder to ' + customerInfo.email + ': ' + e.message);
     }
@@ -105,14 +138,12 @@ function sendReminders() {
 function parseDescription(desc) {
   var info = { firstName: '', email: '' };
 
-  // Extract name (first line: "Name: First Last")
   var nameMatch = desc.match(/Name:\s*(.+)/);
   if (nameMatch) {
     var fullName = nameMatch[1].trim();
     info.firstName = fullName.split(' ')[0];
   }
 
-  // Extract email
   var emailMatch = desc.match(/Email:\s*([^\s\n]+@[^\s\n]+)/);
   if (emailMatch) {
     info.email = emailMatch[1].trim();
@@ -123,13 +154,8 @@ function parseDescription(desc) {
 
 // ── Get Google Meet link from calendar event ─────────────────
 function getMeetLink(event) {
-  // Try hangout link (Maps to conferenceData in Calendar API)
   try {
-    // Apps Script doesn't expose conferenceData directly,
-    // but we can use the Calendar Advanced Service or check description
     var desc = event.getDescription() || '';
-
-    // Check for meet link in description
     var meetMatch = desc.match(/https:\/\/meet\.google\.com\/[a-z\-]+/i);
     if (meetMatch) return meetMatch[0];
   } catch (e) {
@@ -146,10 +172,8 @@ function getMeetLink(event) {
         }
       }
     }
-    // Also check hangoutLink
     if (calEvent.hangoutLink) return calEvent.hangoutLink;
   } catch (e) {
-    // Calendar Advanced Service may not be enabled
     Logger.log('Advanced Calendar API not available: ' + e.message);
   }
 
@@ -157,12 +181,12 @@ function getMeetLink(event) {
 }
 
 // ── Build the reminder email HTML ────────────────────────────
-function buildReminderHtml(firstName, dateStr, timeStr, meetLink) {
+function buildReminderHtml(firstName, dateStr, timeStr, meetLink, brand) {
   var html = '<div style="font-family: Arial, Helvetica, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px;">';
 
   html += '<p>Dear ' + escapeHtml(firstName) + ',</p>';
 
-  html += '<p>Just a quick reminder that your initial Southpaw design consultation is scheduled for tomorrow, <strong>' + escapeHtml(dateStr) + '</strong> at <strong>' + escapeHtml(timeStr) + '</strong>.</p>';
+  html += '<p>Just a quick reminder that your initial ' + escapeHtml(brand.brandName) + ' design consultation is scheduled for tomorrow, <strong>' + escapeHtml(dateStr) + '</strong> at <strong>' + escapeHtml(timeStr) + '</strong>.</p>';
 
   if (meetLink) {
     html += '<p>You can join the meeting here:<br><a href="' + escapeHtml(meetLink) + '" style="color: #1a73e8; font-weight: bold;">' + escapeHtml(meetLink) + '</a></p>';
@@ -174,11 +198,11 @@ function buildReminderHtml(firstName, dateStr, timeStr, meetLink) {
 
   html += '<p>If you would prefer to speak via phone or WhatsApp instead, simply reply to this email and let us know, and we will happily arrange that.</p>';
 
-  html += '<p>If you have any photos of the room, floor plans, measurements, or inspiration images you would like to share beforehand, please feel free to send them across. No problem at all if not. Also, feel free to check out our sensory room gallery <a href="https://southpaw.co.uk/pages/sensory-room-photos" style="color: #1a73e8;">here</a> for inspiration.</p>';
+  html += '<p>If you have any photos of the room, floor plans, measurements, or inspiration images you would like to share beforehand, please feel free to send them across. No problem at all if not. Also, feel free to check out our sensory room gallery <a href="' + escapeHtml(brand.galleryUrl) + '" style="color: #1a73e8;">here</a> for inspiration.</p>';
 
   html += '<p>We look forward to speaking with you.</p>';
 
-  html += '<p>Warm regards,<br><strong>The Southpaw Team</strong></p>';
+  html += '<p>Warm regards,<br><strong>' + escapeHtml(brand.teamName) + '</strong></p>';
 
   html += '</div>';
   return html;

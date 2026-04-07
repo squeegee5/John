@@ -739,12 +739,12 @@
 
       const specialTag = slot.isSpecial ? ' (Special Request)' : '';
       const fullName = getFullName();
-      const eventTitle = `Southpaw Design Call: ${fullName} - ${state.contact.premises || 'No Premises'}${specialTag}`;
+      const eventTitle = `Mike Ayres Design Call: ${fullName} - ${state.contact.premises || 'No Premises'}${specialTag}`;
 
       const event = {
         summary: eventTitle,
         description: buildCalendarDescription(),
-        colorId: '11', // Red (Tomato) dot on calendar
+        colorId: '9', // Blue (Blueberry) dot on calendar
         start: {
           dateTime: startDate.toISOString(),
           timeZone: 'Europe/London',
@@ -763,7 +763,7 @@
         // Set organizer display name
         organizer: {
           email: CONFIG.emailTo,
-          displayName: 'Southpaw Design Video/Call',
+          displayName: 'Mike Ayres Design Video/Call',
         },
         // Invite the customer
         attendees: [
@@ -868,7 +868,7 @@
       }
     }
 
-    data['_subject'] = 'Southpaw Design Consultation Booked';
+    data['_subject'] = 'Mike Ayres Design Consultation Booked';
     data['_replyto'] = state.contact.email;
 
     return data;
@@ -892,7 +892,7 @@
 
   function getDesignerFirstName() {
     if (!state.designer || state.designer.id === 'designer-any') {
-      return 'The Southpaw Design Team';
+      return 'The Mike Ayres Design Team';
     }
     return state.designer.name.split(' ')[0];
   }
@@ -908,7 +908,7 @@
       '<ul style="padding-left: 20px;">' +
         '<li>Photos of the room(s) as they currently are<\/li>' +
         '<li>Floor plans or measurements (if available)<\/li>' +
-        '<li>Inspiration images, Pinterest boards, or styles you\u2019re drawn to \u2013 you can browse our <a href="https:\/\/southpaw.co.uk\/pages\/sensory-room-photos" style="color: #1a73e8;">sensory room photos<\/a> for ideas<\/li>' +
+        '<li>Inspiration images, Pinterest boards, or styles you\u2019re drawn to \u2013 you can browse our <a href="https:\/\/mikeayresdesign.co.uk\/pages\/sensory-room-photos" style="color: #1a73e8;">sensory room photos<\/a> for ideas<\/li>' +
         '<li>Whether this is an existing room being redesigned or a completely new space<\/li>' +
         '<li>Your approximate budget range<\/li>' +
         '<li>Your ideal timescale<\/li>' +
@@ -924,7 +924,7 @@
         : '<p>We will send you a Google Meet link for your consultation shortly.<\/p>') +
       '<p>If you would prefer to speak via phone or WhatsApp instead, just let us know and we will happily arrange that.<\/p>' +
       '<p>If you have any questions ahead of our call, please feel free to get in touch. We look forward to speaking with you soon.<\/p>' +
-      '<p>Warm regards,<br><strong>The Southpaw Team<\/strong><\/p>' +
+      '<p>Warm regards,<br><strong>The Mike Ayres Design Team<\/strong><\/p>' +
     '<\/div>';
   }
 
@@ -942,10 +942,10 @@
       const message = [
         'MIME-Version: 1.0',
         'Content-Type: text/html; charset=utf-8',
-        `From: Southpaw Design Team <${CONFIG.emailTo}>`,
-        `Reply-To: Southpaw Design Team <${CONFIG.emailTo}>`,
+        `From: Mike Ayres Design Team <${CONFIG.emailTo}>`,
+        `Reply-To: Mike Ayres Design Team <${CONFIG.emailTo}>`,
         `To: ${fullName} <${state.contact.email}>`,
-        'Subject: =?UTF-8?B?' + btoa(unescape(encodeURIComponent('Next steps on your Southpaw Design Journey\u2026'))) + '?=',
+        'Subject: =?UTF-8?B?' + btoa(unescape(encodeURIComponent('Next steps on your Mike Ayres Design Journey\u2026'))) + '?=',
         '',
         emailHtml,
       ].join('\r\n');
@@ -1024,11 +1024,11 @@
     if (state.appointmentSlot) summaryData.appointment = state.appointmentSlot.label;
 
     try {
-      sessionStorage.setItem('southpaw_booking', JSON.stringify(summaryData));
+      sessionStorage.setItem('mad_booking', JSON.stringify(summaryData));
     } catch (e) { /* ignore storage errors */ }
 
     // Redirect to the thank you page (for Google Ads conversion tracking)
-    window.location.href = 'https://southpaw.co.uk/pages/thank-you';
+    window.location.href = 'https://mikeayresdesign.co.uk/pages/thank-you';
   }
 
   function summaryRow(label, value) {
