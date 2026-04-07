@@ -59,6 +59,7 @@ img { max-width: 100%; height: auto; display: block; }
   position: relative;
   min-height: 100vh;
   overflow-x: hidden;
+  padding-top: var(--space-2xl);
 }
 
 /* ── Progress Bar ──────────────────────────────────────────── */
@@ -715,7 +716,41 @@ img { max-width: 100%; height: auto; display: block; }
   .contact-options { max-width: 100%; }
 }
 
-/* ── Hide Shopify Page Heading ────────────────────────────── */
+/* ── Boost 6.0.0 Theme Overrides ─────────────────────────── */
+/* Make images bigger (~1.5x) to match Southpaw - override Boost constraints */
+.card-image-container {
+  min-height: 0 !important;
+}
+.card-grid {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+}
+.card-grid.two-col {
+  grid-template-columns: repeat(2, 1fr) !important;
+  max-width: 1100px !important;
+}
+.card-grid.four-col {
+  grid-template-columns: repeat(4, 1fr) !important;
+}
+.card-grid.equipment-grid {
+  grid-template-columns: repeat(5, 1fr) !important;
+}
+.room-type-grid {
+  grid-template-columns: repeat(3, minmax(0, 420px)) !important;
+}
+
+/* Card titles and descriptions should not be bold */
+.card-body h3 {
+  font-weight: 400 !important;
+}
+.card-body p {
+  font-weight: 400 !important;
+}
+.two-col .choice-card .card-body h3 {
+  font-weight: 400 !important;
+}
+
+/* ── Hide Shopify Page Title & Breadcrumbs (Boost 6.0.0) ──── */
+/* Hide the page title and breadcrumbs, but KEEP the site header/logo/nav */
 .page-title,
 .page__title,
 h1.page-title,
@@ -729,13 +764,20 @@ h1.page__title,
 .shopify-section .page-header,
 .shopify-section--page-header,
 .article-template .article-template__hero,
-#sensory-app ~ *:not(script):not(style) {
+.breadcrumb,
+.breadcrumbs,
+nav.breadcrumb,
+.breadcrumb-wrapper,
+[class*="breadcrumb"],
+.page-heading {
   display: none !important;
 }
 
-/* Also hide anything that appears before the app container */
+/* Boost theme: wider container for the form */
 #sensory-app {
   position: relative;
+  max-width: 1400px !important;
+  margin: 0 auto;
 }
 
 /* ── Special Request Form (Calendar Page) ─────────────────── */

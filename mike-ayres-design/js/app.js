@@ -1048,30 +1048,28 @@
   function hidePageHeading() {
     const app = document.getElementById('sensory-app');
     if (!app) return;
-    // Hide any h1/h2 elements that appear before the app container
+    // Hide page title and breadcrumbs before the app
     let el = app.previousElementSibling;
     while (el) {
-      if (el.tagName === 'H1' || el.tagName === 'H2' || el.classList.contains('page-header') || el.classList.contains('page__title-wrapper')) {
+      if (el.tagName === 'H1' || el.tagName === 'H2' ||
+          el.classList.contains('page-header') ||
+          el.classList.contains('page__title-wrapper') ||
+          el.classList.contains('breadcrumb') ||
+          el.classList.contains('breadcrumbs') ||
+          el.tagName === 'NAV' && el.querySelector('.breadcrumb, [class*="breadcrumb"]')) {
         el.style.display = 'none';
       }
       el = el.previousElementSibling;
     }
-    // Also hide parent section headers if the app is inside a Shopify section
+    // Hide parent section headings (but NOT the site header/logo)
     const parent = app.parentElement;
     if (parent) {
-      const headings = parent.querySelectorAll('h1, h2.page-title, .page-header');
+      const headings = parent.querySelectorAll('h1, h2.page-title, .page-header, .page-heading');
       headings.forEach(h => {
         if (!app.contains(h)) h.style.display = 'none';
       });
     }
-    // Hide anything after the app that's part of the template
-    let sibling = app.nextElementSibling;
-    while (sibling) {
-      if (sibling.tagName !== 'SCRIPT' && sibling.tagName !== 'STYLE') {
-        sibling.style.display = 'none';
-      }
-      sibling = sibling.nextElementSibling;
-    }
+    // DO NOT hide elements after the app (keep footer, logo, etc)
   }
 
   // ── Boot ─────────────────────────────────────────────────
