@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sensory Room Form - Image Manager</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #333; line-height: 1.5; }
+  .header { background: #2c3e50; color: #fff; padding: 20px 30px; display: flex; align-items: center; gap: 20px; }
+  .header h1 { font-size: 1.4rem; font-weight: 600; }
+  .tabs { display: flex; gap: 4px; }
+  .tab { padding: 8px 20px; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 0.9rem; font-weight: 500; background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.7); border: none; }
+  .tab.active { background: #fff; color: #2c3e50; }
+  .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+  .instructions { background: #fff; border-radius: 8px; padding: 16px 20px; margin-bottom: 20px; border-left: 4px solid #e8a87c; font-size: 0.9rem; color: #555; }
+  .instructions strong { color: #2c3e50; }
+  .section { margin-bottom: 30px; }
+  .section-title { font-size: 1.1rem; font-weight: 600; color: #2c3e50; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #e2ddd8; }
+  .image-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+  .image-card { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); transition: box-shadow 0.2s; }
+  .image-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+  .image-card .preview { width: 100%; aspect-ratio: 4/3; object-fit: cover; background: #f0f0f0; display: block; }
+  .image-card .preview.portrait { aspect-ratio: 3/4; }
+  .image-card .preview.square { aspect-ratio: 1/1; }
+  .image-card .info { padding: 10px 12px; }
+  .image-card .label { font-size: 0.8rem; font-weight: 600; color: #2c3e50; margin-bottom: 4px; }
+  .image-card .sublabel { font-size: 0.75rem; color: #888; margin-bottom: 8px; }
+  .image-card input { width: 100%; padding: 6px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.75rem; font-family: monospace; color: #555; }
+  .image-card input:focus { outline: none; border-color: #2c3e50; box-shadow: 0 0 0 2px rgba(44,62,80,0.1); }
+  .image-card input.changed { border-color: #e8a87c; background: #fdf8f4; }
+  .actions { position: sticky; bottom: 0; background: #fff; border-top: 1px solid #ddd; padding: 16px 30px; display: flex; gap: 12px; align-items: center; box-shadow: 0 -2px 8px rgba(0,0,0,0.06); z-index: 10; }
+  .btn { padding: 10px 24px; border: none; border-radius: 6px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .btn-primary { background: #2c3e50; color: #fff; }
+  .btn-primary:hover { background: #3d566e; }
+  .btn-secondary { background: #e8a87c; color: #2c3e50; }
+  .btn-secondary:hover { background: #d4956a; color: #fff; }
+  .btn-outline { background: transparent; color: #2c3e50; border: 2px solid #2c3e50; }
+  .btn-outline:hover { background: #2c3e50; color: #fff; }
+  .change-count { font-size: 0.85rem; color: #888; margin-left: auto; }
+  .change-count.has-changes { color: #e8a87c; font-weight: 600; }
+  .toast { position: fixed; top: 20px; right: 20px; background: #2c3e50; color: #fff; padding: 12px 20px; border-radius: 8px; font-size: 0.9rem; opacity: 0; transform: translateY(-10px); transition: all 0.3s; z-index: 100; }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Image Manager</h1>
+  <div class="tabs">
+    <button class="tab active" onclick="switchBrand('southpaw')">Southpaw</button>
+    <button class="tab" onclick="switchBrand('mad')">Mike Ayres Design</button>
+  </div>
+</div>
+
+<div class="container" id="content"></div>
+
+<div class="actions">
+  <button class="btn btn-primary" onclick="saveConfig()">Save config.js</button>
+  <button class="btn btn-secondary" onclick="copyConfig()">Copy to clipboard</button>
+  <button class="btn btn-outline" onclick="resetAll()">Reset all</button>
+  <span class="change-count" id="changeCount">No changes</span>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Brand config file paths (relative to this HTML file) ──
+const BRANDS = {
+  southpaw: { label: 'Southpaw', configPath: 'js/config.js' },
+  mad:      { label: 'Mike Ayres Design', configPath: 'mike-ayres-design/js/config.js' },
+};
+
+let currentBrand = 'southpaw';
+let originalData = {};  // { brand: { section: { key: url } } }
+let currentData  = {};  // working copy
+let configText   = {};  // raw config.js text per brand
+
+// ── Load config.js via fetch ──────────────────────────────
+async function loadBrand(brand) {
+  const path = BRANDS[brand].configPath;
+  try {
+    const resp = await fetch(path);
+    const text = await resp.text();
+    configText[brand] = text;
+    const images = extractImages(text);
+    originalData[brand] = JSON.parse(JSON.stringify(images));
+    currentData[brand]  = JSON.parse(JSON.stringify(images));
+  } catch (e) {
+    console.error('Failed to load', path, e);
+    showToast('Failed to load ' + path + ' - make sure you open this file from the project folder');
+  }
+}
+
+// ── Extract all image URLs from config text ───────────────
+function extractImages(text) {
+  const data = {};
+
+  // Landing slideshow images
+  const slideshowMatch = text.match(/images:\s*\[([\s\S]*?)\]/);
+  if (slideshowMatch) {
+    const urls = slideshowMatch[1].match(/'([^']+)'/g) || [];
+    data['Landing Slideshow'] = {};
+    urls.forEach((u, i) => {
+      data['Landing Slideshow']['Slide ' + (i + 1)] = u.replace(/'/g, '');
+    });
+  }
+
+  // Landing designer image
+  const designerLandingMatch = text.match(/designer:\s*\{[\s\S]*?image:\s*'([^']+)'/);
+  if (designerLandingMatch) {
+    data['Landing Cards'] = { 'Choose Your Designer': designerLandingMatch[1] };
+  }
+
+  // Room types
+  const roomSection = text.match(/roomTypes:\s*\[([\s\S]*?)\],\s*\n\s*\/\//);
+  if (roomSection) {
+    data['Room Types'] = {};
+    const items = roomSection[1].matchAll(/title:\s*'([^']+)'[\s\S]*?image:\s*'([^']*)'/g);
+    for (const m of items) {
+      data['Room Types'][m[1]] = m[2];
+    }
+  }
+
+  // Age groups
+  const ageSection = text.match(/ageGroups:\s*\[([\s\S]*?)\],/);
+  if (ageSection) {
+    data['Age Groups'] = {};
+    const items = ageSection[1].matchAll(/title:\s*'([^']+)'[\s\S]*?image:\s*'([^']*)'/g);
+    for (const m of items) {
+      data['Age Groups'][m[1]] = m[2];
+    }
+  }
+
+  // Equipment
+  const equipSection = text.match(/equipment:\s*\[([\s\S]*?)\],\s*\n\s*\/\//);
+  if (equipSection) {
+    data['Equipment'] = {};
+    const items = equipSection[1].matchAll(/title:\s*'([^']+)'[\s\S]*?image:\s*'([^']*)'/g);
+    for (const m of items) {
+      data['Equipment'][m[1]] = m[2];
+    }
+  }
+
+  // Designers
+  const designerSection = text.match(/designers:\s*\[([\s\S]*?)\],\s*\n/);
+  if (designerSection) {
+    data['Designers'] = {};
+    const items = designerSection[1].matchAll(/name:\s*'([^']+)'[\s\S]*?image:\s*'([^']*)'/g);
+    for (const m of items) {
+      data['Designers'][m[1]] = m[2];
+    }
+  }
+
+  return data;
+}
+
+// ── Render the current brand ──────────────────────────────
+function render() {
+  const data = currentData[currentBrand];
+  if (!data) { document.getElementById('content').innerHTML = '<p>Loading...</p>'; return; }
+
+  let html = `<div class="instructions"><strong>How to use:</strong> Paste a new image URL into any field to replace that image. Click <strong>Save config.js</strong> to write changes to disk, or <strong>Copy to clipboard</strong> to get the updated config text. Upload new images to Shopify via Settings > Files, then paste the CDN URL here.</div>`;
+
+  for (const [section, items] of Object.entries(data)) {
+    html += `<div class="section"><div class="section-title">${section}</div><div class="image-grid">`;
+
+    const aspectClass = section === 'Age Groups' ? 'portrait' : section === 'Designers' ? 'square' : '';
+
+    for (const [label, url] of Object.entries(items)) {
+      const orig = originalData[currentBrand][section][label];
+      const changed = url !== orig;
+      html += `
+        <div class="image-card">
+          <img class="preview ${aspectClass}" src="${url || ''}" alt="${label}" onerror="this.style.background='#eee'">
+          <div class="info">
+            <div class="label">${label}</div>
+            <div class="sublabel">${section}</div>
+            <input type="text" value="${url}" class="${changed ? 'changed' : ''}"
+              data-section="${section}" data-key="${label}"
+              onchange="updateImage(this)" oninput="updateImage(this)">
+          </div>
+        </div>`;
+    }
+    html += '</div></div>';
+  }
+
+  document.getElementById('content').innerHTML = html;
+  updateChangeCount();
+}
+
+// ── Update an image when input changes ────────────────────
+function updateImage(input) {
+  const section = input.dataset.section;
+  const key = input.dataset.key;
+  const newUrl = input.value.trim();
+
+  currentData[currentBrand][section][key] = newUrl;
+
+  // Update preview
+  const img = input.closest('.image-card').querySelector('.preview');
+  img.src = newUrl;
+
+  // Highlight if changed
+  const orig = originalData[currentBrand][section][key];
+  input.classList.toggle('changed', newUrl !== orig);
+
+  updateChangeCount();
+}
+
+// ── Count changes ─────────────────────────────────────────
+function updateChangeCount() {
+  let count = 0;
+  for (const brand of Object.keys(currentData)) {
+    for (const section of Object.keys(currentData[brand])) {
+      for (const key of Object.keys(currentData[brand][section])) {
+        if (currentData[brand][section][key] !== originalData[brand][section][key]) count++;
+      }
+    }
+  }
+  const el = document.getElementById('changeCount');
+  el.textContent = count === 0 ? 'No changes' : count + ' change' + (count > 1 ? 's' : '');
+  el.classList.toggle('has-changes', count > 0);
+}
+
+// ── Build updated config text ─────────────────────────────
+function buildUpdatedConfig(brand) {
+  let text = configText[brand];
+  const orig = originalData[brand];
+  const curr = currentData[brand];
+
+  for (const section of Object.keys(curr)) {
+    for (const key of Object.keys(curr[section])) {
+      const oldUrl = orig[section][key];
+      const newUrl = curr[section][key];
+      if (oldUrl && newUrl && oldUrl !== newUrl) {
+        // Replace all occurrences of the old URL with the new one
+        text = text.split(oldUrl).join(newUrl);
+      }
+    }
+  }
+  return text;
+}
+
+// ── Save config.js (download as file) ─────────────────────
+function saveConfig() {
+  const text = buildUpdatedConfig(currentBrand);
+  const filename = BRANDS[currentBrand].configPath.split('/').pop();
+  const blob = new Blob([text], { type: 'text/javascript' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('Downloaded ' + filename + ' - replace the file in: ' + BRANDS[currentBrand].configPath);
+}
+
+// ── Copy config to clipboard ──────────────────────────────
+function copyConfig() {
+  const text = buildUpdatedConfig(currentBrand);
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('Config copied to clipboard');
+  });
+}
+
+// ── Reset all changes ─────────────────────────────────────
+function resetAll() {
+  currentData[currentBrand] = JSON.parse(JSON.stringify(originalData[currentBrand]));
+  render();
+  showToast('All changes reset');
+}
+
+// ── Switch brand tab ──────────────────────────────────────
+function switchBrand(brand) {
+  currentBrand = brand;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.tab[onclick*="${brand}"]`).classList.add('active');
+  render();
+}
+
+// ── Toast notification ────────────────────────────────────
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ── Init ──────────────────────────────────────────────────
+(async function() {
+  await Promise.all([loadBrand('southpaw'), loadBrand('mad')]);
+  render();
+})();
+</script>
+
+</body>
+</html>

@@ -771,7 +771,7 @@
         ],
       };
 
-      return fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(gc.calendarId)}/events?conferenceDataVersion=1&sendUpdates=all`, {
+      return fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(gc.calendarId)}/events?conferenceDataVersion=1&sendUpdates=none`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -1046,30 +1046,18 @@
 
   // ── Hide Shopify Page Heading (JS fallback) ──────────────
   function hidePageHeading() {
-    const app = document.getElementById('sensory-app');
-    if (!app) return;
-    // Hide page title and breadcrumbs before the app
-    let el = app.previousElementSibling;
-    while (el) {
-      if (el.tagName === 'H1' || el.tagName === 'H2' ||
-          el.classList.contains('page-header') ||
-          el.classList.contains('page__title-wrapper') ||
-          el.classList.contains('breadcrumb') ||
-          el.classList.contains('breadcrumbs') ||
-          el.tagName === 'NAV' && el.querySelector('.breadcrumb, [class*="breadcrumb"]')) {
-        el.style.display = 'none';
-      }
-      el = el.previousElementSibling;
-    }
-    // Hide parent section headings (but NOT the site header/logo)
-    const parent = app.parentElement;
-    if (parent) {
-      const headings = parent.querySelectorAll('h1, h2.page-title, .page-header, .page-heading');
-      headings.forEach(h => {
-        if (!app.contains(h)) h.style.display = 'none';
-      });
-    }
-    // DO NOT hide elements after the app (keep footer, logo, etc)
+    // Only hide the page-level "Design Consultation" title, not the site header
+    const mainEl = document.querySelector('main') || document.querySelector('#MainContent') || document.querySelector('[role="main"]');
+    if (!mainEl) return;
+    // Hide h1 page titles within the main content area only
+    mainEl.querySelectorAll('h1, .page-title, .page__title, .page__title-wrapper, .page-heading').forEach(el => {
+      const app = document.getElementById('sensory-app');
+      if (app && !app.contains(el)) el.style.display = 'none';
+    });
+    // Hide breadcrumbs
+    document.querySelectorAll('.breadcrumb, .breadcrumbs, nav.breadcrumb, .breadcrumb-wrapper').forEach(el => {
+      el.style.display = 'none';
+    });
   }
 
   // ── Boot ─────────────────────────────────────────────────
