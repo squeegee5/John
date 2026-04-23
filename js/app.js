@@ -897,6 +897,26 @@
     return state.designer.name.split(' ')[0];
   }
 
+  function buildEmailSummaryHtml() {
+    const rowStyle = 'display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;font-size:14px;';
+    const labelStyle = 'font-weight:600;color:#2c3e50;';
+    const valueStyle = 'color:#555;text-align:right;';
+    let rows = '';
+    const fullName = getFullName();
+    if (fullName) rows += '<div style="' + rowStyle + '"><span style="' + labelStyle + '">Name<\/span><span style="' + valueStyle + '">' + fullName + '<\/span><\/div>';
+    if (state.contact.email) rows += '<div style="' + rowStyle + '"><span style="' + labelStyle + '">Email<\/span><span style="' + valueStyle + '">' + state.contact.email + '<\/span><\/div>';
+    if (state.roomType) rows += '<div style="' + rowStyle + '"><span style="' + labelStyle + '">Room Type<\/span><span style="' + valueStyle + '">' + state.roomType.title + '<\/span><\/div>';
+    if (state.ageGroup.length > 0) rows += '<div style="' + rowStyle + '"><span style="' + labelStyle + '">Age Group<\/span><span style="' + valueStyle + '">' + state.ageGroup.map(a => a.title).join(', ') + '<\/span><\/div>';
+    if (state.roomSize) rows += '<div style="' + rowStyle + '"><span style="' + labelStyle + '">Room Size<\/span><span style="' + valueStyle + '">' + state.roomSize.title + '<\/span><\/div>';
+    if (state.equipment.length > 0) rows += '<div style="' + rowStyle + '"><span style="' + labelStyle + '">Equipment<\/span><span style="' + valueStyle + '">' + state.equipment.map(e => e.title).join(', ') + '<\/span><\/div>';
+    const designerLabel = (!state.designer || state.designer.id === 'designer-any') ? 'Any (No Preference)' : state.designer.name;
+    rows += '<div style="' + rowStyle + '"><span style="' + labelStyle + '">Designer<\/span><span style="' + valueStyle + '">' + designerLabel + '<\/span><\/div>';
+    if (state.appointmentSlot) rows += '<div style="' + rowStyle + 'border-bottom:none;"><span style="' + labelStyle + '">Appointment<\/span><span style="' + valueStyle + '">' + state.appointmentSlot.label + '<\/span><\/div>';
+    if (!rows) return '';
+    return '<h3 style="color:#2c3e50;margin-top:30px;font-size:18px;">Your Booking Summary<\/h3>' +
+      '<div style="background:#f8f6f3;border-radius:8px;padding:16px 20px;margin:12px 0 20px;">' + rows + '<\/div>';
+  }
+
   function buildCustomerEmailHtml(meetLink) {
     const firstName = state.contact.firstName;
 
@@ -924,6 +944,7 @@
         : '<p>We will send you a Google Meet link for your consultation shortly.<\/p>') +
       '<p>If you would prefer to speak via phone or WhatsApp instead, just let us know and we will happily arrange that.<\/p>' +
       '<p>If you have any questions ahead of our call, please feel free to get in touch. We look forward to speaking with you soon.<\/p>' +
+      buildEmailSummaryHtml() +
       '<p>Warm regards,<br><strong>The Southpaw Team<\/strong><\/p>' +
     '<\/div>';
   }
