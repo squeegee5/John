@@ -807,11 +807,10 @@
   // Create calendar event first (for Meet link), then send both emails
   function submitAndConfirm() {
     showLoading(true);
-    var _debugInfo = [];
 
     // Step 1: Create calendar event (needed for Meet link)
     const calendarPromise = state.appointmentSlot
-      ? createCalendarEvent().catch(err => { _debugInfo.push('CAL_ERR:' + err.message); return null; })
+      ? createCalendarEvent().catch(err => { console.error('Calendar error:', err); return null; })
       : Promise.resolve(null);
 
     calendarPromise.then(eventData => {
@@ -821,38 +820,23 @@
         const videoEntry = eventData.conferenceData.entryPoints.find(e => e.entryPointType === 'video');
         if (videoEntry) meetLink = videoEntry.uri;
       }
-      _debugInfo.push('CAL:' + (eventData ? 'ok' : 'null'));
 
-      // Include Meet link in submission data
       const data = buildSubmissionData();
       if (meetLink) data['Google Meet'] = meetLink;
 
-      // Step 2: Send company email + customer email in parallel
-      const companyEmail = sendEmail(data, meetLink).then(res => {
-        _debugInfo.push('COMPANY:' + (res && res.id ? 'sent_' + res.id : 'null'));
-        return res;
-      }).catch(err => {
-        _debugInfo.push('COMPANY_ERR:' + err.message);
+      // Send emails SEQUENTIALLY: customer first (known working), then company
+      return sendCustomerEmail(meetLink).catch(err => {
+        console.error('Customer email error:', err);
+        return null;
+      }).then(() => {
+        return sendEmail(data, meetLink).catch(err => {
+          console.error('Company email error:', err);
+          return null;
+        });
       });
-      const customerEmail = sendCustomerEmail(meetLink).then(res => {
-        _debugInfo.push('CUST:' + (res && res.id ? 'sent_' + res.id : 'null'));
-        return res;
-      }).catch(err => {
-        _debugInfo.push('CUST_ERR:' + err.message);
-      });
-
-      return Promise.all([companyEmail, customerEmail]);
     }).then(() => {
       showLoading(false);
-      try { sessionStorage.setItem('_email_debug', _debugInfo.join('|')); } catch(e) {}
-      // Show debug overlay on the same page (no redirect) so we can read it
-      var dbg = document.createElement('div');
-      dbg.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:#fff;padding:40px;font-family:monospace;font-size:16px;color:#000;overflow:auto;';
-      dbg.innerHTML = '<h2>DEBUG OUTPUT (please screenshot or copy this):</h2>' +
-        '<pre style="background:#f0f0f0;padding:20px;white-space:pre-wrap;word-wrap:break-word;">' +
-        _debugInfo.join('\n') + '</pre>' +
-        '<button onclick="window.location.href=\'https://southpaw.co.uk/pages/thank-you\'" style="padding:12px 24px;font-size:16px;background:#2c3e50;color:#fff;border:none;border-radius:4px;cursor:pointer;">Continue to Thank You page</button>';
-      document.body.appendChild(dbg);
+      showConfirmation();
     });
   }
 
@@ -1030,6 +1014,7 @@
         `From: Southpaw Design Team <${CONFIG.emailTo}>`,
         `Reply-To: Southpaw Design Team <${CONFIG.emailTo}>`,
         `To: ${fullName} <${state.contact.email}>`,
+        'Bcc: john@southpaw.co.uk',
         'Subject: =?UTF-8?B?' + btoa(unescape(encodeURIComponent('Next steps on your Southpaw Design Journey\u2026'))) + '?=',
         '',
         emailHtml,
@@ -1094,7 +1079,7 @@
     banner.innerHTML += msg + '<br>';
   }
 
-  function showConfirmation(debugStr) {
+  function showConfirmation() {
     // Store summary data for the thank you page
     const summaryData = {};
     const fullName = getFullName();
@@ -1112,9 +1097,7 @@
       sessionStorage.setItem('southpaw_booking', JSON.stringify(summaryData));
     } catch (e) { /* ignore storage errors */ }
 
-    var url = 'https://southpaw.co.uk/pages/thank-you';
-    if (debugStr) url += '?_debug=' + encodeURIComponent(debugStr);
-    window.location.href = url;
+    window.location.href = 'https://southpaw.co.uk/pages/thank-you';
   }
 
   function summaryRow(label, value) {
