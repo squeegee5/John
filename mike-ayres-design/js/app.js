@@ -881,12 +881,16 @@
       const subject = 'Mike Ayres Design Consultation Booked';
       const emailHtml = buildCompanyEmailHtml(data, meetLink);
 
+      // Match the customer email's working MIME structure exactly:
+      // - From and Reply-To are aligned (no external Reply-To)
+      // - Header order: From, Reply-To, To, Subject
+      // Customer reply info lives in the body, not the headers.
       const message = [
         'MIME-Version: 1.0',
         'Content-Type: text/html; charset=utf-8',
         `From: Mike Ayres Design Team <${CONFIG.emailTo}>`,
-        'To: john@southpaw.co.uk',
-        `Reply-To: ${data['Name']} <${data['Email']}>`,
+        `Reply-To: Mike Ayres Design Team <${CONFIG.emailTo}>`,
+        'To: Mike Ayres Bookings <john@southpaw.co.uk>',
         'Subject: =?UTF-8?B?' + btoa(unescape(encodeURIComponent(subject))) + '?=',
         '',
         emailHtml,
@@ -904,15 +908,21 @@
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ raw: encoded }),
-      }).then(res => {
+      })
+      .then(res => {
         if (!res.ok) {
           return res.json().then(errData => {
-            const msg = errData.error ? errData.error.message : ('HTTP ' + res.status);
-            console.error('Company email API error:', msg);
-            throw new Error(msg);
+            const msg = errData.error ? (errData.error.message || errData.error.status) : ('HTTP ' + res.status);
+            console.error('Company email API error:', msg, errData);
+            showApiError('Company email failed: ' + msg);
+            return null;
           });
         }
         return res.json();
+      })
+      .then(resp => {
+        if (resp && resp.id) console.log('Company email sent:', resp.id);
+        return resp;
       });
     });
   }
