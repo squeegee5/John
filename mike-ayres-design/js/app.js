@@ -826,7 +826,7 @@
       if (meetLink) data['Google Meet'] = meetLink;
 
       // Step 2: Send company email + customer email in parallel
-      const companyEmail = sendEmail(data).catch(err => {
+      const companyEmail = sendEmail(data, meetLink).catch(err => {
         console.error('Company email error:', err);
         showApiError('Company email: ' + err.message);
       });
@@ -874,18 +874,73 @@
     return data;
   }
 
-  function sendEmail(data) {
-    return fetch(CONFIG.formAction, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify(data),
-    }).then(res => {
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return res.json();
+  function sendEmail(data, meetLink) {
+    return getAccessToken().then(token => {
+      if (!token) {
+        console.warn('No access token - skipping company notification email');
+        return null;
+      }
+
+      const subject = 'Mike Ayres Design Consultation Booked';
+      const emailHtml = buildCompanyEmailHtml(data, meetLink);
+
+      const message = [
+        'MIME-Version: 1.0',
+        'Content-Type: text/html; charset=utf-8',
+        `From: Mike Ayres Design Team <${CONFIG.emailTo}>`,
+        `To: ${CONFIG.emailTo}`,
+        `Reply-To: ${data['Name']} <${data['Email']}>`,
+        'Subject: =?UTF-8?B?' + btoa(unescape(encodeURIComponent(subject))) + '?=',
+        '',
+        emailHtml,
+      ].join('\r\n');
+
+      const encoded = btoa(unescape(encodeURIComponent(message)))
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+
+      return fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ raw: encoded }),
+      }).then(res => {
+        if (!res.ok) {
+          return res.json().then(errData => {
+            const msg = errData.error ? errData.error.message : ('HTTP ' + res.status);
+            console.error('Company email API error:', msg);
+            throw new Error(msg);
+          });
+        }
+        return res.json();
+      });
     });
+  }
+
+  function buildCompanyEmailHtml(data, meetLink) {
+    const rowStyle = 'padding:10px 14px;border-bottom:1px solid #eee;font-size:14px;';
+    const labelStyle = 'font-weight:600;color:#2c3e50;width:160px;vertical-align:top;';
+    const valueStyle = 'color:#333;';
+
+    let rows = '';
+    const fields = ['Name', 'Email', 'Phone', 'Postcode', 'Premises', 'Room Type', 'Age Group', 'Room Size', 'Equipment', 'Designer', 'Appointment', 'Special Request Info', 'Google Meet', 'Notes'];
+    fields.forEach(function(field) {
+      if (data[field]) {
+        let val = data[field];
+        if (field === 'Google Meet') val = '<a href="' + val + '" style="color:#1a73e8;">' + val + '<\/a>';
+        if (field === 'Email') val = '<a href="mailto:' + val + '" style="color:#1a73e8;">' + val + '<\/a>';
+        rows += '<tr><td style="' + rowStyle + labelStyle + '">' + field + '<\/td><td style="' + rowStyle + valueStyle + '">' + val + '<\/td><\/tr>';
+      }
+    });
+
+    return '<div style="font-family:Arial,Helvetica,sans-serif;color:#333;line-height:1.6;max-width:600px;margin:0 auto;padding:20px;">' +
+      '<h2 style="color:#2c3e50;font-size:20px;margin-bottom:16px;">New Design Consultation Booking<\/h2>' +
+      '<table style="width:100%;border-collapse:collapse;background:#f8f6f3;border-radius:8px;overflow:hidden;">' + rows + '<\/table>' +
+      '<p style="margin-top:16px;font-size:13px;color:#888;">This notification was sent automatically from the Mike Ayres Design booking form.<\/p>' +
+    '<\/div>';
   }
 
   // ── Customer Email (via Gmail API) ──────────────────────
