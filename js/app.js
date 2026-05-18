@@ -647,14 +647,16 @@
 
   // ── Google Calendar Integration ─────────────────────────
 
+  var _tokenPromise = null;
   function getAccessToken() {
+    if (_tokenPromise) return _tokenPromise;
     const gc = CONFIG.googleCalendar;
     if (!gc.refreshToken) {
       console.warn('No refresh token configured');
       return Promise.resolve(null);
     }
 
-    return fetch('https://oauth2.googleapis.com/token', {
+    _tokenPromise = fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
@@ -678,6 +680,7 @@
       showApiError('OAuth fetch failed: ' + err.message);
       return null;
     });
+    return _tokenPromise;
   }
 
   function buildCalendarDescription() {
@@ -874,17 +877,13 @@
   function sendEmail(data, meetLink) {
     return getAccessToken().then(token => {
       if (!token) {
-        console.warn('No access token - skipping company notification email');
+        alert('DEBUG: Company email SKIPPED - no access token');
         return null;
       }
 
       const subject = 'Southpaw Design Consultation Booked';
       const emailHtml = buildCompanyEmailHtml(data, meetLink);
 
-      // Match the customer email's working MIME structure exactly:
-      // - From and Reply-To are aligned (no external Reply-To)
-      // - Header order: From, Reply-To, To, Subject
-      // Customer reply info lives in the body, not the headers.
       const message = [
         'MIME-Version: 1.0',
         'Content-Type: text/html; charset=utf-8',
@@ -911,19 +910,22 @@
       })
       .then(res => {
         if (!res.ok) {
-          return res.json().then(errData => {
-            const msg = errData.error ? (errData.error.message || errData.error.status) : ('HTTP ' + res.status);
-            console.error('Company email API error:', msg, errData);
-            showApiError('Company email failed: ' + msg);
+          return res.text().then(body => {
+            alert('DEBUG: Company email FAILED\nHTTP ' + res.status + '\n' + body);
             return null;
           });
         }
         return res.json();
       })
       .then(resp => {
-        if (resp && resp.id) console.log('Company email sent:', resp.id);
+        if (resp && resp.id) {
+          alert('DEBUG: Company email SENT OK\nMessage ID: ' + resp.id);
+        }
         return resp;
       });
+    }).catch(err => {
+      alert('DEBUG: Company email EXCEPTION\n' + err.message);
+      return null;
     });
   }
 

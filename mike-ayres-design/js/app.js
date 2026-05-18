@@ -647,14 +647,16 @@
 
   // ── Google Calendar Integration ─────────────────────────
 
+  var _tokenPromise = null;
   function getAccessToken() {
+    if (_tokenPromise) return _tokenPromise;
     const gc = CONFIG.googleCalendar;
     if (!gc.refreshToken) {
       console.warn('No refresh token configured');
       return Promise.resolve(null);
     }
 
-    return fetch('https://oauth2.googleapis.com/token', {
+    _tokenPromise = fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
@@ -678,6 +680,7 @@
       showApiError('OAuth fetch failed: ' + err.message);
       return null;
     });
+    return _tokenPromise;
   }
 
   function buildCalendarDescription() {
