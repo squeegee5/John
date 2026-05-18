@@ -845,7 +845,14 @@
     }).then(() => {
       showLoading(false);
       try { sessionStorage.setItem('_email_debug', _debugInfo.join('|')); } catch(e) {}
-      showConfirmation(_debugInfo.join('|'));
+      // Show debug overlay on the same page (no redirect) so we can read it
+      var dbg = document.createElement('div');
+      dbg.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:#fff;padding:40px;font-family:monospace;font-size:16px;color:#000;overflow:auto;';
+      dbg.innerHTML = '<h2>DEBUG OUTPUT (please screenshot or copy this):</h2>' +
+        '<pre style="background:#f0f0f0;padding:20px;white-space:pre-wrap;word-wrap:break-word;">' +
+        _debugInfo.join('\n') + '</pre>' +
+        '<button onclick="window.location.href=\'https://southpaw.co.uk/pages/thank-you\'" style="padding:12px 24px;font-size:16px;background:#2c3e50;color:#fff;border:none;border-radius:4px;cursor:pointer;">Continue to Thank You page</button>';
+      document.body.appendChild(dbg);
     });
   }
 
