@@ -807,10 +807,11 @@
   // Create calendar event first (for Meet link), then send both emails
   function submitAndConfirm() {
     showLoading(true);
+    var _debugInfo = [];
 
     // Step 1: Create calendar event (needed for Meet link)
     const calendarPromise = state.appointmentSlot
-      ? createCalendarEvent().catch(err => { console.error('Calendar error:', err); return null; })
+      ? createCalendarEvent().catch(err => { _debugInfo.push('CAL_ERR:' + err.message); return null; })
       : Promise.resolve(null);
 
     calendarPromise.then(eventData => {
@@ -820,26 +821,31 @@
         const videoEntry = eventData.conferenceData.entryPoints.find(e => e.entryPointType === 'video');
         if (videoEntry) meetLink = videoEntry.uri;
       }
+      _debugInfo.push('CAL:' + (eventData ? 'ok' : 'null'));
 
       // Include Meet link in submission data
       const data = buildSubmissionData();
       if (meetLink) data['Google Meet'] = meetLink;
 
       // Step 2: Send company email + customer email in parallel
-      const companyEmail = sendEmail(data, meetLink).catch(err => {
-        console.error('Company email error:', err);
-        showApiError('Company email: ' + err.message);
+      const companyEmail = sendEmail(data, meetLink).then(res => {
+        _debugInfo.push('COMPANY:' + (res && res.id ? 'sent_' + res.id : 'null'));
+        return res;
+      }).catch(err => {
+        _debugInfo.push('COMPANY_ERR:' + err.message);
       });
-      // Always send customer email (with or without Meet link)
-      const customerEmail = sendCustomerEmail(meetLink).catch(err => {
-        console.error('Customer email error:', err);
-        showApiError('Customer email: ' + err.message);
+      const customerEmail = sendCustomerEmail(meetLink).then(res => {
+        _debugInfo.push('CUST:' + (res && res.id ? 'sent_' + res.id : 'null'));
+        return res;
+      }).catch(err => {
+        _debugInfo.push('CUST_ERR:' + err.message);
       });
 
       return Promise.all([companyEmail, customerEmail]);
     }).then(() => {
       showLoading(false);
-      showConfirmation();
+      try { sessionStorage.setItem('_email_debug', _debugInfo.join('|')); } catch(e) {}
+      showConfirmation(_debugInfo.join('|'));
     });
   }
 
@@ -876,10 +882,7 @@
 
   function sendEmail(data, meetLink) {
     return getAccessToken().then(token => {
-      if (!token) {
-        alert('DEBUG: Company email SKIPPED - no access token');
-        return null;
-      }
+      if (!token) return null;
 
       const subject = 'Southpaw Design Consultation Booked';
       const emailHtml = buildCompanyEmailHtml(data, meetLink);
@@ -911,21 +914,11 @@
       .then(res => {
         if (!res.ok) {
           return res.text().then(body => {
-            alert('DEBUG: Company email FAILED\nHTTP ' + res.status + '\n' + body);
-            return null;
+            throw new Error('HTTP_' + res.status + ':' + body.substring(0, 200));
           });
         }
         return res.json();
-      })
-      .then(resp => {
-        if (resp && resp.id) {
-          alert('DEBUG: Company email SENT OK\nMessage ID: ' + resp.id);
-        }
-        return resp;
       });
-    }).catch(err => {
-      alert('DEBUG: Company email EXCEPTION\n' + err.message);
-      return null;
     });
   }
 
@@ -1094,7 +1087,7 @@
     banner.innerHTML += msg + '<br>';
   }
 
-  function showConfirmation() {
+  function showConfirmation(debugStr) {
     // Store summary data for the thank you page
     const summaryData = {};
     const fullName = getFullName();
@@ -1112,8 +1105,9 @@
       sessionStorage.setItem('southpaw_booking', JSON.stringify(summaryData));
     } catch (e) { /* ignore storage errors */ }
 
-    // Redirect to the thank you page (for Google Ads conversion tracking)
-    window.location.href = 'https://southpaw.co.uk/pages/thank-you';
+    var url = 'https://southpaw.co.uk/pages/thank-you';
+    if (debugStr) url += '?_debug=' + encodeURIComponent(debugStr);
+    window.location.href = url;
   }
 
   function summaryRow(label, value) {
