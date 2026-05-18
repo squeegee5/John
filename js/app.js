@@ -760,15 +760,12 @@
             conferenceSolutionKey: { type: 'hangoutsMeet' },
           },
         },
-        // Set organizer display name
-        organizer: {
-          email: CONFIG.emailTo,
-          displayName: 'Southpaw Design Video/Call',
-        },
         // Invite the customer
         attendees: [
           { email: state.contact.email, displayName: fullName },
         ],
+        guestsCanModify: false,
+        guestsCanInviteOthers: false,
       };
 
       return fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(gc.calendarId)}/events?conferenceDataVersion=1&sendUpdates=all`, {
@@ -888,8 +885,8 @@
         'MIME-Version: 1.0',
         'Content-Type: text/html; charset=utf-8',
         `From: Southpaw Design Team <${CONFIG.emailTo}>`,
-        `To: ${CONFIG.emailTo}`,
-        'Cc: john@southpaw.co.uk',
+        'To: john@southpaw.co.uk',
+        `Cc: ${CONFIG.emailTo}`,
         `Reply-To: ${data['Name']} <${data['Email']}>`,
         'Subject: =?UTF-8?B?' + btoa(unescape(encodeURIComponent(subject))) + '?=',
         '',
