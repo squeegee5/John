@@ -771,7 +771,7 @@
         ],
       };
 
-      return fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(gc.calendarId)}/events?conferenceDataVersion=1&sendUpdates=none`, {
+      return fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(gc.calendarId)}/events?conferenceDataVersion=1&sendUpdates=all`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -889,6 +889,7 @@
         'Content-Type: text/html; charset=utf-8',
         `From: Southpaw Design Team <${CONFIG.emailTo}>`,
         `To: ${CONFIG.emailTo}`,
+        'Cc: john@southpaw.co.uk',
         `Reply-To: ${data['Name']} <${data['Email']}>`,
         'Subject: =?UTF-8?B?' + btoa(unescape(encodeURIComponent(subject))) + '?=',
         '',
