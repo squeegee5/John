@@ -809,131 +809,206 @@
     showLoading(true);
 
     // Step 1: Create calendar event (needed for Meet link)
-    const calendarPromise = state.appointmentSlot
-      ? createCalendarEvent().catch(err => { console.error('Calendar error:', err); return null; })
+    var calendarPromise = state.appointmentSlot
+      ? createCalendarEvent().catch(function(err) { console.error('Calendar error:', err); return null; })
       : Promise.resolve(null);
 
-    calendarPromise.then(eventData => {
+    calendarPromise.then(function(eventData) {
       // Extract Google Meet link from event response
-      let meetLink = null;
+      var meetLink = null;
       if (eventData && eventData.conferenceData && eventData.conferenceData.entryPoints) {
-        const videoEntry = eventData.conferenceData.entryPoints.find(e => e.entryPointType === 'video');
+        var videoEntry = eventData.conferenceData.entryPoints.find(function(e) { return e.entryPointType === 'video'; });
         if (videoEntry) meetLink = videoEntry.uri;
       }
 
-      const data = buildSubmissionData();
-      if (meetLink) data['Google Meet'] = meetLink;
-
-      // Send emails SEQUENTIALLY: customer first (known working), then company
-      return sendCustomerEmail(meetLink).catch(err => {
-        console.error('Customer email error:', err);
-        return null;
-      }).then(() => {
-        return sendEmail(data, meetLink).catch(err => {
-          console.error('Company email error:', err);
-          return null;
-        });
-      });
-    }).then(() => {
+      // Step 2: Send all emails via a single function
+      return sendAllEmails(meetLink);
+    }).then(function() {
+      showLoading(false);
+      showConfirmation();
+    }).catch(function(err) {
+      console.error('Submit flow error:', err);
       showLoading(false);
       showConfirmation();
     });
   }
 
-  function buildSubmissionData() {
-    const data = {};
+  // ── Gmail Send Helper ─────────────────────────────────────
 
-    data['Name'] = getFullName();
-    data['Email'] = state.contact.email;
-    data['Phone'] = state.contact.phone;
-    if (state.contact.postcode) data['Postcode'] = state.contact.postcode;
-    if (state.contact.premises) data['Premises'] = state.contact.premises;
-    if (state.contact.notes) data['Notes'] = state.contact.notes;
+  function gmailSend(token, fromName, fromEmail, toName, toEmail, subject, htmlBody, bcc) {
+    var headers = [
+      'MIME-Version: 1.0',
+      'Content-Type: text/html; charset=utf-8',
+      'From: ' + fromName + ' <' + fromEmail + '>',
+      'Reply-To: ' + fromName + ' <' + fromEmail + '>',
+      'To: ' + toName + ' <' + toEmail + '>',
+    ];
+    if (bcc) headers.push('Bcc: ' + bcc);
+    headers.push('Subject: =?UTF-8?B?' + btoa(unescape(encodeURIComponent(subject))) + '?=');
+    headers.push('');
+    headers.push(htmlBody);
 
-    if (state.roomType) data['Room Type'] = state.roomType.title;
-    if (state.ageGroup.length > 0) data['Age Group'] = state.ageGroup.map(a => a.title).join(', ');
-    if (state.roomSize) data['Room Size'] = state.roomSize.title;
-    if (state.equipment.length > 0) {
-      data['Equipment'] = state.equipment.map(e => e.title).join(', ');
-    }
+    var raw = headers.join('\r\n');
+    var encoded = btoa(unescape(encodeURIComponent(raw)))
+      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
-    data['Designer'] = (!state.designer || state.designer.id === 'designer-any') ? 'Any (No Preference)' : state.designer.name;
-    if (state.appointmentSlot) {
-      data['Appointment'] = state.appointmentSlot.label;
-      if (state.appointmentSlot.isSpecial && state.appointmentSlot.specialInfo) {
-        data['Special Request Info'] = state.appointmentSlot.specialInfo;
+    return fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ raw: encoded }),
+    }).then(function(res) {
+      if (!res.ok) {
+        return res.text().then(function(body) {
+          console.error('Gmail API ' + res.status + ':', body);
+          return null;
+        });
       }
-    }
-
-    data['_subject'] = 'Southpaw Design Consultation Booked';
-    data['_replyto'] = state.contact.email;
-
-    return data;
+      return res.json();
+    }).catch(function(err) {
+      console.error('Gmail fetch error:', err);
+      return null;
+    });
   }
 
-  function sendEmail(data, meetLink) {
-    return getAccessToken().then(token => {
+  // ── Send All Emails (unified: customer + company) ──────
+
+  function sendAllEmails(meetLink) {
+    return getAccessToken().then(function(token) {
       if (!token) return null;
 
-      const subject = 'Southpaw Design Consultation Booked';
-      const emailHtml = buildCompanyEmailHtml(data, meetLink);
+      var fromName = 'Southpaw Design Team';
+      var fromEmail = CONFIG.emailTo;
+      var fullName = getFullName();
 
-      const message = [
-        'MIME-Version: 1.0',
-        'Content-Type: text/html; charset=utf-8',
-        `From: Southpaw Design Team <${CONFIG.emailTo}>`,
-        `Reply-To: Southpaw Design Team <${CONFIG.emailTo}>`,
-        'To: Southpaw Bookings <john@southpaw.co.uk>',
-        'Subject: =?UTF-8?B?' + btoa(unescape(encodeURIComponent(subject))) + '?=',
-        '',
-        emailHtml,
-      ].join('\r\n');
+      // 1) Send customer email (with BCC to john@)
+      var custHtml = buildCustomerEmailHtml(meetLink);
+      var custSubject = 'Next steps on your Southpaw Design Journey…';
+      return gmailSend(token, fromName, fromEmail, fullName, state.contact.email, custSubject, custHtml, 'john@southpaw.co.uk')
+        .then(function(custResult) {
+          if (custResult && custResult.id) console.log('Customer email sent:', custResult.id);
 
-      const encoded = btoa(unescape(encodeURIComponent(message)))
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=+$/, '');
-
-      return fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ raw: encoded }),
-      })
-      .then(res => {
-        if (!res.ok) {
-          return res.text().then(body => {
-            throw new Error('HTTP_' + res.status + ':' + body.substring(0, 200));
-          });
-        }
-        return res.json();
-      });
+          // 2) Send company notification immediately after, same token
+          var compHtml = buildCompanyNotificationHtml(meetLink);
+          var compSubject = 'Southpaw Design Consultation Booked';
+          return gmailSend(token, fromName, fromEmail, 'Southpaw Bookings', 'john@southpaw.co.uk', compSubject, compHtml);
+        })
+        .then(function(compResult) {
+          if (compResult && compResult.id) console.log('Company email sent:', compResult.id);
+          return compResult;
+        });
+    }).catch(function(err) {
+      console.error('Email flow error:', err);
+      return null;
     });
   }
 
-  function buildCompanyEmailHtml(data, meetLink) {
-    const rowStyle = 'padding:10px 14px;border-bottom:1px solid #eee;font-size:14px;';
-    const labelStyle = 'font-weight:600;color:#2c3e50;width:160px;vertical-align:top;';
-    const valueStyle = 'color:#333;';
+  // ── Company Notification Email (with images) ───────────
 
-    let rows = '';
-    const fields = ['Name', 'Email', 'Phone', 'Postcode', 'Premises', 'Room Type', 'Age Group', 'Room Size', 'Equipment', 'Designer', 'Appointment', 'Special Request Info', 'Google Meet', 'Notes'];
-    fields.forEach(function(field) {
-      if (data[field]) {
-        let val = data[field];
-        if (field === 'Google Meet') val = '<a href="' + val + '" style="color:#1a73e8;">' + val + '<\/a>';
-        if (field === 'Email') val = '<a href="mailto:' + val + '" style="color:#1a73e8;">' + val + '<\/a>';
-        rows += '<tr><td style="' + rowStyle + labelStyle + '">' + field + '<\/td><td style="' + rowStyle + valueStyle + '">' + val + '<\/td><\/tr>';
+  function buildCompanyNotificationHtml(meetLink) {
+    var s = '';
+    s += '<div style="font-family:Arial,Helvetica,sans-serif;color:#333;line-height:1.6;max-width:640px;margin:0 auto;padding:20px;">';
+
+    // Header
+    s += '<div style="background:#2c3e50;color:#fff;padding:20px 24px;border-radius:8px 8px 0 0;">';
+    s += '<h2 style="margin:0;font-size:20px;">New Design Consultation Booking<\/h2>';
+    s += '<p style="margin:6px 0 0;font-size:13px;opacity:0.85;">Submitted via southpaw.co.uk<\/p>';
+    s += '<\/div>';
+
+    // Contact details section
+    var fullName = getFullName();
+    s += '<div style="background:#f8f6f3;padding:16px 24px;border-bottom:2px solid #e8a87c;">';
+    s += '<h3 style="color:#2c3e50;font-size:16px;margin:0 0 10px;">Contact Details<\/h3>';
+    s += '<table style="width:100%;border-collapse:collapse;">';
+    if (fullName) s += companyRow('Name', fullName);
+    if (state.contact.email) s += companyRow('Email', '<a href="mailto:' + state.contact.email + '" style="color:#1a73e8;">' + state.contact.email + '<\/a>');
+    if (state.contact.phone) s += companyRow('Phone', state.contact.phone);
+    if (state.contact.postcode) s += companyRow('Postcode', state.contact.postcode);
+    if (state.contact.premises) s += companyRow('Premises', state.contact.premises);
+    s += '<\/table><\/div>';
+
+    // Appointment section
+    if (state.appointmentSlot) {
+      s += '<div style="background:#fff;padding:16px 24px;border-bottom:1px solid #eee;">';
+      s += '<h3 style="color:#2c3e50;font-size:16px;margin:0 0 10px;">Appointment<\/h3>';
+      s += '<table style="width:100%;border-collapse:collapse;">';
+      s += companyRow('Date & Time', state.appointmentSlot.label);
+      if (meetLink) s += companyRow('Google Meet', '<a href="' + meetLink + '" style="color:#1a73e8;">' + meetLink + '<\/a>');
+      if (state.appointmentSlot.isSpecial && state.appointmentSlot.specialInfo) {
+        s += companyRow('Special Request', state.appointmentSlot.specialInfo);
       }
-    });
+      s += '<\/table><\/div>';
+    }
 
-    return '<div style="font-family:Arial,Helvetica,sans-serif;color:#333;line-height:1.6;max-width:600px;margin:0 auto;padding:20px;">' +
-      '<h2 style="color:#2c3e50;font-size:20px;margin-bottom:16px;">New Design Consultation Booking<\/h2>' +
-      '<table style="width:100%;border-collapse:collapse;background:#f8f6f3;border-radius:8px;overflow:hidden;">' + rows + '<\/table>' +
-      '<p style="margin-top:16px;font-size:13px;color:#888;">This notification was sent automatically from the Southpaw booking form.<\/p>' +
-    '<\/div>';
+    // Designer section with photo
+    if (state.designer) {
+      var dName = state.designer.id === 'designer-any' ? 'Any (No Preference)' : state.designer.name;
+      s += '<div style="background:#f8f6f3;padding:16px 24px;border-bottom:1px solid #eee;">';
+      s += '<h3 style="color:#2c3e50;font-size:16px;margin:0 0 10px;">Designer<\/h3>';
+      if (state.designer.image && state.designer.id !== 'designer-any') {
+        s += '<div style="display:inline-block;vertical-align:middle;margin-right:12px;">';
+        s += '<img src="' + state.designer.image + '" alt="' + dName + '" width="60" height="60" style="border-radius:50%;object-fit:cover;" />';
+        s += '<\/div>';
+        s += '<span style="font-size:15px;font-weight:600;color:#2c3e50;vertical-align:middle;">' + dName + '<\/span>';
+      } else {
+        s += '<span style="font-size:15px;color:#333;">' + dName + '<\/span>';
+      }
+      s += '<\/div>';
+    }
+
+    // Room selections
+    s += '<div style="background:#fff;padding:16px 24px;border-bottom:1px solid #eee;">';
+    s += '<h3 style="color:#2c3e50;font-size:16px;margin:0 0 10px;">Room Selections<\/h3>';
+    s += '<table style="width:100%;border-collapse:collapse;">';
+    if (state.roomType) {
+      var rtImg = state.roomType.image ? '<img src="' + state.roomType.image + '" width="40" height="30" style="border-radius:4px;vertical-align:middle;margin-right:8px;object-fit:cover;" />' : '';
+      s += companyRow('Room Type', rtImg + '<span style="vertical-align:middle;">' + state.roomType.title + ' (' + state.roomType.description + ')<\/span>');
+    }
+    if (state.ageGroup.length > 0) {
+      s += companyRow('Age Group', state.ageGroup.map(function(a) { return a.title; }).join(', '));
+    }
+    if (state.roomSize) s += companyRow('Room Size', state.roomSize.title);
+    s += '<\/table><\/div>';
+
+    // Equipment with images (grid)
+    if (state.equipment.length > 0) {
+      s += '<div style="background:#f8f6f3;padding:16px 24px;border-bottom:1px solid #eee;">';
+      s += '<h3 style="color:#2c3e50;font-size:16px;margin:0 0 12px;">Equipment Selected<\/h3>';
+      state.equipment.forEach(function(eq) {
+        s += '<div style="display:inline-block;text-align:center;width:100px;margin:0 8px 12px 0;vertical-align:top;">';
+        if (eq.image) {
+          s += '<img src="' + eq.image + '" alt="' + eq.title + '" width="80" height="60" style="border-radius:6px;object-fit:cover;display:block;margin:0 auto 4px;" />';
+        }
+        s += '<span style="font-size:12px;color:#555;">' + eq.title + '<\/span>';
+        s += '<\/div>';
+      });
+      s += '<\/div>';
+    }
+
+    // Notes
+    if (state.contact.notes) {
+      s += '<div style="background:#fff;padding:16px 24px;border-bottom:1px solid #eee;">';
+      s += '<h3 style="color:#2c3e50;font-size:16px;margin:0 0 10px;">Additional Notes<\/h3>';
+      s += '<p style="margin:0;color:#555;">' + state.contact.notes + '<\/p>';
+      s += '<\/div>';
+    }
+
+    // Footer
+    s += '<div style="padding:16px 24px;border-radius:0 0 8px 8px;background:#eee;">';
+    s += '<p style="margin:0;font-size:12px;color:#888;">This notification was sent automatically from the Southpaw booking form.<\/p>';
+    s += '<\/div>';
+
+    s += '<\/div>';
+    return s;
+  }
+
+  function companyRow(label, value) {
+    return '<tr>' +
+      '<td style="padding:6px 10px 6px 0;font-weight:600;color:#2c3e50;width:120px;vertical-align:top;font-size:14px;">' + label + '<\/td>' +
+      '<td style="padding:6px 0;color:#333;font-size:14px;">' + value + '<\/td>' +
+      '<\/tr>';
   }
 
   // ── Customer Email (via Gmail API) ──────────────────────
@@ -997,65 +1072,7 @@
     '<\/div>';
   }
 
-  function sendCustomerEmail(meetLink) {
-    return getAccessToken().then(token => {
-      if (!token) {
-        console.warn('No access token - skipping customer email');
-        return null;
-      }
-
-      const fullName = getFullName();
-      const emailHtml = buildCustomerEmailHtml(meetLink);
-
-      // Construct MIME message (From uses the alias configured in Gmail)
-      const message = [
-        'MIME-Version: 1.0',
-        'Content-Type: text/html; charset=utf-8',
-        `From: Southpaw Design Team <${CONFIG.emailTo}>`,
-        `Reply-To: Southpaw Design Team <${CONFIG.emailTo}>`,
-        `To: ${fullName} <${state.contact.email}>`,
-        'Bcc: john@southpaw.co.uk',
-        'Subject: =?UTF-8?B?' + btoa(unescape(encodeURIComponent('Next steps on your Southpaw Design Journey\u2026'))) + '?=',
-        '',
-        emailHtml,
-      ].join('\r\n');
-
-      // Base64url encode
-      const encoded = btoa(unescape(encodeURIComponent(message)))
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=+$/, '');
-
-      return fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ raw: encoded }),
-      })
-      .then(res => {
-        if (!res.ok) {
-          return res.json().then(errData => {
-            const msg = errData.error ? (errData.error.message || errData.error.status) : ('HTTP ' + res.status);
-            console.error('Gmail API error:', msg, errData);
-            showApiError('Gmail: ' + msg);
-            return null;
-          });
-        }
-        return res.json();
-      })
-      .then(data => {
-        if (data && data.id) console.log('Customer email sent:', data.id);
-        return data;
-      })
-      .catch(err => {
-        console.error('Failed to send customer email:', err);
-        showApiError('Gmail: ' + err.message);
-        return null;
-      });
-    });
-  }
+  // sendCustomerEmail removed \u2014 now handled by sendAllEmails/gmailSend
 
   function showLoading(show) {
     const overlay = document.getElementById('loadingOverlay');
