@@ -1,31 +1,54 @@
 /**
- * Google Apps Script Email Proxy
- * Receives POST requests from the Southpaw/MAD booking forms
- * and sends the company notification email server-side.
+ * Google Apps Script Email Proxy — with detailed logging
  *
- * DEPLOYMENT INSTRUCTIONS:
- * 1. Go to https://script.google.com while logged into john@southpaw.co.uk
- * 2. Click "New project"
- * 3. Paste this entire file into the editor (replace any existing code)
- * 4. Click the project name ("Untitled project") and rename to "Email Proxy"
- * 5. Click "Deploy" > "New deployment"
- * 6. Click the gear icon next to "Select type" and choose "Web app"
- * 7. Set "Execute as" to "Me (john@southpaw.co.uk)"
- * 8. Set "Who has access" to "Anyone"
- * 9. Click "Deploy"
- * 10. Authorize the app when prompted (click through the "unsafe" warning)
- * 11. Copy the Web app URL (looks like: https://script.google.com/macros/s/XXXX/exec)
- * 12. Give the URL to complete the setup
+ * IMPORTANT: After updating this code, you must REDEPLOY:
+ * 1. Click "Deploy" > "Manage deployments"
+ * 2. Click the pencil icon (Edit) next to the existing deployment
+ * 3. Change "Version" to "New version"
+ * 4. Click "Deploy"
+ * 5. The URL stays the same — no need to update anywhere else
  */
 
 function doPost(e) {
+  var log = {
+    received: new Date().toISOString(),
+    hasPostData: !!(e && e.postData),
+    contentLength: e && e.postData ? e.postData.length : 0,
+    contentType: e && e.postData ? e.postData.type : null,
+    parameters: e ? Object.keys(e.parameters || {}) : []
+  };
+
   try {
-    var data = JSON.parse(e.postData.contents);
+    if (!e || !e.postData || !e.postData.contents) {
+      Logger.log('NO POST DATA: ' + JSON.stringify(log));
+      return ContentService.createTextOutput(JSON.stringify({
+        success: false, error: 'no_post_data', log: log
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    var data;
+    try {
+      data = JSON.parse(e.postData.contents);
+    } catch (parseErr) {
+      log.parseError = parseErr.toString();
+      log.rawSnippet = e.postData.contents.substring(0, 200);
+      Logger.log('JSON PARSE FAILED: ' + JSON.stringify(log));
+      return ContentService.createTextOutput(JSON.stringify({
+        success: false, error: 'parse_failed', log: log
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    log.to = data.to;
+    log.subject = data.subject;
+    log.htmlBodyLength = data.htmlBody ? data.htmlBody.length : 0;
+    log.from = data.from;
+    log.activeUser = Session.getActiveUser().getEmail();
+    log.effectiveUser = Session.getEffectiveUser().getEmail();
 
     if (!data.to || !data.subject || !data.htmlBody) {
+      Logger.log('MISSING FIELDS: ' + JSON.stringify(log));
       return ContentService.createTextOutput(JSON.stringify({
-        success: false,
-        error: 'Missing required fields: to, subject, htmlBody'
+        success: false, error: 'missing_fields', log: log
       })).setMimeType(ContentService.MimeType.JSON);
     }
 
@@ -33,26 +56,36 @@ function doPost(e) {
       htmlBody: data.htmlBody,
       name: data.fromName || 'Southpaw Design Team'
     };
-
-    if (data.replyTo) {
-      options.replyTo = data.replyTo;
-    }
-
-    // Use alias if specified (design-visit@southpaw.co.uk)
+    if (data.replyTo) options.replyTo = data.replyTo;
     if (data.from) {
-      options.from = data.from;
+      try {
+        var aliases = GmailApp.getAliases();
+        log.availableAliases = aliases;
+        if (aliases.indexOf(data.from) !== -1) {
+          options.from = data.from;
+          log.usingAlias = data.from;
+        } else {
+          log.aliasNotAvailable = data.from;
+        }
+      } catch (aliasErr) {
+        log.aliasError = aliasErr.toString();
+      }
     }
 
     GmailApp.sendEmail(data.to, data.subject, '', options);
+    log.sent = true;
+    Logger.log('EMAIL SENT: ' + JSON.stringify(log));
 
     return ContentService.createTextOutput(JSON.stringify({
-      success: true
+      success: true, log: log
     })).setMimeType(ContentService.MimeType.JSON);
 
   } catch (err) {
+    log.error = err.toString();
+    log.stack = err.stack ? err.stack.substring(0, 500) : null;
+    Logger.log('EXCEPTION: ' + JSON.stringify(log));
     return ContentService.createTextOutput(JSON.stringify({
-      success: false,
-      error: err.toString()
+      success: false, error: err.toString(), log: log
     })).setMimeType(ContentService.MimeType.JSON);
   }
 }
@@ -60,6 +93,8 @@ function doPost(e) {
 function doGet(e) {
   return ContentService.createTextOutput(JSON.stringify({
     status: 'Email proxy is running',
-    usage: 'POST with JSON body: {to, subject, htmlBody, fromName, from, replyTo}'
+    activeUser: Session.getActiveUser().getEmail(),
+    effectiveUser: Session.getEffectiveUser().getEmail(),
+    aliases: GmailApp.getAliases()
   })).setMimeType(ContentService.MimeType.JSON);
 }
