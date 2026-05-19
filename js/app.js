@@ -804,25 +804,25 @@
 
   // ── Submit Helpers ───────────────────────────────────────
 
-  // Create calendar event first (for Meet link), then send both emails
   function submitAndConfirm() {
     showLoading(true);
 
-    // Step 1: Create calendar event (needed for Meet link)
     var calendarPromise = state.appointmentSlot
       ? createCalendarEvent().catch(function(err) { console.error('Calendar error:', err); return null; })
       : Promise.resolve(null);
 
     calendarPromise.then(function(eventData) {
-      // Extract Google Meet link from event response
       var meetLink = null;
       if (eventData && eventData.conferenceData && eventData.conferenceData.entryPoints) {
         var videoEntry = eventData.conferenceData.entryPoints.find(function(e) { return e.entryPointType === 'video'; });
         if (videoEntry) meetLink = videoEntry.uri;
       }
 
-      // Step 2: Send all emails via a single function
-      return sendAllEmails(meetLink);
+      // Fire company email via server proxy immediately (no token needed, fire-and-forget)
+      sendCompanyViaProxy(meetLink);
+
+      // Send customer email via Gmail API (needs token, we wait for this)
+      return sendCustomerEmail(meetLink);
     }).then(function() {
       showLoading(false);
       showConfirmation();
@@ -873,53 +873,53 @@
     });
   }
 
-  // ── Send All Emails (customer via Gmail API, company via server proxy) ──
+  // ── Company email via server proxy (sendBeacon — CORS-immune, survives page nav) ──
 
   function sendCompanyViaProxy(meetLink) {
     var proxyUrl = CONFIG.emailProxyUrl;
     if (!proxyUrl) {
       console.warn('emailProxyUrl not configured — skipping company email');
-      return Promise.resolve(null);
+      return;
     }
     var compHtml = buildCompanyNotificationHtml(meetLink);
-    var payload = {
+    var payload = JSON.stringify({
       to: CONFIG.companyEmailTo || 'john@southpaw.co.uk',
       subject: 'Southpaw Design Consultation Booked',
       htmlBody: compHtml,
       fromName: 'Southpaw Design Team',
       from: CONFIG.emailTo,
       replyTo: CONFIG.emailTo
-    };
-    return fetch(proxyUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
-      body: JSON.stringify(payload)
-    }).then(function() {
-      console.log('Company email sent via proxy');
-      return true;
-    }).catch(function(err) {
-      console.error('Proxy email error:', err);
-      return null;
     });
+    if (navigator.sendBeacon) {
+      var blob = new Blob([payload], { type: 'text/plain;charset=UTF-8' });
+      var queued = navigator.sendBeacon(proxyUrl, blob);
+      console.log('Company email beacon:', queued ? 'queued' : 'rejected');
+    } else {
+      fetch(proxyUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+        body: payload
+      }).catch(function(err) { console.error('Proxy error:', err); });
+    }
   }
 
-  function sendAllEmails(meetLink) {
+  // ── Customer email via Gmail API ──────────────────────────
+
+  function sendCustomerEmail(meetLink) {
     return getAccessToken().then(function(token) {
       if (!token) return null;
-
       var fromName = 'Southpaw Design Team';
       var fromEmail = CONFIG.emailTo;
       var fullName = getFullName();
-
       var custHtml = buildCustomerEmailHtml(meetLink);
       var custSubject = 'Next steps on your Southpaw Design Journey…';
-      return gmailSend(token, fromName, fromEmail, fullName, state.contact.email, custSubject, custHtml)
-        .then(function(custResult) {
-          if (custResult && custResult.id) console.log('Customer email sent:', custResult.id);
-          return sendCompanyViaProxy(meetLink);
-        });
+      return gmailSend(token, fromName, fromEmail, fullName, state.contact.email, custSubject, custHtml);
+    }).then(function(result) {
+      if (result && result.id) console.log('Customer email sent:', result.id);
+      return result;
     }).catch(function(err) {
-      console.error('Email flow error:', err);
+      console.error('Customer email error:', err);
       return null;
     });
   }
@@ -1090,8 +1090,6 @@
       '<p>Warm regards,<br><strong>The Southpaw Team<\/strong><\/p>' +
     '<\/div>';
   }
-
-  // sendCustomerEmail removed \u2014 now handled by sendAllEmails/gmailSend
 
   function showLoading(show) {
     const overlay = document.getElementById('loadingOverlay');
