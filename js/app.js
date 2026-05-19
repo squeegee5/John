@@ -805,6 +805,7 @@
   // ── Submit Helpers ───────────────────────────────────────
 
   function submitAndConfirm() {
+    try { localStorage.setItem('sp_v', 'v7-' + new Date().toISOString()); } catch(e) {}
     showLoading(true);
 
     var calendarPromise = state.appointmentSlot
@@ -813,15 +814,17 @@
 
     calendarPromise.then(function(eventData) {
       var meetLink = null;
-      if (eventData && eventData.conferenceData && eventData.conferenceData.entryPoints) {
-        var videoEntry = eventData.conferenceData.entryPoints.find(function(e) { return e.entryPointType === 'video'; });
-        if (videoEntry) meetLink = videoEntry.uri;
-      }
+      try {
+        if (eventData && eventData.conferenceData && eventData.conferenceData.entryPoints) {
+          var eps = eventData.conferenceData.entryPoints;
+          for (var i = 0; i < eps.length; i++) {
+            if (eps[i].entryPointType === 'video') { meetLink = eps[i].uri; break; }
+          }
+        }
+      } catch (e) {}
 
-      // Fire company email via server proxy immediately (no token needed, fire-and-forget)
       sendCompanyViaProxy(meetLink);
 
-      // Send customer email via Gmail API (needs token, we wait for this)
       return sendCustomerEmail(meetLink);
     }).then(function() {
       showLoading(false);
