@@ -873,7 +873,35 @@
     });
   }
 
-  // ── Send All Emails (unified: customer + company) ──────
+  // ── Send All Emails (customer via Gmail API, company via server proxy) ──
+
+  function sendCompanyViaProxy(meetLink) {
+    var proxyUrl = CONFIG.emailProxyUrl;
+    if (!proxyUrl) {
+      console.warn('emailProxyUrl not configured — skipping company email');
+      return Promise.resolve(null);
+    }
+    var compHtml = buildCompanyNotificationHtml(meetLink);
+    var payload = {
+      to: CONFIG.companyEmailTo || 'john@southpaw.co.uk',
+      subject: 'Southpaw Design Consultation Booked',
+      htmlBody: compHtml,
+      fromName: 'Southpaw Design Team',
+      from: CONFIG.emailTo,
+      replyTo: CONFIG.emailTo
+    };
+    return fetch(proxyUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+      body: JSON.stringify(payload)
+    }).then(function() {
+      console.log('Company email sent via proxy');
+      return true;
+    }).catch(function(err) {
+      console.error('Proxy email error:', err);
+      return null;
+    });
+  }
 
   function sendAllEmails(meetLink) {
     return getAccessToken().then(function(token) {
@@ -883,28 +911,12 @@
       var fromEmail = CONFIG.emailTo;
       var fullName = getFullName();
 
-      // 1) Send customer email (with BCC to john@)
       var custHtml = buildCustomerEmailHtml(meetLink);
       var custSubject = 'Next steps on your Southpaw Design Journey…';
-      return gmailSend(token, fromName, fromEmail, fullName, state.contact.email, custSubject, custHtml, 'john@southpaw.co.uk')
+      return gmailSend(token, fromName, fromEmail, fullName, state.contact.email, custSubject, custHtml)
         .then(function(custResult) {
           if (custResult && custResult.id) console.log('Customer email sent:', custResult.id);
-
-          // CHECKPOINT email — proves the code reaches this point in the form flow
-          var checkpointHtml = '<p>CHECKPOINT: Customer email returned ' + (custResult && custResult.id ? 'success id=' + custResult.id : 'NULL/error') + '</p><p>About to send company email next.</p>';
-          return gmailSend(token, fromName, fromEmail, 'Southpaw Checkpoint', 'john@southpaw.co.uk', 'CHECKPOINT-Form: Reached company email step', checkpointHtml);
-        })
-        .then(function(checkResult) {
-          if (checkResult && checkResult.id) console.log('Checkpoint email sent:', checkResult.id);
-
-          // 2) Send company notification immediately after, same token
-          var compHtml = buildCompanyNotificationHtml(meetLink);
-          var compSubject = 'Southpaw Design Consultation Booked';
-          return gmailSend(token, fromName, fromEmail, 'Southpaw Bookings', 'john@southpaw.co.uk', compSubject, compHtml);
-        })
-        .then(function(compResult) {
-          if (compResult && compResult.id) console.log('Company email sent:', compResult.id);
-          return compResult;
+          return sendCompanyViaProxy(meetLink);
         });
     }).catch(function(err) {
       console.error('Email flow error:', err);
