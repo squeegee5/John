@@ -903,7 +903,7 @@
     }
 
     var payload = JSON.stringify({
-      to: CONFIG.companyEmailTo || 'john@southpaw.co.uk',
+      to: CONFIG.emailTo,
       subject: 'Southpaw Design Consultation Booked',
       htmlBody: compHtml,
       fromName: 'Southpaw Design Team',
@@ -954,14 +954,24 @@
       var fromName = 'Southpaw Design Team';
       var fromEmail = CONFIG.emailTo;
       var fullName = getFullName();
+
+      // Send customer email
       var custHtml = buildCustomerEmailHtml(meetLink);
       var custSubject = 'Next steps on your Southpaw Design Journey…';
-      return gmailSend(token, fromName, fromEmail, fullName, state.contact.email, custSubject, custHtml);
-    }).then(function(result) {
-      if (result && result.id) console.log('Customer email sent:', result.id);
-      return result;
+      var custPromise = gmailSend(token, fromName, fromEmail, fullName, state.contact.email, custSubject, custHtml);
+
+      // Send company notification via Gmail API (to design-visit@ alias)
+      var compHtml = buildCompanyNotificationHtml(meetLink);
+      var compSubject = 'Southpaw Design Consultation Booked';
+      var compPromise = gmailSend(token, fromName, fromEmail, 'Southpaw Bookings', CONFIG.emailTo, compSubject, compHtml);
+
+      return Promise.all([custPromise, compPromise]).then(function(results) {
+        if (results[0] && results[0].id) console.log('Customer email sent:', results[0].id);
+        if (results[1] && results[1].id) console.log('Company email sent:', results[1].id);
+        return results;
+      });
     }).catch(function(err) {
-      console.error('Customer email error:', err);
+      console.error('Email error:', err);
       return null;
     });
   }
