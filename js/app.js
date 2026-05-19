@@ -890,6 +890,13 @@
         .then(function(custResult) {
           if (custResult && custResult.id) console.log('Customer email sent:', custResult.id);
 
+          // CHECKPOINT email — proves the code reaches this point in the form flow
+          var checkpointHtml = '<p>CHECKPOINT: Customer email returned ' + (custResult && custResult.id ? 'success id=' + custResult.id : 'NULL/error') + '</p><p>About to send company email next.</p>';
+          return gmailSend(token, fromName, fromEmail, 'Southpaw Checkpoint', 'john@southpaw.co.uk', 'CHECKPOINT-Form: Reached company email step', checkpointHtml);
+        })
+        .then(function(checkResult) {
+          if (checkResult && checkResult.id) console.log('Checkpoint email sent:', checkResult.id);
+
           // 2) Send company notification immediately after, same token
           var compHtml = buildCompanyNotificationHtml(meetLink);
           var compSubject = 'Southpaw Design Consultation Booked';
