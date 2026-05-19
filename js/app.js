@@ -805,7 +805,6 @@
   // ── Submit Helpers ───────────────────────────────────────
 
   function submitAndConfirm() {
-    try { localStorage.setItem('sp_v', 'v7-' + new Date().toISOString()); } catch(e) {}
     showLoading(true);
 
     var calendarPromise = state.appointmentSlot
@@ -822,8 +821,6 @@
           }
         }
       } catch (e) {}
-
-      sendCompanyViaProxy(meetLink);
 
       return sendCustomerEmail(meetLink);
     }).then(function() {
@@ -876,77 +873,7 @@
     });
   }
 
-  // ── Company email via server proxy (multi-method: beacon + fetch + image ping) ──
-
-  function logProxyStep(step, extra) {
-    try {
-      var log = JSON.parse(localStorage.getItem('southpaw_email_log') || '[]');
-      log.push({ t: new Date().toISOString(), step: step, extra: extra || null });
-      if (log.length > 50) log = log.slice(-50);
-      localStorage.setItem('southpaw_email_log', JSON.stringify(log));
-    } catch (e) {}
-  }
-
-  function sendCompanyViaProxy(meetLink) {
-    var proxyUrl = CONFIG.emailProxyUrl;
-    if (!proxyUrl) {
-      logProxyStep('skip_no_url');
-      return;
-    }
-
-    var compHtml;
-    try {
-      compHtml = buildCompanyNotificationHtml(meetLink);
-    } catch (err) {
-      logProxyStep('build_html_error', err.message);
-      return;
-    }
-
-    var payload = JSON.stringify({
-      to: CONFIG.emailTo,
-      subject: 'Southpaw Design Consultation Booked',
-      htmlBody: compHtml,
-      fromName: 'Southpaw Design Team',
-      from: CONFIG.emailTo,
-      replyTo: CONFIG.emailTo,
-      origin: 'form-browser',
-      meta: { ua: navigator.userAgent.substring(0, 80), href: location.href }
-    });
-
-    logProxyStep('proxy_start', { size: payload.length });
-
-    // Method 1: sendBeacon (CORS-immune, survives nav)
-    try {
-      if (navigator.sendBeacon) {
-        var blob = new Blob([payload], { type: 'text/plain;charset=UTF-8' });
-        var queued = navigator.sendBeacon(proxyUrl, blob);
-        logProxyStep('beacon', { queued: queued });
-      } else {
-        logProxyStep('beacon_unavailable');
-      }
-    } catch (err) {
-      logProxyStep('beacon_threw', err.message);
-    }
-
-    // Method 2: fetch with no-cors (parallel, in case beacon is blocked)
-    try {
-      fetch(proxyUrl, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
-        body: payload,
-        keepalive: true
-      }).then(function() {
-        logProxyStep('fetch_done');
-      }).catch(function(err) {
-        logProxyStep('fetch_error', err.message);
-      });
-    } catch (err) {
-      logProxyStep('fetch_threw', err.message);
-    }
-  }
-
-  // ── Customer email via Gmail API ──────────────────────────
+  // ── Customer + company emails via Gmail API ─────────────
 
   function sendCustomerEmail(meetLink) {
     return getAccessToken().then(function(token) {

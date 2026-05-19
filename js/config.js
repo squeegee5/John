@@ -13,8 +13,6 @@ const CONFIG = {
   heroTitle: 'Design Your Sensory Room',
   heroSubtitle: 'Start your journey to creating the perfect sensory environment. Choose where you\'d like to begin.',
   emailTo: 'design-visit@southpaw.co.uk',
-  companyEmailTo: 'john@southpaw.co.uk',
-  emailProxyUrl: '',
   formAction: 'https://formsubmit.co/ajax/design-visit@southpaw.co.uk',
 
   // ── External Links ────────────────────────────────────────
