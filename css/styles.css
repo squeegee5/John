@@ -633,6 +633,17 @@ img { max-width: 100%; height: auto; display: block; }
   padding-top: var(--space-xl);
 }
 
+/* Equipment page: pull everything up so Continue is visible without scrolling */
+[data-step="room-equipment"] .step-content {
+  padding-top: var(--space-sm);
+}
+[data-step="room-equipment"] .step-header {
+  margin-bottom: var(--space-md);
+}
+[data-step="room-equipment"] .equipment-grid {
+  margin-bottom: var(--space-md);
+}
+
 /* Wider container for room type page (3-per-row layout) */
 [data-step="room-type"] .step-content {
   max-width: 1400px;
