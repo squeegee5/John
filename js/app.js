@@ -35,6 +35,7 @@
       phone: '',
       postcode: '',
       premises: '',
+      address: '',
       notes: '',
     },
     contactFilled: false,
@@ -579,6 +580,7 @@
       phone: document.getElementById('contactPhone').value.trim(),
       postcode: document.getElementById('contactPostcode').value.trim(),
       premises: document.getElementById('contactPremises').value.trim(),
+      address: document.getElementById('contactAddress') ? document.getElementById('contactAddress').value.trim() : '',
       notes: document.getElementById('contactNotes') ? document.getElementById('contactNotes').value.trim() : '',
     };
   }
@@ -595,6 +597,8 @@
       document.getElementById('contactPhone').value = state.contact.phone;
       document.getElementById('contactPostcode').value = state.contact.postcode;
       document.getElementById('contactPremises').value = state.contact.premises;
+      var addressEl = document.getElementById('contactAddress');
+      if (addressEl) addressEl.value = state.contact.address;
       const notesEl = document.getElementById('contactNotes');
       if (notesEl) notesEl.value = state.contact.notes;
     }
@@ -694,7 +698,7 @@
     }
     if (state.contact.phone) desc += `Phone: ${state.contact.phone}\n`;
     if (state.contact.postcode) desc += `Postcode: ${state.contact.postcode}\n`;
-    if (state.contact.premises) desc += `Premises: ${state.contact.premises}\n`;
+    if (state.contact.premises) desc += `Premises: ${state.contact.premises}${state.contact.address ? ' & ' + state.contact.address : ''}\n`;
 
     desc += '\n--- Selections ---\n';
     if (state.roomType) desc += `Room Type: ${state.roomType.title}\n`;
@@ -909,10 +913,10 @@
     var s = '';
     s += '<div style="font-family:Arial,Helvetica,sans-serif;color:#333;line-height:1.6;max-width:640px;margin:0 auto;padding:20px;">';
 
-    // Header
-    s += '<div style="background:#2c3e50;color:#fff;padding:20px 24px;border-radius:8px 8px 0 0;">';
+    // Header with logo
+    s += '<div style="background:#2c3e50;color:#fff;padding:16px 24px;border-radius:8px 8px 0 0;">';
+    s += '<img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/southpaw_logo_transparent.png?v=1780503941" alt="Southpaw" height="30" style="display:block;margin-bottom:8px;" />';
     s += '<h2 style="margin:0;font-size:20px;">New Design Consultation Booking<\/h2>';
-    s += '<p style="margin:6px 0 0;font-size:13px;opacity:0.85;">Submitted via southpaw.co.uk<\/p>';
     s += '<\/div>';
 
     // Contact details section
@@ -924,7 +928,11 @@
     if (state.contact.email) s += companyRow('Email', '<a href="mailto:' + state.contact.email + '" style="color:#1a73e8;">' + state.contact.email + '<\/a>');
     if (state.contact.phone) s += companyRow('Phone', state.contact.phone);
     if (state.contact.postcode) s += companyRow('Postcode', state.contact.postcode);
-    if (state.contact.premises) s += companyRow('Premises', state.contact.premises);
+    if (state.contact.premises) {
+      var premisesVal = state.contact.premises;
+      if (state.contact.address) premisesVal += ' &amp; ' + state.contact.address;
+      s += companyRow('Premises', premisesVal);
+    }
     s += '<\/table><\/div>';
 
     // Appointment section
@@ -992,11 +1000,6 @@
       s += '<p style="margin:0;color:#555;">' + state.contact.notes + '<\/p>';
       s += '<\/div>';
     }
-
-    // Footer
-    s += '<div style="padding:16px 24px;border-radius:0 0 8px 8px;background:#eee;">';
-    s += '<p style="margin:0;font-size:12px;color:#888;">This notification was sent automatically from the Southpaw booking form.<\/p>';
-    s += '<\/div>';
 
     s += '<\/div>';
     return s;
