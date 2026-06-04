@@ -91,6 +91,14 @@
     'designer-landing': `<svg viewBox="0 0 120 90" class="placeholder-icon" style="width:96px;height:72px"><circle cx="40" cy="30" r="14" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 72c0-14 10-24 24-24s24 10 24 24" fill="none" stroke="currentColor" stroke-width="2"/><rect x="68" y="20" width="36" height="44" rx="3" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M74 32h24M74 40h24M74 48h16" stroke="currentColor" stroke-width="1.5"/></svg>`,
   };
 
+  function updateMultiSelectButton(stepName, count) {
+    var section = document.querySelector('[data-step="' + stepName + '"]');
+    if (!section) return;
+    var btn = section.querySelector('.btn-primary');
+    if (!btn) return;
+    btn.style.display = count > 0 ? '' : 'none';
+  }
+
   // ── Initialization ───────────────────────────────────────
   function init() {
     populateLandingPage();
@@ -229,14 +237,15 @@
     container.innerHTML = '';
     CONFIG.ageGroups.forEach(item => {
       container.appendChild(createChoiceCard(item, item.id, true, () => {
-        // Update age group state from selected cards
         state.ageGroup = [];
         container.querySelectorAll('.choice-card.selected').forEach(card => {
           const ag = CONFIG.ageGroups.find(a => a.id === card.dataset.id);
           if (ag) state.ageGroup.push(ag);
         });
+        updateMultiSelectButton('room-age', state.ageGroup.length);
       }));
     });
+    updateMultiSelectButton('room-age', 0);
   }
 
   function populateSizeCards() {
@@ -261,8 +270,10 @@
           const equip = CONFIG.equipment.find(e => e.id === card.dataset.id);
           if (equip) state.equipment.push(equip);
         });
+        updateMultiSelectButton('room-equipment', state.equipment.length);
       }));
     });
+    updateMultiSelectButton('room-equipment', 0);
   }
 
   function populateDesignerCards() {
@@ -538,6 +549,8 @@
       { id: 'contactPhone', required: true },
       { id: 'contactPostcode', required: true },
       { id: 'contactPremises', required: true },
+      { id: 'contactAddress', required: true },
+      { id: 'contactNotes', required: true },
     ];
 
     fields.forEach(field => {

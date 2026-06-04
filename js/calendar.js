@@ -105,12 +105,36 @@ class CalendarBooking {
     );
   }
 
-  /**
-   * Minimum days ahead for calendar display.
-   * Always start from tomorrow; individual slots are filtered
-   * by the 28-hour minimum notice rule in getSlotsForDay().
-   * If today is Friday, earliest is Tuesday (skip Monday for prep).
-   */
+  buildSpecialTimeOptions(date) {
+    if (!date) return '';
+    const dayOfWeek = date.getDay();
+    const schedule = this.config.schedule[dayOfWeek];
+    if (!schedule) return '';
+
+    const isMonday = dayOfWeek === 1;
+    const mondayBlocked = this.config.mondayBlockedHours || [];
+    const blockedHours = this.config.blockedHours || [];
+    const earliest = this.getEarliestBookingTime();
+
+    let html = '';
+    for (let h = schedule.start; h < schedule.end; h++) {
+      if (blockedHours.includes(h)) continue;
+      if (isMonday && mondayBlocked.includes(h)) continue;
+
+      for (let m = 0; m < 60; m += 15) {
+        const slotStart = new Date(date);
+        slotStart.setHours(h, m, 0, 0);
+        if (slotStart < earliest) continue;
+        if (this.isSlotBusy(date, h)) continue;
+
+        const label = this.formatTime15(h, m);
+        html += `<option value="${h}:${m}">${label}</option>`;
+      }
+    }
+    if (!html) html = '<option value="" disabled>No times available</option>';
+    return html;
+  }
+
   getMinDaysAhead() {
     const today = new Date();
     const dow = today.getDay(); // 0=Sun … 5=Fri 6=Sat
@@ -403,7 +427,7 @@ class CalendarBooking {
     }
 
     if (this.showSpecialRequest) {
-      // Build date options from visible working days (all future days)
+      // Build date options using the same rules as the main calendar
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const minAhead = this.getMinDaysAhead();
@@ -423,15 +447,9 @@ class CalendarBooking {
         return `<option value="${dt.toISOString()}">${this.formatDateLong(dt)}</option>`;
       }).join('');
 
-      // Time options in 15-min increments (9:00 to 15:45)
-      let timeOptionsHtml = '';
-      for (let h = 9; h < 16; h++) {
-        for (let m = 0; m < 60; m += 15) {
-          if (h === 15 && m > 0) break; // stop at 15:00 (3pm)
-          const label = this.formatTime15(h, m);
-          timeOptionsHtml += `<option value="${h}:${m}">${label}</option>`;
-        }
-      }
+      // Build initial time options for the first date
+      const firstDate = datOpts.length > 0 ? datOpts[0] : null;
+      let timeOptionsHtml = this.buildSpecialTimeOptions(firstDate);
 
       reqEl.innerHTML = `
         <div class="special-request-form">
@@ -471,6 +489,17 @@ class CalendarBooking {
       toggleBtn.addEventListener('click', () => {
         this.showSpecialRequest = true;
         this.renderSpecialRequest();
+      });
+    }
+
+    const dateSelect = reqEl.querySelector('#specialDate');
+    if (dateSelect) {
+      dateSelect.addEventListener('change', () => {
+        const timeSelect = reqEl.querySelector('#specialTime');
+        if (timeSelect) {
+          const selectedDate = new Date(dateSelect.value);
+          timeSelect.innerHTML = this.buildSpecialTimeOptions(selectedDate);
+        }
       });
     }
 
