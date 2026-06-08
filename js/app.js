@@ -711,7 +711,7 @@
     }
     if (state.contact.phone) desc += `Phone: ${state.contact.phone}\n`;
     if (state.contact.postcode) desc += `Postcode: ${state.contact.postcode}\n`;
-    if (state.contact.premises) desc += `Premises: ${state.contact.premises}${state.contact.address ? ' & ' + state.contact.address : ''}\n`;
+    if (state.contact.premises) desc += `Premises: ${state.contact.premises}${state.contact.address ? ', ' + state.contact.address : ''}\n`;
 
     desc += '\n--- Selections ---\n';
     if (state.roomType) desc += `Room Type: ${state.roomType.title}\n`;
@@ -943,7 +943,7 @@
     if (state.contact.postcode) s += companyRow('Postcode', state.contact.postcode);
     if (state.contact.premises) {
       var premisesVal = state.contact.premises;
-      if (state.contact.address) premisesVal += ' &amp; ' + state.contact.address;
+      if (state.contact.address) premisesVal += ', ' + state.contact.address;
       s += companyRow('Premises', premisesVal);
     }
     s += '<\/table><\/div>';
@@ -977,18 +977,19 @@
       s += '<\/div>';
     }
 
-    // Room selections
+    // Room details
     s += '<div style="background:#fff;padding:16px 24px;border-bottom:1px solid #eee;">';
-    s += '<h3 style="color:#2c3e50;font-size:16px;margin:0 0 10px;">Room Selections<\/h3>';
+    s += '<h3 style="color:#2c3e50;font-size:16px;margin:0 0 10px;">Room Details<\/h3>';
     s += '<table style="width:100%;border-collapse:collapse;">';
     if (state.roomType) {
       var rtImg = state.roomType.image ? '<img src="' + state.roomType.image + '" width="40" height="30" style="border-radius:4px;vertical-align:middle;margin-right:8px;object-fit:cover;" />' : '';
-      s += companyRow('Room Type', rtImg + '<span style="vertical-align:middle;">' + state.roomType.title + ' (' + state.roomType.description + ')<\/span>');
+      s += companyRow('Room Type', rtImg + '<span style="vertical-align:middle;">' + state.roomType.description + '<\/span>');
     }
     if (state.ageGroup.length > 0) {
       s += companyRow('Age Group', state.ageGroup.map(function(a) { return a.title; }).join(', '));
     }
     if (state.roomSize) s += companyRow('Room Size', state.roomSize.title);
+    if (state.contact.notes) s += companyRow('Notes', '“' + state.contact.notes + '”');
     s += '<\/table><\/div>';
 
     // Equipment with images (grid)
@@ -1003,14 +1004,6 @@
         s += '<span style="font-size:12px;color:#555;">' + eq.title + '<\/span>';
         s += '<\/div>';
       });
-      s += '<\/div>';
-    }
-
-    // Notes
-    if (state.contact.notes) {
-      s += '<div style="background:#fff;padding:16px 24px;border-bottom:1px solid #eee;">';
-      s += '<h3 style="color:#2c3e50;font-size:16px;margin:0 0 10px;">Additional Notes<\/h3>';
-      s += '<p style="margin:0;color:#555;">' + state.contact.notes + '<\/p>';
       s += '<\/div>';
     }
 
