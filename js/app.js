@@ -788,7 +788,7 @@
         guestsCanInviteOthers: false,
       };
 
-      return fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(gc.calendarId)}/events?conferenceDataVersion=1&sendUpdates=all`, {
+      return fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(gc.calendarId)}/events?conferenceDataVersion=1&sendUpdates=none`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -852,18 +852,38 @@
 
   // ── Gmail Send Helper ─────────────────────────────────────
 
-  function gmailSend(token, fromName, fromEmail, toName, toEmail, subject, htmlBody, bcc) {
+  function gmailSend(token, fromName, fromEmail, toName, toEmail, subject, htmlBody, bcc, ics) {
     var headers = [
       'MIME-Version: 1.0',
-      'Content-Type: text/html; charset=utf-8',
       'From: ' + fromName + ' <' + fromEmail + '>',
       'Reply-To: ' + fromName + ' <' + fromEmail + '>',
       'To: ' + toName + ' <' + toEmail + '>',
     ];
     if (bcc) headers.push('Bcc: ' + bcc);
     headers.push('Subject: =?UTF-8?B?' + btoa(unescape(encodeURIComponent(subject))) + '?=');
-    headers.push('');
-    headers.push(htmlBody);
+
+    if (ics) {
+      // Multipart: HTML body + calendar invite attachment
+      var boundary = 'sp_' + Date.now().toString(36);
+      headers.push('Content-Type: multipart/mixed; boundary="' + boundary + '"');
+      headers.push('');
+      headers.push('--' + boundary);
+      headers.push('Content-Type: text/html; charset=utf-8');
+      headers.push('');
+      headers.push(htmlBody);
+      headers.push('');
+      headers.push('--' + boundary);
+      headers.push('Content-Type: text/calendar; method=REQUEST; charset=utf-8');
+      headers.push('Content-Disposition: attachment; filename="invite.ics"');
+      headers.push('');
+      headers.push(ics);
+      headers.push('');
+      headers.push('--' + boundary + '--');
+    } else {
+      headers.push('Content-Type: text/html; charset=utf-8');
+      headers.push('');
+      headers.push(htmlBody);
+    }
 
     var raw = headers.join('\r\n');
     var encoded = btoa(unescape(encodeURIComponent(raw)))
@@ -890,6 +910,41 @@
     });
   }
 
+  // ── Calendar invite (.ics) attached to customer email ────
+  // Sent from design-visit@ so the customer never sees a personal address.
+
+  function buildCustomerIcs(meetLink) {
+    var slot = state.appointmentSlot;
+    if (!slot) return null;
+    var start = new Date(slot.date);
+    start.setHours(slot.hour, slot.minute || 0, 0, 0);
+    var end = new Date(start.getTime() + 60 * 60 * 1000);
+    function fmt(d) {
+      return d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+    }
+    var fullName = getFullName();
+    var lines = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Southpaw//Design Consultation//EN',
+      'METHOD:REQUEST',
+      'BEGIN:VEVENT',
+      'UID:southpaw-' + Date.now() + '@southpaw.co.uk',
+      'DTSTAMP:' + fmt(new Date()),
+      'DTSTART:' + fmt(start),
+      'DTEND:' + fmt(end),
+      'SUMMARY:Southpaw Design Call',
+      'DESCRIPTION:' + (meetLink ? 'Join via Google Meet: ' + meetLink : 'Initial design consultation – details to follow'),
+      meetLink ? 'LOCATION:' + meetLink : '',
+      'ORGANIZER;CN=Southpaw Design Team:mailto:' + CONFIG.emailTo,
+      'ATTENDEE;CN=' + fullName + ';RSVP=TRUE:mailto:' + state.contact.email,
+      'STATUS:CONFIRMED',
+      'END:VEVENT',
+      'END:VCALENDAR',
+    ].filter(Boolean);
+    return lines.join('\r\n');
+  }
+
   // ── Customer + company emails via Gmail API ─────────────
 
   function sendCustomerEmail(meetLink) {
@@ -899,10 +954,11 @@
       var fromEmail = CONFIG.emailTo;
       var fullName = getFullName();
 
-      // Send customer email
+      // Send customer email (with calendar invite attached, from design-visit@)
       var custHtml = buildCustomerEmailHtml(meetLink);
       var custSubject = 'Next steps on your Southpaw Design Journey…';
-      var custPromise = gmailSend(token, fromName, fromEmail, fullName, state.contact.email, custSubject, custHtml);
+      var custIcs = buildCustomerIcs(meetLink);
+      var custPromise = gmailSend(token, fromName, fromEmail, fullName, state.contact.email, custSubject, custHtml, null, custIcs);
 
       // Send company notification via Gmail API (to design-visit@ alias)
       var compHtml = buildCompanyNotificationHtml(meetLink);
