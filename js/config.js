@@ -197,6 +197,18 @@ const CONFIG = {
     },
     blockedHours: [12],
     mondayBlockedHours: [10],
+    // Date-specific availability (YYYY-MM-DD). Overrides the weekday schedule.
+    //   'closed'       = no consultations that day. Unlike blockedDates, this
+    //                    does NOT push a prep-day buffer onto the next day.
+    //   { start, end } = restricted hours for that day only (24h, end exclusive)
+    dateOverrides: {
+      '2026-09-07': { start: 14, end: 16 }, // Mon 7 Sep: 2pm–4pm only
+      '2026-09-14': 'closed',               // Mon 14 Sep: no consultations
+      '2026-09-21': 'closed',               // Mon 21 Sep: no consultations
+      '2026-09-28': 'closed',               // Mon 28 Sep: no consultations
+      '2026-10-05': { start: 13, end: 16 }, // Mon 5 Oct: 1pm–4pm only
+      // Mon 12 Oct onwards: normal Monday hours resume
+    },
     slotsToShow: 5,
     slotDuration: 60,
     calendarNote: 'Initial consultations typically last 15-20 minutes, but we book a full hour slot to ensure we have plenty of time to discuss your project.',

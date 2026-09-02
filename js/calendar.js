@@ -108,8 +108,10 @@ class CalendarBooking {
   buildSpecialTimeOptions(date) {
     if (!date) return '';
     const dayOfWeek = date.getDay();
-    const schedule = this.config.schedule[dayOfWeek];
-    if (!schedule) return '';
+    const schedule = this.getHoursForDate(date);
+    if (!schedule || this.isDateClosed(date)) {
+      return '<option value="" disabled>No times available</option>';
+    }
 
     const isMonday = dayOfWeek === 1;
     const mondayBlocked = this.config.mondayBlockedHours || [];
@@ -171,10 +173,50 @@ class CalendarBooking {
    */
   isBlockedDate(date) {
     const blockedDates = this.config.blockedDates || [];
-    const dateStr = date.getFullYear() + '-' +
+    return blockedDates.includes(this.dateKey(date));
+  }
+
+  /**
+   * YYYY-MM-DD key for a date, in local time.
+   */
+  dateKey(date) {
+    return date.getFullYear() + '-' +
       String(date.getMonth() + 1).padStart(2, '0') + '-' +
       String(date.getDate()).padStart(2, '0');
-    return blockedDates.includes(dateStr);
+  }
+
+  /**
+   * One-off availability override for a specific date, or null.
+   * Returns 'closed' or { start, end }.
+   */
+  getDateOverride(date) {
+    const overrides = this.config.dateOverrides || {};
+    return overrides[this.dateKey(date)] || null;
+  }
+
+  /**
+   * True if this specific date is closed for consultations.
+   * Unlike a blocked date, this does not add a prep buffer to the next day.
+   */
+  isDateClosed(date) {
+    return this.getDateOverride(date) === 'closed';
+  }
+
+  /**
+   * Working hours for a date: the weekday schedule, narrowed by any
+   * date-specific override. Returns null if the day is not a working day.
+   */
+  getHoursForDate(date) {
+    const schedule = this.config.schedule[date.getDay()];
+    if (!schedule) return null;
+    const override = this.getDateOverride(date);
+    if (override && override !== 'closed') {
+      return {
+        start: override.start != null ? override.start : schedule.start,
+        end: override.end != null ? override.end : schedule.end,
+      };
+    }
+    return { start: schedule.start, end: schedule.end };
   }
 
   /**
@@ -214,7 +256,7 @@ class CalendarBooking {
     const maxLookahead = this.config.weeksAhead * 7 + 14;
     let d = new Date(startDate);
     for (let i = 0; i < maxLookahead && workingDays.length < totalNeeded; i++) {
-      if (scheduleDays.includes(d.getDay()) && !this.isBlockedDate(d) && !this.isPostHolidayBuffer(d)) {
+      if (scheduleDays.includes(d.getDay()) && !this.isBlockedDate(d) && !this.isDateClosed(d) && !this.isPostHolidayBuffer(d)) {
         workingDays.push(new Date(d));
       }
       d.setDate(d.getDate() + 1);
@@ -238,7 +280,7 @@ class CalendarBooking {
     let count = 0;
     let d = new Date(startDate);
     for (let i = 0; i < maxLookahead; i++) {
-      if (scheduleDays.includes(d.getDay()) && !this.isBlockedDate(d) && !this.isPostHolidayBuffer(d)) count++;
+      if (scheduleDays.includes(d.getDay()) && !this.isBlockedDate(d) && !this.isDateClosed(d) && !this.isPostHolidayBuffer(d)) count++;
       d.setDate(d.getDate() + 1);
     }
     return Math.ceil(count / daysToShow);
@@ -250,8 +292,8 @@ class CalendarBooking {
    */
   getSlotsForDay(date) {
     const dayOfWeek = date.getDay();
-    const schedule = this.config.schedule[dayOfWeek];
-    if (!schedule) return [];
+    const schedule = this.getHoursForDate(date);
+    if (!schedule || this.isDateClosed(date)) return [];
 
     const earliest = this.getEarliestBookingTime(); // 28 hours from now
     const isMonday = dayOfWeek === 1;
@@ -437,7 +479,7 @@ class CalendarBooking {
       const datOpts = [];
       let d = new Date(startDate);
       for (let i = 0; i < 28; i++) {
-        if (scheduleDays.includes(d.getDay()) && !this.isBlockedDate(d) && !this.isPostHolidayBuffer(d)) {
+        if (scheduleDays.includes(d.getDay()) && !this.isBlockedDate(d) && !this.isDateClosed(d) && !this.isPostHolidayBuffer(d)) {
           datOpts.push(new Date(d));
         }
         d.setDate(d.getDate() + 1);
