@@ -9,7 +9,8 @@
  *  - 24hr notice required. If current time is afternoon (>=12),
  *    earliest booking is day after tomorrow.
  *  - Only 4-5 slots shown per day (pseudo-random, seeded by date)
- *  - No bookings Monday 1-3pm
+ *  - Working weekdays can change from a given date (CONFIG scheduleFrom)
+ *  - Per-date closures / restricted hours (CONFIG dateOverrides)
  *  - Special time request option with 15-min increments
  * ============================================================
  */
@@ -107,27 +108,20 @@ class CalendarBooking {
 
   buildSpecialTimeOptions(date) {
     if (!date) return '';
-    const dayOfWeek = date.getDay();
-    const schedule = this.getHoursForDate(date);
-    if (!schedule || this.isDateClosed(date)) {
+    const hours = this.getHoursForDate(date);
+    if (!hours || this.isDateClosed(date) || this.isBlockedDate(date) || this.isPostHolidayBuffer(date)) {
       return '<option value="" disabled>No times available</option>';
     }
 
-    const isMonday = dayOfWeek === 1;
-    const mondayBlocked = this.config.mondayBlockedHours || [];
-    const blockedHours = this.config.blockedHours || [];
     const earliest = this.getEarliestBookingTime();
 
     let html = '';
-    for (let h = schedule.start; h < schedule.end; h++) {
-      if (blockedHours.includes(h)) continue;
-      if (isMonday && mondayBlocked.includes(h)) continue;
-
+    for (let h = hours.start; h < hours.end; h++) {
       for (let m = 0; m < 60; m += 15) {
         const slotStart = new Date(date);
         slotStart.setHours(h, m, 0, 0);
         if (slotStart < earliest) continue;
-        if (this.isSlotBusy(date, h)) continue;
+        if (this.isRangeBlocked(date, h, m, hours)) continue;
 
         const label = this.formatTime15(h, m);
         html += `<option value="${h}:${m}">${label}</option>`;
@@ -203,11 +197,64 @@ class CalendarBooking {
   }
 
   /**
-   * Working hours for a date: the weekday schedule, narrowed by any
-   * date-specific override. Returns null if the day is not a working day.
+   * The weekday schedule in effect on a given date. Entries in
+   * config.scheduleFrom replace the base schedule from their date onwards.
+   */
+  getScheduleForDate(date) {
+    const key = this.dateKey(date);
+    let active = this.config.schedule || {};
+    const changes = this.config.scheduleFrom || [];
+    for (const change of changes) {
+      if (change && change.from && key >= change.from) active = change.schedule || {};
+    }
+    return active;
+  }
+
+  /**
+   * True if consultations run on this date's weekday.
+   */
+  isWorkingDay(date) {
+    return !!this.getScheduleForDate(date)[date.getDay()];
+  }
+
+  /**
+   * True if a consultation starting at startHour:startMinute would clash with
+   * a blocked window (lunch, the Monday morning block), run past the end of
+   * the day's consultation hours, or overlap an existing calendar booking.
+   */
+  isRangeBlocked(date, startHour, startMinute, hours) {
+    const start = new Date(date);
+    start.setHours(startHour, startMinute, 0, 0);
+    const end = new Date(start.getTime() + (this.config.slotDuration || 60) * 60000);
+
+    // Must finish within the day's consultation hours
+    const dayEnd = new Date(date);
+    dayEnd.setHours(hours.end, 0, 0, 0);
+    if (end > dayEnd) return true;
+
+    // Blocked hours — any overlap, not just a matching start hour
+    const blocked = (this.config.blockedHours || []).slice();
+    if (date.getDay() === 1) {
+      (this.config.mondayBlockedHours || []).forEach(h => blocked.push(h));
+    }
+    for (const h of blocked) {
+      const bStart = new Date(date);
+      bStart.setHours(h, 0, 0, 0);
+      const bEnd = new Date(date);
+      bEnd.setHours(h + 1, 0, 0, 0);
+      if (start < bEnd && end > bStart) return true;
+    }
+
+    // Existing Google Calendar bookings — any overlap
+    return this.busySlots.some(busy => start < busy.end && end > busy.start);
+  }
+
+  /**
+   * Working hours for a date: the weekday schedule in effect on that date,
+   * narrowed by any date-specific override. Null if not a working day.
    */
   getHoursForDate(date) {
-    const schedule = this.config.schedule[date.getDay()];
+    const schedule = this.getScheduleForDate(date)[date.getDay()];
     if (!schedule) return null;
     const override = this.getDateOverride(date);
     if (override && override !== 'closed') {
@@ -225,13 +272,12 @@ class CalendarBooking {
    * this day needs a buffer (designers need prep time).
    */
   isPostHolidayBuffer(date) {
-    const scheduleDays = Object.keys(this.config.schedule).map(Number);
     let check = new Date(date);
     check.setDate(check.getDate() - 1);
 
     for (let i = 0; i < 10; i++) {
       if (this.isBlockedDate(check)) return true;
-      if (scheduleDays.includes(check.getDay())) return false;
+      if (this.isWorkingDay(check)) return false;
       check.setDate(check.getDate() - 1);
     }
     return false;
@@ -246,7 +292,6 @@ class CalendarBooking {
 
     const daysToShow = this.config.daysToShow || 3;
     const minAhead = this.getMinDaysAhead();
-    const scheduleDays = Object.keys(this.config.schedule).map(Number);
 
     const startDate = new Date(today);
     startDate.setDate(today.getDate() + minAhead);
@@ -256,7 +301,7 @@ class CalendarBooking {
     const maxLookahead = this.config.weeksAhead * 7 + 14;
     let d = new Date(startDate);
     for (let i = 0; i < maxLookahead && workingDays.length < totalNeeded; i++) {
-      if (scheduleDays.includes(d.getDay()) && !this.isBlockedDate(d) && !this.isDateClosed(d) && !this.isPostHolidayBuffer(d)) {
+      if (this.isWorkingDay(d) && !this.isBlockedDate(d) && !this.isDateClosed(d) && !this.isPostHolidayBuffer(d)) {
         workingDays.push(new Date(d));
       }
       d.setDate(d.getDate() + 1);
@@ -271,7 +316,6 @@ class CalendarBooking {
     today.setHours(0, 0, 0, 0);
     const daysToShow = this.config.daysToShow || 3;
     const minAhead = this.getMinDaysAhead();
-    const scheduleDays = Object.keys(this.config.schedule).map(Number);
 
     const startDate = new Date(today);
     startDate.setDate(today.getDate() + minAhead);
@@ -280,7 +324,7 @@ class CalendarBooking {
     let count = 0;
     let d = new Date(startDate);
     for (let i = 0; i < maxLookahead; i++) {
-      if (scheduleDays.includes(d.getDay()) && !this.isBlockedDate(d) && !this.isDateClosed(d) && !this.isPostHolidayBuffer(d)) count++;
+      if (this.isWorkingDay(d) && !this.isBlockedDate(d) && !this.isDateClosed(d) && !this.isPostHolidayBuffer(d)) count++;
       d.setDate(d.getDate() + 1);
     }
     return Math.ceil(count / daysToShow);
@@ -473,13 +517,12 @@ class CalendarBooking {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const minAhead = this.getMinDaysAhead();
-      const scheduleDays = Object.keys(this.config.schedule).map(Number);
       const startDate = new Date(today);
       startDate.setDate(today.getDate() + minAhead);
       const datOpts = [];
       let d = new Date(startDate);
       for (let i = 0; i < 28; i++) {
-        if (scheduleDays.includes(d.getDay()) && !this.isBlockedDate(d) && !this.isDateClosed(d) && !this.isPostHolidayBuffer(d)) {
+        if (this.isWorkingDay(d) && !this.isBlockedDate(d) && !this.isDateClosed(d) && !this.isPostHolidayBuffer(d)) {
           datOpts.push(new Date(d));
         }
         d.setDate(d.getDate() + 1);

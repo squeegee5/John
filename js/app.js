@@ -496,31 +496,46 @@
     }
   }
 
-  // Get the "anytime" slot: 11am on next working day at least 2 days ahead
+  // Get the "anytime" slot: first free hour (11am preferred) on the next
+  // bookable day at least minDaysAhead ahead. Applies the same availability
+  // rules as the customer-facing calendar.
   function getAnytimeSlot() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const minAhead = CONFIG.calendar.minDaysAhead || 2;
-    const scheduleDays = Object.keys(CONFIG.calendar.schedule).map(Number);
+    const cal = calendarInstance || Object.assign(Object.create(CalendarBooking.prototype), {
+      config: CONFIG.calendar,
+      busySlots: [],
+    });
 
     const startDate = new Date(today);
     startDate.setDate(today.getDate() + minAhead);
 
     let d = new Date(startDate);
-    for (let i = 0; i < 14; i++) {
-      if (scheduleDays.includes(d.getDay())) {
-        const hour = 11;
-        const calInst = calendarInstance || { formatDateLong: CalendarBooking.prototype.formatDateLong, formatHour24: CalendarBooking.prototype.formatHour24 };
-        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-        const dateLong = `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
-        return {
-          date: new Date(d),
-          hour: hour,
-          dateFormatted: dateLong,
-          timeFormatted: '11:00 - 12:00',
-          label: `${dateLong}, 11:00 - 12:00`,
-        };
+    for (let i = 0; i < 28; i++) {
+      const bookable = cal.isWorkingDay(d) && !cal.isBlockedDate(d) &&
+        !cal.isDateClosed(d) && !cal.isPostHolidayBuffer(d);
+      if (bookable) {
+        const hours = cal.getHoursForDate(d);
+        const candidates = [];
+        for (let h = hours.start; h < hours.end; h++) candidates.push(h);
+        // Prefer 11am, otherwise the earliest free hour that day
+        candidates.sort((a, b) => (a === 11 ? -1 : b === 11 ? 1 : a - b));
+        const hour = candidates.find(h => !cal.isRangeBlocked(d, h, 0, hours));
+        if (hour != null) {
+          const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+          const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+          const dateLong = `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+          const pad = (n) => String(n).padStart(2, '0');
+          const timeLabel = `${pad(hour)}:00 - ${pad(hour + 1)}:00`;
+          return {
+            date: new Date(d),
+            hour: hour,
+            dateFormatted: dateLong,
+            timeFormatted: timeLabel,
+            label: `${dateLong}, ${timeLabel}`,
+          };
+        }
       }
       d.setDate(d.getDate() + 1);
     }

@@ -189,14 +189,30 @@ const CONFIG = {
     weeksAhead: 4,
     minDaysAhead: 2,
     daysToShow: 3,
+    // Weekday schedule in effect until a scheduleFrom entry takes over.
     schedule: {
       1: { start: 9, end: 16, label: 'Monday' },
       2: { start: 9, end: 16, label: 'Tuesday' },
       3: { start: 9, end: 16, label: 'Wednesday' },
       4: { start: 9, end: 16, label: 'Thursday' },
     },
-    blockedHours: [12],
-    mondayBlockedHours: [10],
+    // Schedule changes that take effect from a date onwards. List them in
+    // chronological order; the last entry whose `from` date has been reached
+    // is the one that applies. To go back to the full week, add a new entry
+    // with a later `from` date rather than editing the ones below.
+    scheduleFrom: [
+      {
+        // Reduced schedule while the design backlog clears: Mondays and
+        // Fridays only, from the week of Mon 5 Oct, until further notice.
+        from: '2026-10-05',
+        schedule: {
+          1: { start: 9, end: 16, label: 'Monday' },
+          5: { start: 9, end: 14, label: 'Friday' }, // last slot starts 1pm
+        },
+      },
+    ],
+    blockedHours: [12],       // 12pm–1pm, every day
+    mondayBlockedHours: [10], // Monday 10am–10:30am design meeting
     // Date-specific availability (YYYY-MM-DD). Overrides the weekday schedule.
     //   'closed'       = no consultations that day. Unlike blockedDates, this
     //                    does NOT push a prep-day buffer onto the next day.
