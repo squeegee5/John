@@ -186,7 +186,9 @@ const CONFIG = {
 
   // ── Calendar Settings ─────────────────────────────────────
   calendar: {
-    weeksAhead: 4,
+    // How far ahead customers can book. Raise this when few weekdays are
+    // bookable, so there are still plenty of dates to page through.
+    weeksAhead: 12,
     minDaysAhead: 2,
     daysToShow: 3,
     // Weekday schedule in effect until a scheduleFrom entry takes over.

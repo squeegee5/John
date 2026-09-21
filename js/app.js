@@ -512,7 +512,8 @@
     startDate.setDate(today.getDate() + minAhead);
 
     let d = new Date(startDate);
-    for (let i = 0; i < 28; i++) {
+    const maxLookahead = cal.getMaxLookaheadDays();
+    for (let i = 0; i < maxLookahead; i++) {
       const bookable = cal.isWorkingDay(d) && !cal.isBlockedDate(d) &&
         !cal.isDateClosed(d) && !cal.isPostHolidayBuffer(d);
       if (bookable) {

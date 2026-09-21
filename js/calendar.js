@@ -57,17 +57,18 @@ class CalendarBooking {
         return;
       }
 
-      // Fetch events for the next 5 weeks
+      // Cover every day the calendar can show, plus a week of headroom,
+      // so no bookable day is ever displayed without busy data.
       const now = new Date();
       const timeMin = now.toISOString();
       const end = new Date(now);
-      end.setDate(end.getDate() + 35);
+      end.setDate(end.getDate() + this.getMaxLookaheadDays() + 7);
       const timeMax = end.toISOString();
 
       return fetch(
         `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(gc.calendarId)}/events?` +
         `timeMin=${encodeURIComponent(timeMin)}&timeMax=${encodeURIComponent(timeMax)}` +
-        `&singleEvents=true&orderBy=startTime&fields=items(start,end,status)`,
+        `&singleEvents=true&orderBy=startTime&maxResults=2500&fields=items(start,end,status)`,
         {
           headers: { 'Authorization': `Bearer ${tokenData.access_token}` },
         }
@@ -90,6 +91,15 @@ class CalendarBooking {
     .finally(() => {
       this.busyLoaded = true;
     });
+  }
+
+  /**
+   * How many calendar days ahead the booking window reaches. With only a
+   * couple of bookable weekdays this needs to span many weeks to offer a
+   * useful number of days.
+   */
+  getMaxLookaheadDays() {
+    return (this.config.weeksAhead || 4) * 7 + 14;
   }
 
   /**
@@ -304,7 +314,7 @@ class CalendarBooking {
 
     const totalNeeded = (this.weekOffset + 1) * daysToShow;
     const workingDays = [];
-    const maxLookahead = this.config.weeksAhead * 7 + 14;
+    const maxLookahead = this.getMaxLookaheadDays();
     let d = new Date(startDate);
     for (let i = 0; i < maxLookahead && workingDays.length < totalNeeded; i++) {
       if (this.isWorkingDay(d) && !this.isBlockedDate(d) && !this.isDateClosed(d) && !this.isPostHolidayBuffer(d)) {
@@ -326,7 +336,7 @@ class CalendarBooking {
     const startDate = new Date(today);
     startDate.setDate(today.getDate() + minAhead);
 
-    const maxLookahead = this.config.weeksAhead * 7 + 14;
+    const maxLookahead = this.getMaxLookaheadDays();
     let count = 0;
     let d = new Date(startDate);
     for (let i = 0; i < maxLookahead; i++) {
@@ -527,7 +537,8 @@ class CalendarBooking {
       startDate.setDate(today.getDate() + minAhead);
       const datOpts = [];
       let d = new Date(startDate);
-      for (let i = 0; i < 28; i++) {
+      const maxLookahead = this.getMaxLookaheadDays();
+      for (let i = 0; i < maxLookahead; i++) {
         if (this.isWorkingDay(d) && !this.isBlockedDate(d) && !this.isDateClosed(d) && !this.isPostHolidayBuffer(d)) {
           datOpts.push(new Date(d));
         }
