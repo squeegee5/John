@@ -207,11 +207,14 @@ const CONFIG = {
         from: '2026-10-05',
         schedule: {
           1: { start: 9, end: 16, label: 'Monday' },
-          5: { start: 9, end: 14, label: 'Friday' }, // last slot starts 1pm
+          // Fridays: last slot starts 1pm, and no 12pm-1pm break
+          5: { start: 9, end: 14, label: 'Friday', blockedHours: [] },
         },
       },
     ],
-    blockedHours: [12],       // 12pm–1pm, every day
+    // Hours closed on every day, unless a schedule entry sets its own
+    // blockedHours (as Friday does above).
+    blockedHours: [12],       // 12pm–1pm
     mondayBlockedHours: [10], // Monday 10am–10:30am design meeting
     // Date-specific availability (YYYY-MM-DD). Overrides the weekday schedule.
     //   'closed'       = no consultations that day. Unlike blockedDates, this

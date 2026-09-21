@@ -233,7 +233,7 @@ class CalendarBooking {
     if (end > dayEnd) return true;
 
     // Blocked hours — any overlap, not just a matching start hour
-    const blocked = (this.config.blockedHours || []).slice();
+    const blocked = ((hours && hours.blockedHours) || []).slice();
     if (date.getDay() === 1) {
       (this.config.mondayBlockedHours || []).forEach(h => blocked.push(h));
     }
@@ -256,14 +256,20 @@ class CalendarBooking {
   getHoursForDate(date) {
     const schedule = this.getScheduleForDate(date)[date.getDay()];
     if (!schedule) return null;
+    // A schedule entry may set its own blockedHours (e.g. Friday has no
+    // 12pm-1pm break); otherwise the site-wide list applies.
+    const blockedHours = schedule.blockedHours != null
+      ? schedule.blockedHours
+      : (this.config.blockedHours || []);
     const override = this.getDateOverride(date);
     if (override && override !== 'closed') {
       return {
         start: override.start != null ? override.start : schedule.start,
         end: override.end != null ? override.end : schedule.end,
+        blockedHours: blockedHours,
       };
     }
-    return { start: schedule.start, end: schedule.end };
+    return { start: schedule.start, end: schedule.end, blockedHours: blockedHours };
   }
 
   /**
@@ -346,7 +352,7 @@ class CalendarBooking {
     // Build all possible slots
     const allSlots = [];
     for (let hour = schedule.start; hour < schedule.end; hour++) {
-      const isBlocked = this.config.blockedHours.includes(hour);
+      const isBlocked = (schedule.blockedHours || []).includes(hour);
       const isMondayBlocked = isMonday && mondayBlocked.includes(hour);
 
       // Check 28-hour minimum: slot start time must be >= earliest
