@@ -63,13 +63,20 @@ function setup() {
  * old notes to design-visit@.
  */
 function backfillSharing() {
+  // Apps Script stops a run after 6 minutes, so stop early and let a re-run
+  // pick up where this one left off (handled docs are skipped).
+  var started = Date.now();
   var files = findNotes_(null);
-  var shared = 0;
+  var shared = 0, handled = 0, remaining = 0;
   files.forEach(function (f) {
+    if (isDone_(f.getId())) return;
+    if (Date.now() - started > 4.5 * 60 * 1000) { remaining++; return; }
     if (shareWithCompany_(f)) shared++;
     markDone_(f.getId());
+    handled++;
   });
-  Logger.log('Backfill: checked ' + files.length + ' notes docs, newly shared ' + shared + '.');
+  Logger.log('Backfill: handled ' + handled + ', newly shared ' + shared +
+    (remaining ? ', ' + remaining + ' still to do. Run backfillSharing again.' : '. All done.'));
 }
 
 /**
