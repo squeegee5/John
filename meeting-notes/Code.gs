@@ -1,51 +1,25 @@
 /**
- * Consultation Notes Helper — Google Apps Script
+ * Consultation Notes Helper — Google Apps Script (runs as john@southpaw.co.uk)
  *
- * Google Meet saves "Notes by Gemini" for every design call into the Drive of
- * the account that created the Meet link. The booking form creates events with
- * john@southpaw.co.uk, so every notes doc lands in John's Drive, shared with
- * nobody else, and only John gets the notes email.
+ * Every 10 minutes, for "Notes by Gemini" from booking-form calls only
+ * (titles starting "Southpaw Design Call" / "Mike Ayres Design Call"):
+ *   1. Shares the notes doc so anyone at Somato Group with the link can edit
+ *      (company only — customers never get access)
+ *   2. Forwards Gemini's own notes email to design-visit@southpaw.co.uk, after
+ *      the doc is shared, so colleagues can open "View the full notes"
  *
- * This script runs every 10 minutes as john@southpaw.co.uk and, for each new
- * notes doc from a booking-form call (titles starting "Southpaw Design Call" or
- * "Mike Ayres Design Call" — John's other meetings are never touched):
- *   1. Shares it so anyone at Somato Group with the link can edit
- *   2. Optionally moves it into a shared folder / Shared Drive
- *   3. Emails the notes and link to design-visit@southpaw.co.uk (once)
- *
- * Customers are never given access: sharing is company-only.
- *
- * SETUP (one time, about 2 minutes):
- *  1. Go to https://script.google.com signed in as john@southpaw.co.uk
- *     (check the account icon top-right — NOT a personal Gmail account)
- *  2. New project → paste this whole file over the placeholder code
- *  3. Rename the project "Consultation Notes Helper"
- *  4. Choose "setup" in the function dropdown at the top and click Run
- *  5. Approve the permissions prompt (Advanced → Go to project → Allow)
- *
- * setup() shares every existing consultation notes doc with the company
- * straight away (without emailing old ones), then schedules itself to run
- * every 10 minutes. Nothing needs deploying. Run setup() again at any time;
- * it replaces its own schedule rather than adding a second one.
+ * First-time setup: choose "setup" in the function dropdown, Run, approve.
+ * Updating this code: just paste and save — the schedule keeps running.
  */
 
 const SETTINGS = {
-  // Only notes docs whose titles start with one of these are processed
   callTitlePrefixes: ['Southpaw Design Call', 'Mike Ayres Design Call'],
   notesTitleMarker: 'Notes by Gemini',
-
-  // Who gets emailed when new notes are ready
   notifyEmail: 'design-visit@southpaw.co.uk',
-
-  // Optional: ID of a Drive folder (e.g. a folder in a Shared Drive) to move
-  // notes into. It's the long ID at the end of the folder's URL.
-  // Leave as '' to keep notes where Google Meet puts them.
+  geminiSender: 'gemini-notes@google.com',
+  // Optional: folder ID (e.g. in a Shared Drive) to move notes into. '' = leave in place.
   moveToFolderId: '',
-
-  // Wait this long after Gemini last wrote to the doc before processing it
   settleMinutes: 5,
-
-  // How far back each run looks for new notes
   lookbackDays: 7,
 };
 
@@ -57,11 +31,6 @@ function setup() {
   backfillSharing();
 }
 
-/**
- * Shares every existing consultation notes doc with the company and marks it
- * as handled, without emailing — so switching this on doesn't send a flood of
- * old notes to design-visit@.
- */
 function backfillSharing() {
   // Apps Script stops a run after 6 minutes, so stop early and let a re-run
   // pick up where this one left off (handled docs are skipped).
@@ -89,15 +58,73 @@ function processNewNotes() {
   findNotes_(since).forEach(function (f) {
     if (isDone_(f.getId())) return;
     if (f.getLastUpdated().getTime() > settledBefore) return; // Gemini may still be writing
-
     shareWithCompany_(f);
     moveIfConfigured_(f);
-    emailNotes_(f);
     markDone_(f.getId());
+  });
+
+  forwardGeminiEmails_();
+}
+
+/**
+ * Forwards Gemini's notes email for each consultation call to design-visit@,
+ * making sure the linked doc is shared first. Gemini emails that arrived
+ * before this feature was switched on are never forwarded.
+ */
+function forwardGeminiEmails_() {
+  var props = PropertiesService.getScriptProperties();
+  var startedAt = Number(props.getProperty('forwardingStartedAt'));
+  if (!startedAt) {
+    startedAt = Date.now();
+    props.setProperty('forwardingStartedAt', String(startedAt));
+  }
+
+  var threads = GmailApp.search('from:' + SETTINGS.geminiSender + ' newer_than:' + SETTINGS.lookbackDays + 'd');
+  threads.forEach(function (thread) {
+    thread.getMessages().forEach(function (msg) {
+      var key = 'msg:' + msg.getId();
+      if (props.getProperty(key) === '1') return;
+      if (msg.getDate().getTime() < startedAt) return;
+      if (msg.getFrom().indexOf(SETTINGS.geminiSender) === -1) return;
+
+      var file = consultationDocFromEmail_(msg.getBody());
+      if (file === undefined) return;          // doc not readable yet — try next run
+      if (file) {                              // null = not a consultation call
+        shareWithCompany_(file);
+        msg.forward(SETTINGS.notifyEmail, { name: 'Southpaw Design Team' });
+      }
+      props.setProperty(key, '1');
+    });
   });
 }
 
+/**
+ * Finds the Gemini notes doc linked from an email.
+ * Returns the file, null if the email isn't for a consultation call, or
+ * undefined if the doc couldn't be opened (so it's retried next run).
+ */
+function consultationDocFromEmail_(html) {
+  var text = String(html).replace(/%2F/gi, '/');
+  var re = /document\/d\/([A-Za-z0-9_-]{20,})/g;
+  var ids = {}, m, sawUnreadable = false;
+  while ((m = re.exec(text)) !== null) ids[m[1]] = true;
+
+  for (var id in ids) {
+    var file;
+    try { file = DriveApp.getFileById(id); } catch (e) { sawUnreadable = true; continue; }
+    if (isConsultationNotes_(file.getName())) return file;
+  }
+  return sawUnreadable ? undefined : null;
+}
+
 // ── Helpers ─────────────────────────────────────────────────
+
+function isConsultationNotes_(name) {
+  var isConsultation = SETTINGS.callTitlePrefixes.some(function (p) {
+    return name.indexOf(p) === 0;
+  });
+  return isConsultation && name.indexOf(SETTINGS.notesTitleMarker) !== -1;
+}
 
 function findNotes_(since) {
   var q = "title contains '" + SETTINGS.notesTitleMarker + "'" +
@@ -109,11 +136,7 @@ function findNotes_(since) {
   var it = DriveApp.searchFiles(q);
   while (it.hasNext()) {
     var f = it.next();
-    var name = f.getName();
-    var isConsultation = SETTINGS.callTitlePrefixes.some(function (p) {
-      return name.indexOf(p) === 0;
-    });
-    if (isConsultation && name.indexOf(SETTINGS.notesTitleMarker) !== -1) out.push(f);
+    if (isConsultationNotes_(f.getName())) out.push(f);
   }
   return out;
 }
@@ -149,47 +172,10 @@ function moveIfConfigured_(file) {
   }
 }
 
-function emailNotes_(file) {
-  var callName = file.getName()
-    .replace(new RegExp('\\s*[–-]\\s*' + SETTINGS.notesTitleMarker + '\\s*$'), '');
-
-  var notesText = '';
-  try {
-    notesText = DocumentApp.openById(file.getId()).getBody().getText().trim();
-    if (notesText.length > 8000) notesText = notesText.slice(0, 8000) + '\n…';
-  } catch (e) {
-    Logger.log('Could not read "' + file.getName() + '": ' + e);
-  }
-
-  var html =
-    '<div style="font-family:Arial,Helvetica,sans-serif;color:#333;line-height:1.5;max-width:640px;">' +
-    '<p>Notes from <strong>' + escapeHtml_(callName) + '</strong> are ready. ' +
-    'Anyone at Southpaw can open and edit them.</p>' +
-    '<p><a href="' + file.getUrl() + '" style="color:#1a73e8;font-weight:bold;">Open the notes</a></p>' +
-    (notesText
-      ? '<hr style="border:none;border-top:1px solid #ddd;">' +
-        '<div style="white-space:pre-wrap;font-size:14px;">' + escapeHtml_(notesText) + '</div>'
-      : '') +
-    '</div>';
-
-  GmailApp.sendEmail(
-    SETTINGS.notifyEmail,
-    'Consultation notes: ' + callName,
-    'Notes from ' + callName + ':\n' + file.getUrl() + '\n\n' + notesText,
-    { htmlBody: html, name: 'Southpaw Consultation Notes' }
-  );
-}
-
 function isDone_(id) {
   return PropertiesService.getScriptProperties().getProperty('done:' + id) === '1';
 }
 
 function markDone_(id) {
   PropertiesService.getScriptProperties().setProperty('done:' + id, '1');
-}
-
-function escapeHtml_(s) {
-  return String(s)
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
 }
