@@ -5,17 +5,23 @@
  * (titles starting "Southpaw Design Call" / "Mike Ayres Design Call"):
  *   1. Shares the notes doc so anyone at Somato Group with the link can edit
  *      (company only — customers never get access)
- *   2. Forwards Gemini's own notes email to design-visit@southpaw.co.uk, after
- *      the doc is shared, so colleagues can open "View the full notes"
+ *   2. Forwards Gemini's own notes email to that brand's design-visit@
+ *      address, after the doc is shared, so colleagues can open
+ *      "View the full notes":
+ *        Southpaw Design Call    → design-visit@southpaw.co.uk
+ *        Mike Ayres Design Call  → design-visit@mikeayresdesign.co.uk
  *
  * First-time setup: choose "setup" in the function dropdown, Run, approve.
  * Updating this code: just paste and save — the schedule keeps running.
  */
 
 const SETTINGS = {
-  callTitlePrefixes: ['Southpaw Design Call', 'Mike Ayres Design Call'],
+  // Calls whose notes are handled, and where each brand's notes are sent
+  brands: [
+    { prefix: 'Southpaw Design Call', notifyEmail: 'design-visit@southpaw.co.uk', senderName: 'Southpaw Design Team' },
+    { prefix: 'Mike Ayres Design Call', notifyEmail: 'design-visit@mikeayresdesign.co.uk', senderName: 'Mike Ayres Design Team' },
+  ],
   notesTitleMarker: 'Notes by Gemini',
-  notifyEmail: 'design-visit@southpaw.co.uk',
   geminiSender: 'gemini-notes@google.com',
   // Optional: folder ID (e.g. in a Shared Drive) to move notes into. '' = leave in place.
   moveToFolderId: '',
@@ -91,7 +97,8 @@ function forwardGeminiEmails_() {
       if (file === undefined) return;          // doc not readable yet — try next run
       if (file) {                              // null = not a consultation call
         shareWithCompany_(file);
-        msg.forward(SETTINGS.notifyEmail, { name: 'Southpaw Design Team' });
+        var brand = brandFor_(file.getName());
+        msg.forward(brand.notifyEmail, { name: brand.senderName });
       }
       props.setProperty(key, '1');
     });
@@ -119,11 +126,15 @@ function consultationDocFromEmail_(html) {
 
 // ── Helpers ─────────────────────────────────────────────────
 
+function brandFor_(name) {
+  for (var i = 0; i < SETTINGS.brands.length; i++) {
+    if (name.indexOf(SETTINGS.brands[i].prefix) === 0) return SETTINGS.brands[i];
+  }
+  return null;
+}
+
 function isConsultationNotes_(name) {
-  var isConsultation = SETTINGS.callTitlePrefixes.some(function (p) {
-    return name.indexOf(p) === 0;
-  });
-  return isConsultation && name.indexOf(SETTINGS.notesTitleMarker) !== -1;
+  return !!brandFor_(name) && name.indexOf(SETTINGS.notesTitleMarker) !== -1;
 }
 
 function findNotes_(since) {
