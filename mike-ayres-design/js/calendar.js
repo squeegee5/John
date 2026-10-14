@@ -9,7 +9,9 @@
  *  - 24hr notice required. If current time is afternoon (>=12),
  *    earliest booking is day after tomorrow.
  *  - Only 4-5 slots shown per day (pseudo-random, seeded by date)
- *  - No bookings Monday 1-3pm
+ *  - Working weekdays can change from a given date (CONFIG scheduleFrom)
+ *  - Per-date closures / restricted hours (CONFIG dateOverrides)
+ *  - Or: only explicit per-date time windows (CONFIG availabilityWindows)
  *  - Special time request option with 15-min increments
  * ============================================================
  */
@@ -56,17 +58,18 @@ class CalendarBooking {
         return;
       }
 
-      // Fetch events for the next 5 weeks
+      // Cover every day the calendar can show, plus a week of headroom,
+      // so no bookable day is ever displayed without busy data.
       const now = new Date();
       const timeMin = now.toISOString();
       const end = new Date(now);
-      end.setDate(end.getDate() + 35);
+      end.setDate(end.getDate() + this.getMaxLookaheadDays() + 7);
       const timeMax = end.toISOString();
 
       return fetch(
         `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(gc.calendarId)}/events?` +
         `timeMin=${encodeURIComponent(timeMin)}&timeMax=${encodeURIComponent(timeMax)}` +
-        `&singleEvents=true&orderBy=startTime&fields=items(start,end,status)`,
+        `&singleEvents=true&orderBy=startTime&maxResults=2500&fields=items(start,end,status)`,
         {
           headers: { 'Authorization': `Bearer ${tokenData.access_token}` },
         }
@@ -92,6 +95,73 @@ class CalendarBooking {
   }
 
   /**
+   * How many calendar days ahead the booking window reaches. With only a
+   * couple of bookable weekdays this needs to span many weeks to offer a
+   * useful number of days.
+   */
+  getMaxLookaheadDays() {
+    if (this.usesWindows()) {
+      // Reach the last listed date, however far ahead it is
+      const keys = Object.keys(this.config.availabilityWindows).sort();
+      const [y, m, d] = keys[keys.length - 1].split('-').map(Number);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return Math.max(1, Math.ceil((new Date(y, m - 1, d) - today) / 86400000) + 2);
+    }
+    return (this.config.weeksAhead || 4) * 7 + 14;
+  }
+
+  // ── Date-specific availability windows ──────────────────
+  // When config.availabilityWindows is set, ONLY the listed dates and times
+  // are bookable; the weekday schedule, blocked hours and prep-day buffer
+  // are not used. Existing calendar bookings are still respected.
+
+  usesWindows() {
+    const w = this.config.availabilityWindows;
+    return !!w && Object.keys(w).length > 0;
+  }
+
+  toMinutes(hhmm) {
+    const [h, m] = String(hhmm).split(':').map(Number);
+    return h * 60 + (m || 0);
+  }
+
+  getWindowsForDate(date) {
+    const list = (this.config.availabilityWindows || {})[this.dateKey(date)] || [];
+    return list.map(([s, e]) => ({ start: this.toMinutes(s), end: this.toMinutes(e) }));
+  }
+
+  getSlotMinutes() {
+    return this.config.slotDuration || 60;
+  }
+
+  isRangeBusy(start, end) {
+    return this.busySlots.some(busy => start < busy.end && end > busy.start);
+  }
+
+  /**
+   * Every bookable slot on a date in windows mode: one starting every
+   * `stepMinutes` from each window's start that finishes inside the window,
+   * meets the minimum notice, and doesn't overlap an existing booking.
+   */
+  getWindowSlots(date, stepMinutes) {
+    const dur = this.getSlotMinutes();
+    const step = stepMinutes || dur;
+    const earliest = this.getEarliestBookingTime();
+    const out = [];
+    this.getWindowsForDate(date).forEach(w => {
+      for (let t = w.start; t + dur <= w.end; t += step) {
+        const start = new Date(date);
+        start.setHours(Math.floor(t / 60), t % 60, 0, 0);
+        const end = new Date(start.getTime() + dur * 60000);
+        if (start < earliest || this.isRangeBusy(start, end)) continue;
+        out.push({ hour: start.getHours(), minute: start.getMinutes(), date: new Date(date) });
+      }
+    });
+    return out;
+  }
+
+  /**
    * Check if a given hour slot on a date overlaps with any busy time.
    */
   isSlotBusy(date, hour) {
@@ -105,12 +175,37 @@ class CalendarBooking {
     );
   }
 
-  /**
-   * Minimum days ahead for calendar display.
-   * Always start from tomorrow; individual slots are filtered
-   * by the 28-hour minimum notice rule in getSlotsForDay().
-   * If today is Friday, earliest is Tuesday (skip Monday for prep).
-   */
+  buildSpecialTimeOptions(date) {
+    if (!date) return '';
+    if (this.usesWindows()) {
+      const opts = this.getWindowSlots(date, 15).map(s =>
+        `<option value="${s.hour}:${s.minute}">${this.formatTime15(s.hour, s.minute)}</option>`
+      ).join('');
+      return opts || '<option value="" disabled>No times available</option>';
+    }
+    const hours = this.getHoursForDate(date);
+    if (!hours || this.isDateClosed(date) || this.isBlockedDate(date) || this.isPostHolidayBuffer(date)) {
+      return '<option value="" disabled>No times available</option>';
+    }
+
+    const earliest = this.getEarliestBookingTime();
+
+    let html = '';
+    for (let h = hours.start; h < hours.end; h++) {
+      for (let m = 0; m < 60; m += 15) {
+        const slotStart = new Date(date);
+        slotStart.setHours(h, m, 0, 0);
+        if (slotStart < earliest) continue;
+        if (this.isRangeBlocked(date, h, m, hours)) continue;
+
+        const label = this.formatTime15(h, m);
+        html += `<option value="${h}:${m}">${label}</option>`;
+      }
+    }
+    if (!html) html = '<option value="" disabled>No times available</option>';
+    return html;
+  }
+
   getMinDaysAhead() {
     const today = new Date();
     const dow = today.getDay(); // 0=Sun … 5=Fri 6=Sat
@@ -147,10 +242,110 @@ class CalendarBooking {
    */
   isBlockedDate(date) {
     const blockedDates = this.config.blockedDates || [];
-    const dateStr = date.getFullYear() + '-' +
+    return blockedDates.includes(this.dateKey(date));
+  }
+
+  /**
+   * YYYY-MM-DD key for a date, in local time.
+   */
+  dateKey(date) {
+    return date.getFullYear() + '-' +
       String(date.getMonth() + 1).padStart(2, '0') + '-' +
       String(date.getDate()).padStart(2, '0');
-    return blockedDates.includes(dateStr);
+  }
+
+  /**
+   * One-off availability override for a specific date, or null.
+   * Returns 'closed' or { start, end }.
+   */
+  getDateOverride(date) {
+    const overrides = this.config.dateOverrides || {};
+    return overrides[this.dateKey(date)] || null;
+  }
+
+  /**
+   * True if this specific date is closed for consultations.
+   * Unlike a blocked date, this does not add a prep buffer to the next day.
+   */
+  isDateClosed(date) {
+    return this.getDateOverride(date) === 'closed';
+  }
+
+  /**
+   * The weekday schedule in effect on a given date. Entries in
+   * config.scheduleFrom replace the base schedule from their date onwards.
+   */
+  getScheduleForDate(date) {
+    const key = this.dateKey(date);
+    let active = this.config.schedule || {};
+    const changes = this.config.scheduleFrom || [];
+    for (const change of changes) {
+      if (change && change.from && key >= change.from) active = change.schedule || {};
+    }
+    return active;
+  }
+
+  /**
+   * True if consultations run on this date's weekday.
+   */
+  isWorkingDay(date) {
+    if (this.usesWindows()) return this.getWindowsForDate(date).length > 0;
+    return !!this.getScheduleForDate(date)[date.getDay()];
+  }
+
+  /**
+   * True if a consultation starting at startHour:startMinute would clash with
+   * a blocked window (lunch, the Monday morning block), run past the end of
+   * the day's consultation hours, or overlap an existing calendar booking.
+   */
+  isRangeBlocked(date, startHour, startMinute, hours) {
+    const start = new Date(date);
+    start.setHours(startHour, startMinute, 0, 0);
+    const end = new Date(start.getTime() + (this.config.slotDuration || 60) * 60000);
+
+    // Must finish within the day's consultation hours
+    const dayEnd = new Date(date);
+    dayEnd.setHours(hours.end, 0, 0, 0);
+    if (end > dayEnd) return true;
+
+    // Blocked hours — any overlap, not just a matching start hour
+    const blocked = ((hours && hours.blockedHours) || []).slice();
+    if (date.getDay() === 1) {
+      (this.config.mondayBlockedHours || []).forEach(h => blocked.push(h));
+    }
+    for (const h of blocked) {
+      const bStart = new Date(date);
+      bStart.setHours(h, 0, 0, 0);
+      const bEnd = new Date(date);
+      bEnd.setHours(h + 1, 0, 0, 0);
+      if (start < bEnd && end > bStart) return true;
+    }
+
+    // Existing Google Calendar bookings — any overlap
+    return this.busySlots.some(busy => start < busy.end && end > busy.start);
+  }
+
+  /**
+   * Working hours for a date: the weekday schedule in effect on that date,
+   * narrowed by any date-specific override. Null if not a working day.
+   */
+  getHoursForDate(date) {
+    const schedule = this.getScheduleForDate(date)[date.getDay()];
+    if (!schedule) return null;
+    // A schedule entry may set its own blockedHours (e.g. Friday has no
+    // 12pm-1pm break); otherwise the site-wide list applies.
+    const blockedHours = schedule.blockedHours != null
+      ? schedule.blockedHours
+      : (this.config.blockedHours || []);
+    const override = this.getDateOverride(date);
+    if (override && override !== 'closed') {
+      return {
+        start: override.start != null ? override.start : schedule.start,
+        end: override.end != null ? override.end : schedule.end,
+        blockedHours: blockedHours,
+      };
+    }
+    return { start: schedule.start, end: schedule.end, blockedHours: blockedHours };
   }
 
   /**
@@ -159,13 +354,13 @@ class CalendarBooking {
    * this day needs a buffer (designers need prep time).
    */
   isPostHolidayBuffer(date) {
-    const scheduleDays = Object.keys(this.config.schedule).map(Number);
+    if (this.usesWindows()) return false; // listed dates are explicit
     let check = new Date(date);
     check.setDate(check.getDate() - 1);
 
     for (let i = 0; i < 10; i++) {
       if (this.isBlockedDate(check)) return true;
-      if (scheduleDays.includes(check.getDay())) return false;
+      if (this.isWorkingDay(check)) return false;
       check.setDate(check.getDate() - 1);
     }
     return false;
@@ -180,17 +375,16 @@ class CalendarBooking {
 
     const daysToShow = this.config.daysToShow || 3;
     const minAhead = this.getMinDaysAhead();
-    const scheduleDays = Object.keys(this.config.schedule).map(Number);
 
     const startDate = new Date(today);
     startDate.setDate(today.getDate() + minAhead);
 
     const totalNeeded = (this.weekOffset + 1) * daysToShow;
     const workingDays = [];
-    const maxLookahead = this.config.weeksAhead * 7 + 14;
+    const maxLookahead = this.getMaxLookaheadDays();
     let d = new Date(startDate);
     for (let i = 0; i < maxLookahead && workingDays.length < totalNeeded; i++) {
-      if (scheduleDays.includes(d.getDay()) && !this.isBlockedDate(d) && !this.isPostHolidayBuffer(d)) {
+      if (this.isWorkingDay(d) && !this.isBlockedDate(d) && !this.isDateClosed(d) && !this.isPostHolidayBuffer(d)) {
         workingDays.push(new Date(d));
       }
       d.setDate(d.getDate() + 1);
@@ -205,16 +399,15 @@ class CalendarBooking {
     today.setHours(0, 0, 0, 0);
     const daysToShow = this.config.daysToShow || 3;
     const minAhead = this.getMinDaysAhead();
-    const scheduleDays = Object.keys(this.config.schedule).map(Number);
 
     const startDate = new Date(today);
     startDate.setDate(today.getDate() + minAhead);
 
-    const maxLookahead = this.config.weeksAhead * 7 + 14;
+    const maxLookahead = this.getMaxLookaheadDays();
     let count = 0;
     let d = new Date(startDate);
     for (let i = 0; i < maxLookahead; i++) {
-      if (scheduleDays.includes(d.getDay()) && !this.isBlockedDate(d) && !this.isPostHolidayBuffer(d)) count++;
+      if (this.isWorkingDay(d) && !this.isBlockedDate(d) && !this.isDateClosed(d) && !this.isPostHolidayBuffer(d)) count++;
       d.setDate(d.getDate() + 1);
     }
     return Math.ceil(count / daysToShow);
@@ -225,9 +418,20 @@ class CalendarBooking {
    * Applies: blocked hours, Monday 1-3pm block, random slot hiding.
    */
   getSlotsForDay(date) {
+    if (this.usesWindows()) {
+      const dur = this.getSlotMinutes();
+      const slots = this.getWindowSlots(date).map(s => {
+        const end = s.hour * 60 + s.minute + dur;
+        return Object.assign(s, {
+          label: `${this.formatTime12(s.hour, s.minute)} – ${this.formatTime12(Math.floor(end / 60), end % 60)}`,
+        });
+      });
+      return this.pickSlots(date, slots);
+    }
+
     const dayOfWeek = date.getDay();
-    const schedule = this.config.schedule[dayOfWeek];
-    if (!schedule) return [];
+    const schedule = this.getHoursForDate(date);
+    if (!schedule || this.isDateClosed(date)) return [];
 
     const earliest = this.getEarliestBookingTime(); // 28 hours from now
     const isMonday = dayOfWeek === 1;
@@ -236,7 +440,7 @@ class CalendarBooking {
     // Build all possible slots
     const allSlots = [];
     for (let hour = schedule.start; hour < schedule.end; hour++) {
-      const isBlocked = this.config.blockedHours.includes(hour);
+      const isBlocked = (schedule.blockedHours || []).includes(hour);
       const isMondayBlocked = isMonday && mondayBlocked.includes(hour);
 
       // Check 28-hour minimum: slot start time must be >= earliest
@@ -249,6 +453,7 @@ class CalendarBooking {
 
       allSlots.push({
         hour,
+        minute: 0,
         label: `${this.formatHour(hour)} \u2013 ${this.formatHour(hour + 1)}`,
         date: new Date(date),
         unavailable: isUnavailable,
@@ -257,27 +462,28 @@ class CalendarBooking {
       });
     }
 
-    // Filter to only available slots, then randomly select 4-5
-    const available = allSlots.filter(s => !s.unavailable);
+    return this.pickSlots(date, allSlots.filter(s => !s.unavailable));
+  }
+
+  /**
+   * Show at most config.slotsToShow of the available slots, chosen
+   * pseudo-randomly (seeded by date so a refresh shows the same ones).
+   */
+  pickSlots(date, available) {
     const slotsToShow = this.config.slotsToShow || 5;
+    if (available.length <= slotsToShow) return available;
 
-    if (available.length > slotsToShow) {
-      // Use date as seed so the same slots appear on refresh
-      const seed = date.toISOString().slice(0, 10);
-      const shuffled = available.slice();
-      // Fisher-Yates with seeded random
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const r = this.seededRandom(seed + i);
-        const j = Math.floor(r * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-      }
-      const shown = shuffled.slice(0, slotsToShow);
-      // Sort by hour for display
-      shown.sort((a, b) => a.hour - b.hour);
-      return shown;
+    const seed = date.toISOString().slice(0, 10);
+    const shuffled = available.slice();
+    // Fisher-Yates with seeded random
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const r = this.seededRandom(seed + i);
+      const j = Math.floor(r * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
-
-    return available;
+    const shown = shuffled.slice(0, slotsToShow);
+    shown.sort((a, b) => (a.hour * 60 + a.minute) - (b.hour * 60 + b.minute));
+    return shown;
   }
 
   formatHour(h) {
@@ -293,6 +499,29 @@ class CalendarBooking {
 
   formatTime15(h, m) {
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  }
+
+  formatTime12(h, m) {
+    const suffix = h < 12 || h === 24 ? 'am' : 'pm';
+    const h12 = h % 12 === 0 ? 12 : h % 12;
+    return `${h12}:${String(m).padStart(2, '0')}${suffix}`;
+  }
+
+  /**
+   * Slot details passed to onSelect: "09:00 - 09:30" style times, using
+   * the configured slot length.
+   */
+  describeSlot(date, hour, minute) {
+    const end = hour * 60 + minute + this.getSlotMinutes();
+    const time = `${this.formatTime15(hour, minute)} - ${this.formatTime15(Math.floor(end / 60), end % 60)}`;
+    return {
+      date,
+      hour,
+      minute,
+      dateFormatted: this.formatDateLong(date),
+      timeFormatted: time,
+      label: `${this.formatDateLong(date)}, ${time}`,
+    };
   }
 
   formatDate(date) {
@@ -327,7 +556,12 @@ class CalendarBooking {
 
   render() {
     const days = this.getVisibleDays();
-    if (days.length === 0) return;
+    if (days.length === 0) {
+      this.container.innerHTML = '<div class="calendar-slot unavailable">' +
+        'There are no consultation times available at the moment. ' +
+        'Please go back and send your details, and our team will be in touch.</div>';
+      return;
+    }
     const firstDay = days[0];
     const lastDay = days[days.length - 1];
     const monthLabel = this.getMonthLabel(firstDay, lastDay);
@@ -368,6 +602,7 @@ class CalendarBooking {
           const isSelected = this.selectedSlot &&
             this.selectedSlot.date.toDateString() === slot.date.toDateString() &&
             this.selectedSlot.hour === slot.hour &&
+            (this.selectedSlot.minute || 0) === (slot.minute || 0) &&
             !this.selectedSlot.isSpecial;
           const classes = ['calendar-slot'];
           if (slot.unavailable) classes.push('unavailable');
@@ -375,7 +610,8 @@ class CalendarBooking {
           html += `
             <div class="${classes.join(' ')}"
                  data-date="${slot.date.toISOString()}"
-                 data-hour="${slot.hour}">
+                 data-hour="${slot.hour}"
+                 data-minute="${slot.minute || 0}">
               ${slot.label}
             </div>
           `;
@@ -403,17 +639,17 @@ class CalendarBooking {
     }
 
     if (this.showSpecialRequest) {
-      // Build date options from visible working days (all future days)
+      // Build date options using the same rules as the main calendar
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const minAhead = this.getMinDaysAhead();
-      const scheduleDays = Object.keys(this.config.schedule).map(Number);
       const startDate = new Date(today);
       startDate.setDate(today.getDate() + minAhead);
       const datOpts = [];
       let d = new Date(startDate);
-      for (let i = 0; i < 28; i++) {
-        if (scheduleDays.includes(d.getDay()) && !this.isBlockedDate(d) && !this.isPostHolidayBuffer(d)) {
+      const maxLookahead = this.getMaxLookaheadDays();
+      for (let i = 0; i < maxLookahead; i++) {
+        if (this.isWorkingDay(d) && !this.isBlockedDate(d) && !this.isDateClosed(d) && !this.isPostHolidayBuffer(d)) {
           datOpts.push(new Date(d));
         }
         d.setDate(d.getDate() + 1);
@@ -423,15 +659,9 @@ class CalendarBooking {
         return `<option value="${dt.toISOString()}">${this.formatDateLong(dt)}</option>`;
       }).join('');
 
-      // Time options in 15-min increments (9:00 to 15:45)
-      let timeOptionsHtml = '';
-      for (let h = 9; h < 16; h++) {
-        for (let m = 0; m < 60; m += 15) {
-          if (h === 15 && m > 0) break; // stop at 15:00 (3pm)
-          const label = this.formatTime15(h, m);
-          timeOptionsHtml += `<option value="${h}:${m}">${label}</option>`;
-        }
-      }
+      // Build initial time options for the first date
+      const firstDate = datOpts.length > 0 ? datOpts[0] : null;
+      let timeOptionsHtml = this.buildSpecialTimeOptions(firstDate);
 
       reqEl.innerHTML = `
         <div class="special-request-form">
@@ -474,6 +704,17 @@ class CalendarBooking {
       });
     }
 
+    const dateSelect = reqEl.querySelector('#specialDate');
+    if (dateSelect) {
+      dateSelect.addEventListener('change', () => {
+        const timeSelect = reqEl.querySelector('#specialTime');
+        if (timeSelect) {
+          const selectedDate = new Date(dateSelect.value);
+          timeSelect.innerHTML = this.buildSpecialTimeOptions(selectedDate);
+        }
+      });
+    }
+
     const cancelBtn = reqEl.querySelector('#specialCancel');
     if (cancelBtn) {
       cancelBtn.addEventListener('click', () => {
@@ -488,13 +729,9 @@ class CalendarBooking {
         const dateEl = reqEl.querySelector('#specialDate');
         const timeEl = reqEl.querySelector('#specialTime');
         const infoEl = reqEl.querySelector('#specialInfo');
+        if (!timeEl.value) return; // "No times available"
         const date = new Date(dateEl.value);
         const [hour, minute] = timeEl.value.split(':').map(Number);
-        const endMin = minute + 30;
-        const endHour = hour + Math.floor(endMin / 60);
-        const endMinute = endMin % 60;
-
-        const timeLabel = `${this.formatTime15(hour, minute)} - ${this.formatTime15(endHour, endMinute)}`;
         const info = infoEl ? infoEl.value.trim() : '';
 
         this.selectedSlot = { date, hour, minute, isSpecial: true };
@@ -502,16 +739,11 @@ class CalendarBooking {
         this.render();
 
         if (this.onSelect) {
-          this.onSelect({
-            date,
-            hour,
-            minute,
-            isSpecial: true,
-            specialInfo: info,
-            dateFormatted: this.formatDateLong(date),
-            timeFormatted: timeLabel,
-            label: `${this.formatDateLong(date)}, ${timeLabel} (Special Request)`,
-          });
+          const slot = this.describeSlot(date, hour, minute);
+          slot.isSpecial = true;
+          slot.specialInfo = info;
+          slot.label += ' (Special Request)';
+          this.onSelect(slot);
         }
       });
     }
@@ -545,33 +777,21 @@ class CalendarBooking {
     slots.forEach(slotEl => {
       slotEl.addEventListener('click', () => {
         const date = new Date(slotEl.dataset.date);
-        const hour = parseInt(slotEl.dataset.hour);
+        const hour = parseInt(slotEl.dataset.hour, 10);
+        const minute = parseInt(slotEl.dataset.minute || '0', 10);
 
-        this.selectedSlot = { date, hour };
+        this.selectedSlot = { date, hour, minute };
         this.render();
 
-        if (this.onSelect) {
-          this.onSelect({
-            date,
-            hour,
-            dateFormatted: this.formatDateLong(date),
-            timeFormatted: `${this.formatHour24(hour)} - ${this.formatHour24(hour + 1)}`,
-            label: `${this.formatDateLong(date)}, ${this.formatHour24(hour)} - ${this.formatHour24(hour + 1)}`,
-          });
-        }
+        if (this.onSelect) this.onSelect(this.describeSlot(date, hour, minute));
       });
     });
   }
 
   getSelection() {
     if (!this.selectedSlot) return null;
-    return {
-      date: this.selectedSlot.date,
-      hour: this.selectedSlot.hour,
-      dateFormatted: this.formatDateLong(this.selectedSlot.date),
-      timeFormatted: `${this.formatHour24(this.selectedSlot.hour)} - ${this.formatHour24(this.selectedSlot.hour + 1)}`,
-      label: `${this.formatDateLong(this.selectedSlot.date)}, ${this.formatHour24(this.selectedSlot.hour)} - ${this.formatHour24(this.selectedSlot.hour + 1)}`,
-    };
+    const s = this.selectedSlot;
+    return this.describeSlot(s.date, s.hour, s.minute || 0);
   }
 
   clearSelection() {

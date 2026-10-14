@@ -41,6 +41,12 @@
     contactFilled: false,
   };
 
+  // Brand wording/styling and consultation settings come from config.js, so
+  // Southpaw and Mike Ayres Design share this file unchanged.
+  const BRAND = CONFIG.brand;
+  const CONSULT = CONFIG.consultations || { enabled: true, callTypes: ['video'] };
+  state.callType = (CONSULT.callTypes || ['video'])[0];
+
   let calendarInstance = null;
 
   // ── Placeholder SVG icons ────────────────────────────────
@@ -314,7 +320,7 @@
         if (state.firstPath === 'designer') {
           setTimeout(() => navigateTo('room-type'), 350);
         } else {
-          setTimeout(() => navigateTo('designer-calendar'), 350);
+          setTimeout(proceedToScheduling, 350);
         }
       });
 
@@ -353,9 +359,34 @@
 
   // ── Navigation ───────────────────────────────────────────
 
+  // True when customers can pick a consultation time: switched on in config
+  // and at least one bookable day remains in the calendar's range.
+  function consultationsAvailable() {
+    if (!CONSULT.enabled) return false;
+    const cal = calendarInstance || Object.assign(Object.create(CalendarBooking.prototype), {
+      config: CONFIG.calendar,
+      busySlots: [],
+      weekOffset: 0,
+    });
+    return cal.getTotalPages() > 0;
+  }
+
+  // Once the customer's details (and designer, if chosen) are in: go to the
+  // date picker, or send the enquiry straight away when bookings are off.
+  function proceedToScheduling() {
+    if (consultationsAvailable()) {
+      navigateTo('designer-calendar');
+    } else if (state.contactFilled) {
+      submitAndConfirm();
+    } else {
+      navigateTo('contact');
+    }
+  }
+
   function navigateTo(step) {
     // Initialize or re-render calendar when navigating to calendar step
     if (step === 'designer-calendar') {
+      renderCallTypeChoice();
       setTimeout(() => {
         const container = document.getElementById('calendarContainer');
         if (!calendarInstance) {
@@ -416,7 +447,38 @@
       steps.push('room-type', 'room-age', 'room-size', 'room-equipment',
                   'designer-select', 'designer-calendar', 'contact', 'confirmation');
     }
+    if (!CONSULT.enabled) return steps.filter(s => s !== 'designer-calendar');
     return steps;
+  }
+
+  // Video or phone call choice, shown above the calendar when the brand
+  // offers more than one call type.
+  function renderCallTypeChoice() {
+    const el = document.getElementById('callTypeChoice');
+    if (!el) return;
+    const types = CONSULT.callTypes || ['video'];
+    if (types.length < 2) {
+      el.innerHTML = '';
+      return;
+    }
+    const labels = CONSULT.callTypeLabels || { video: 'Video call', phone: 'Phone call' };
+    el.innerHTML =
+      '<p class="call-type-label">How would you like to speak with us?</p>' +
+      '<div class="call-type-options">' +
+      types.map(t =>
+        `<button type="button" class="call-type-btn${state.callType === t ? ' selected' : ''}" data-call-type="${t}">${labels[t] || t}</button>`
+      ).join('') +
+      '</div>';
+    el.querySelectorAll('.call-type-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.callType = btn.dataset.callType;
+        renderCallTypeChoice();
+      });
+    });
+  }
+
+  function isPhoneCall() {
+    return state.callType === 'phone';
   }
 
   // ── Global Event Binding ─────────────────────────────────
@@ -458,11 +520,11 @@
 
           if (state.firstPath === 'designer' && state.designer && !state.appointmentSlot) {
             // Designer-first: go to calendar (email sent after slot selected)
-            navigateTo('designer-calendar');
+            proceedToScheduling();
           } else if (state.firstPath === 'room' && !state.completedPaths.has('room')) {
             state.completedPaths.add('room');
             // Room path submit: go to calendar (email sent after slot selected)
-            navigateTo('designer-calendar');
+            proceedToScheduling();
           } else {
             const currentPath = getCurrentPath();
             if (currentPath) state.completedPaths.add(currentPath);
@@ -470,7 +532,7 @@
             if (state.appointmentSlot) {
               submitAndConfirm();
             } else {
-              navigateTo('designer-calendar');
+              proceedToScheduling();
             }
           }
         }
@@ -514,6 +576,14 @@
     let d = new Date(startDate);
     const maxLookahead = cal.getMaxLookaheadDays();
     for (let i = 0; i < maxLookahead; i++) {
+      if (cal.usesWindows()) {
+        // Explicit time windows: 11am if it's free, else the first free slot
+        const free = cal.getWindowSlots(d);
+        const pick = free.find(s => s.hour === 11 && s.minute === 0) || free[0];
+        if (pick) return cal.describeSlot(new Date(d), pick.hour, pick.minute);
+        d.setDate(d.getDate() + 1);
+        continue;
+      }
       const bookable = cal.isWorkingDay(d) && !cal.isBlockedDate(d) &&
         !cal.isDateClosed(d) && !cal.isPostHolidayBuffer(d);
       if (bookable) {
@@ -672,7 +742,7 @@
           collectContactData();
           state.contactFilled = true;
           state.completedPaths.add('room');
-          navigateTo('designer-calendar');
+          proceedToScheduling();
         }
       });
     }
@@ -716,6 +786,10 @@
     return _tokenPromise;
   }
 
+  function getSlotMinutes() {
+    return CONFIG.calendar.slotDuration || 60;
+  }
+
   function buildCalendarDescription() {
     let desc = '';
 
@@ -728,6 +802,11 @@
     if (state.contact.phone) desc += `Phone: ${state.contact.phone}\n`;
     if (state.contact.postcode) desc += `Postcode: ${state.contact.postcode}\n`;
     if (state.contact.premises) desc += `Premises: ${state.contact.premises}${state.contact.address ? ', ' + state.contact.address : ''}\n`;
+    if (state.appointmentSlot) {
+      desc += isPhoneCall()
+        ? `Call Type: Phone call (call the customer on ${state.contact.phone})\n`
+        : 'Call Type: Video call (Google Meet)\n';
+    }
 
     desc += '\n--- Selections ---\n';
     if (state.roomType) desc += `Room Type: ${state.roomType.title}\n`;
@@ -770,17 +849,17 @@
       const startDate = new Date(slot.date);
       const minute = slot.minute || 0;
       startDate.setHours(slot.hour, minute, 0, 0);
-      const endDate = new Date(startDate);
-      endDate.setTime(startDate.getTime() + 60 * 60 * 1000); // 1 hour
+      const endDate = new Date(startDate.getTime() + getSlotMinutes() * 60 * 1000);
 
       const specialTag = slot.isSpecial ? ' (Special Request)' : '';
+      const phoneTag = isPhoneCall() ? ' (Phone)' : '';
       const fullName = getFullName();
-      const eventTitle = `Southpaw Design Call: ${fullName} - ${state.contact.premises || 'No Premises'}${specialTag}`;
+      const eventTitle = `${BRAND.callTitle}: ${fullName} - ${state.contact.premises || 'No Premises'}${phoneTag}${specialTag}`;
 
       const event = {
         summary: eventTitle,
         description: buildCalendarDescription(),
-        colorId: '11', // Red (Tomato) dot on calendar
+        colorId: BRAND.calendarColorId,
         start: {
           dateTime: startDate.toISOString(),
           timeZone: 'Europe/London',
@@ -789,13 +868,6 @@
           dateTime: endDate.toISOString(),
           timeZone: 'Europe/London',
         },
-        // Google Meet video conference
-        conferenceData: {
-          createRequest: {
-            requestId: `consult-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-            conferenceSolutionKey: { type: 'hangoutsMeet' },
-          },
-        },
         // Invite the customer
         attendees: [
           { email: state.contact.email, displayName: fullName },
@@ -803,6 +875,15 @@
         guestsCanModify: false,
         guestsCanInviteOthers: false,
       };
+      if (!isPhoneCall()) {
+        // Google Meet video conference
+        event.conferenceData = {
+          createRequest: {
+            requestId: `consult-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+            conferenceSolutionKey: { type: 'hangoutsMeet' },
+          },
+        };
+      }
 
       return fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(gc.calendarId)}/events?conferenceDataVersion=1&sendUpdates=none`, {
         method: 'POST',
@@ -934,25 +1015,33 @@
     if (!slot) return null;
     var start = new Date(slot.date);
     start.setHours(slot.hour, slot.minute || 0, 0, 0);
-    var end = new Date(start.getTime() + 60 * 60 * 1000);
+    var end = new Date(start.getTime() + getSlotMinutes() * 60 * 1000);
     function fmt(d) {
       return d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
     }
     var fullName = getFullName();
+    var description, location;
+    if (isPhoneCall()) {
+      description = 'We will call you on ' + state.contact.phone;
+      location = 'Phone call';
+    } else {
+      description = meetLink ? 'Join via Google Meet: ' + meetLink : 'Initial design consultation – details to follow';
+      location = meetLink || '';
+    }
     var lines = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
-      'PRODID:-//Southpaw//Design Consultation//EN',
+      'PRODID:-//' + BRAND.name + '//Design Consultation//EN',
       'METHOD:REQUEST',
       'BEGIN:VEVENT',
-      'UID:southpaw-' + Date.now() + '@southpaw.co.uk',
+      'UID:consultation-' + Date.now() + '@' + CONFIG.emailTo.split('@')[1],
       'DTSTAMP:' + fmt(new Date()),
       'DTSTART:' + fmt(start),
       'DTEND:' + fmt(end),
-      'SUMMARY:Southpaw Design Call',
-      'DESCRIPTION:' + (meetLink ? 'Join via Google Meet: ' + meetLink : 'Initial design consultation – details to follow'),
-      meetLink ? 'LOCATION:' + meetLink : '',
-      'ORGANIZER;CN=Southpaw Design Team:mailto:' + CONFIG.emailTo,
+      'SUMMARY:' + BRAND.callTitle + (isPhoneCall() ? ' (phone call)' : ''),
+      'DESCRIPTION:' + description,
+      location ? 'LOCATION:' + location : '',
+      'ORGANIZER;CN=' + BRAND.senderName + ':mailto:' + CONFIG.emailTo,
       'ATTENDEE;CN=' + fullName + ';RSVP=TRUE:mailto:' + state.contact.email,
       'STATUS:CONFIRMED',
       'END:VEVENT',
@@ -962,24 +1051,28 @@
   }
 
   // ── Customer + company emails via Gmail API ─────────────
+  // With a booked slot these confirm the consultation; without one (when
+  // consultations are switched off) they acknowledge an enquiry.
 
   function sendCustomerEmail(meetLink) {
     return getAccessToken().then(function(token) {
       if (!token) return null;
-      var fromName = 'Southpaw Design Team';
+      var booked = !!state.appointmentSlot;
+      var fromName = BRAND.senderName;
       var fromEmail = CONFIG.emailTo;
       var fullName = getFullName();
 
-      // Send customer email (with calendar invite attached, from design-visit@)
+      // Customer email (with calendar invite attached when booked)
       var custHtml = buildCustomerEmailHtml(meetLink);
-      var custSubject = 'Next steps on your Southpaw Design Journey…';
-      var custIcs = buildCustomerIcs(meetLink);
+      var custSubject = 'Next steps on your ' + BRAND.designLabel + ' Journey…';
+      var custIcs = booked ? buildCustomerIcs(meetLink) : null;
       var custPromise = gmailSend(token, fromName, fromEmail, fullName, state.contact.email, custSubject, custHtml, null, custIcs);
 
-      // Send company notification via Gmail API (to design-visit@ alias)
+      // Company notification to the design-visit@ group
       var compHtml = buildCompanyNotificationHtml(meetLink);
-      var compSubject = 'Southpaw Design Consultation Booked';
-      var compPromise = gmailSend(token, fromName, fromEmail, 'Southpaw Bookings', CONFIG.emailTo, compSubject, compHtml);
+      var compSubject = BRAND.designLabel + (booked ? ' Consultation Booked' : ' Enquiry');
+      var compTo = BRAND.name + (booked ? ' Bookings' : ' Enquiries');
+      var compPromise = gmailSend(token, fromName, fromEmail, compTo, CONFIG.emailTo, compSubject, compHtml);
 
       return Promise.all([custPromise, compPromise]).then(function(results) {
         if (results[0] && results[0].id) console.log('Customer email sent:', results[0].id);
@@ -995,18 +1088,22 @@
   // ── Company Notification Email (with images) ───────────
 
   function buildCompanyNotificationHtml(meetLink) {
+    var hdr = BRAND.emailHeader;
+    var booked = !!state.appointmentSlot;
     var s = '';
     s += '<div style="font-family:Arial,Helvetica,sans-serif;color:#333;line-height:1.6;max-width:640px;margin:0 auto;padding:20px;">';
 
     // Header with logo
-    s += '<div style="background:#2c3e50;color:#fff;padding:16px 24px;border-radius:8px 8px 0 0;">';
-    s += '<img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/southpaw_logo_transparent.png?v=1780503941" alt="Southpaw" height="30" style="display:block;margin-bottom:8px;" />';
-    s += '<h2 style="margin:0;font-size:20px;">New Design Consultation Booking<\/h2>';
+    s += '<div style="background:' + hdr.background + ';color:' + hdr.textColor + ';padding:16px 24px;border-radius:8px 8px 0 0;' +
+      (hdr.borderBottom ? 'border-bottom:' + hdr.borderBottom + ';' : '') + '">';
+    s += '<img src="' + hdr.logoUrl + '" alt="' + BRAND.name + '" height="' + hdr.logoHeight + '" style="display:block;margin-bottom:8px;" />';
+    s += '<h2 style="margin:0;font-size:20px;color:' + hdr.textColor + ';">' +
+      (booked ? 'New Design Consultation Booking' : 'New Design Enquiry') + '<\/h2>';
     s += '<\/div>';
 
     // Contact details section
     var fullName = getFullName();
-    s += '<div style="background:#f8f6f3;padding:16px 24px;border-bottom:2px solid #e8a87c;">';
+    s += '<div style="background:#f8f6f3;padding:16px 24px;border-bottom:2px solid ' + hdr.accent + ';">';
     s += '<h3 style="color:#2c3e50;font-size:16px;margin:0 0 10px;">Contact Details<\/h3>';
     s += '<table style="width:100%;border-collapse:collapse;">';
     if (fullName) s += companyRow('Name', fullName);
@@ -1021,12 +1118,17 @@
     s += '<\/table><\/div>';
 
     // Appointment section
-    if (state.appointmentSlot) {
+    if (booked) {
       s += '<div style="background:#fff;padding:16px 24px;border-bottom:1px solid #eee;">';
       s += '<h3 style="color:#2c3e50;font-size:16px;margin:0 0 10px;">Appointment<\/h3>';
       s += '<table style="width:100%;border-collapse:collapse;">';
       s += companyRow('Date & Time', state.appointmentSlot.label);
-      if (meetLink) s += companyRow('Google Meet', '<a href="' + meetLink + '" style="color:#1a73e8;">' + meetLink + '<\/a>');
+      if (isPhoneCall()) {
+        s += companyRow('Call Type', 'Phone call – call the customer on <strong>' + state.contact.phone + '<\/strong>');
+      } else {
+        s += companyRow('Call Type', 'Video call (Google Meet)');
+        if (meetLink) s += companyRow('Google Meet', '<a href="' + meetLink + '" style="color:#1a73e8;">' + meetLink + '<\/a>');
+      }
       if (state.appointmentSlot.isSpecial && state.appointmentSlot.specialInfo) {
         s += companyRow('Special Request', state.appointmentSlot.specialInfo);
       }
@@ -1092,63 +1194,87 @@
 
   // ── Customer Email (via Gmail API) ──────────────────────
 
-  function getDesignerFirstName() {
-    if (!state.designer || state.designer.id === 'designer-any') {
-      return 'The Southpaw Design Team';
-    }
-    return state.designer.name.split(' ')[0];
-  }
-
   function buildEmailSummaryHtml() {
     const rowStyle = 'display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;font-size:14px;';
     const labelStyle = 'font-weight:600;color:#2c3e50;';
     const valueStyle = 'color:#555;text-align:right;';
+    const row = (label, value) =>
+      '<div style="' + rowStyle + '"><span style="' + labelStyle + '">' + label + '<\/span><span style="' + valueStyle + '">' + value + '<\/span><\/div>';
     let rows = '';
     const fullName = getFullName();
-    if (fullName) rows += '<div style="' + rowStyle + '"><span style="' + labelStyle + '">Name<\/span><span style="' + valueStyle + '">' + fullName + '<\/span><\/div>';
-    if (state.contact.email) rows += '<div style="' + rowStyle + '"><span style="' + labelStyle + '">Email<\/span><span style="' + valueStyle + '">' + state.contact.email + '<\/span><\/div>';
-    if (state.roomType) rows += '<div style="' + rowStyle + '"><span style="' + labelStyle + '">Room Type<\/span><span style="' + valueStyle + '">' + state.roomType.title + '<\/span><\/div>';
-    if (state.ageGroup.length > 0) rows += '<div style="' + rowStyle + '"><span style="' + labelStyle + '">Age Group<\/span><span style="' + valueStyle + '">' + state.ageGroup.map(a => a.title).join(', ') + '<\/span><\/div>';
-    if (state.roomSize) rows += '<div style="' + rowStyle + '"><span style="' + labelStyle + '">Room Size<\/span><span style="' + valueStyle + '">' + state.roomSize.title + '<\/span><\/div>';
-    if (state.equipment.length > 0) rows += '<div style="' + rowStyle + '"><span style="' + labelStyle + '">Equipment<\/span><span style="' + valueStyle + '">' + state.equipment.map(e => e.title).join(', ') + '<\/span><\/div>';
+    if (fullName) rows += row('Name', fullName);
+    if (state.contact.email) rows += row('Email', state.contact.email);
+    if (state.roomType) rows += row('Room Type', state.roomType.title);
+    if (state.ageGroup.length > 0) rows += row('Age Group', state.ageGroup.map(a => a.title).join(', '));
+    if (state.roomSize) rows += row('Room Size', state.roomSize.title);
+    if (state.equipment.length > 0) rows += row('Equipment', state.equipment.map(e => e.title).join(', '));
     const designerLabel = (!state.designer || state.designer.id === 'designer-any') ? 'Any (No Preference)' : state.designer.name;
-    rows += '<div style="' + rowStyle + '"><span style="' + labelStyle + '">Designer<\/span><span style="' + valueStyle + '">' + designerLabel + '<\/span><\/div>';
-    if (state.appointmentSlot) rows += '<div style="' + rowStyle + 'border-bottom:none;"><span style="' + labelStyle + '">Appointment<\/span><span style="' + valueStyle + '">' + state.appointmentSlot.label + '<\/span><\/div>';
+    rows += row('Designer', designerLabel);
+    if (state.appointmentSlot) {
+      rows += row('Call Type', isPhoneCall() ? 'Phone call' : 'Video call (Google Meet)');
+      rows += row('Appointment', state.appointmentSlot.label);
+    }
     if (!rows) return '';
-    return '<h3 style="color:#2c3e50;margin-top:30px;font-size:18px;">Your Booking Summary<\/h3>' +
+    return '<h3 style="color:#2c3e50;margin-top:30px;font-size:18px;">' +
+      (state.appointmentSlot ? 'Your Booking Summary' : 'Your Enquiry Summary') + '<\/h3>' +
       '<div style="background:#f8f6f3;border-radius:8px;padding:16px 20px;margin:12px 0 20px;">' + rows + '<\/div>';
   }
 
-  function buildCustomerEmailHtml(meetLink) {
-    const firstName = state.contact.firstName;
-
-    return '<div style="font-family: Arial, Helvetica, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px;">' +
-      '<p>Dear ' + firstName + ',<\/p>' +
-      '<p>Thank you for booking your initial design consultation, we\u2019re really looking forward to speaking with you and learning more about your project.<\/p>' +
-      '<p>Our discussion will take approximately 15\u201320 minutes and will give us a clearer understanding of your space, your vision, and how we can best support you.<\/p>' +
-      '<p>To help us prepare ahead of our meeting, it would be greatly appreciated if you could share any of the following (where possible):<\/p>' +
-      '<ul style="padding-left: 20px;">' +
+  function buildPrepListHtml() {
+    return '<ul style="padding-left: 20px;">' +
         '<li>Photos of the room(s) as they currently are<\/li>' +
         '<li>Floor plans or measurements (if available)<\/li>' +
-        '<li>Inspiration images, Pinterest boards, or styles you\u2019re drawn to \u2013 you can browse our <a href="https:\/\/southpaw.co.uk\/pages\/sensory-room-photos" style="color: #1a73e8;">sensory room photos<\/a> for ideas<\/li>' +
+        '<li>Inspiration images, Pinterest boards, or styles you’re drawn to – you can browse our <a href="' + BRAND.photosUrl + '" style="color: #1a73e8;">sensory room photos<\/a> for ideas<\/li>' +
         '<li>Whether this is an existing room being redesigned or a completely new space<\/li>' +
         '<li>Your approximate budget range<\/li>' +
         '<li>Your ideal timescale<\/li>' +
         '<li>Any other stakeholders involved in the decision-making process<\/li>' +
-        '<li>Any particular challenges or requirements you\u2019d like us to be aware of<\/li>' +
-      '<\/ul>' +
-      '<p>If you\u2019re unable to gather all of this information, please don\u2019t worry, we can absolutely still have a valuable conversation. However, the more detail we have beforehand, the more productive and focused our time together will be.<\/p>' +
-      '<p>Following our initial consultation, we may need to conduct a site visit to gather further details and additional information. This is where our Sales Director, Mike, will take you through the process in more detail. This initial step ensures we have everything required to move your project forward accurately and efficiently.<\/p>' +
-      '<h3 style="color: #2c3e50; margin-top: 30px; font-size: 18px;">Meeting Details<\/h3>' +
-      (meetLink
-        ? '<p>We are scheduled to meet on <strong>' + state.appointmentSlot.dateFormatted + '</strong> at <strong>' + state.appointmentSlot.timeFormatted + '</strong> via Google Meet:<br>' +
+        '<li>Any particular challenges or requirements you’d like us to be aware of<\/li>' +
+      '<\/ul>';
+  }
+
+  function buildCustomerEmailHtml(meetLink) {
+    const firstName = state.contact.firstName;
+    const open = '<div style="font-family: Arial, Helvetica, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px;">' +
+      '<p>Dear ' + firstName + ',<\/p>';
+    const close = buildEmailSummaryHtml() +
+      '<p>Warm regards,<br><strong>' + BRAND.teamName + '<\/strong><\/p>' +
+      '<\/div>';
+
+    // Enquiry only (consultations switched off)
+    if (!state.appointmentSlot) {
+      return open +
+        '<p>Thank you for your enquiry. Our team will be in contact shortly using the details you’ve provided. We look forward to helping you.<\/p>' +
+        '<p>In the meantime, if you’re able to share any of the following, it will help us prepare (no problem at all if not):<\/p>' +
+        buildPrepListHtml() +
+        '<p>Simply reply to this email with anything you’d like to send over.<\/p>' +
+        close;
+    }
+
+    const slot = state.appointmentSlot;
+    let meeting;
+    if (isPhoneCall()) {
+      meeting = '<p>We will call you on <strong>' + state.contact.phone + '<\/strong> on <strong>' + slot.dateFormatted + '<\/strong> at <strong>' + slot.timeFormatted + '<\/strong>.<\/p>' +
+        '<p>If you would prefer a video call instead, or would like us to use a different number, just reply to this email and let us know.<\/p>';
+    } else {
+      meeting = (meetLink
+        ? '<p>We are scheduled to meet on <strong>' + slot.dateFormatted + '</strong> at <strong>' + slot.timeFormatted + '</strong> via Google Meet:<br>' +
           '<a href="' + meetLink + '" style="color: #1a73e8; font-weight: bold;">' + meetLink + '<\/a><\/p>'
         : '<p>We will send you a Google Meet link for your consultation shortly.<\/p>') +
-      '<p>If you would prefer to speak via phone or WhatsApp instead, just let us know and we will happily arrange that.<\/p>' +
+        '<p>If you would prefer to speak via phone or WhatsApp instead, just let us know and we will happily arrange that.<\/p>';
+    }
+
+    return open +
+      '<p>Thank you for booking your initial design consultation, we’re really looking forward to speaking with you and learning more about your project.<\/p>' +
+      '<p>Our discussion will take approximately 15–20 minutes and will give us a clearer understanding of your space, your vision, and how we can best support you.<\/p>' +
+      '<p>To help us prepare ahead of our ' + (isPhoneCall() ? 'call' : 'meeting') + ', it would be greatly appreciated if you could share any of the following (where possible):<\/p>' +
+      buildPrepListHtml() +
+      '<p>If you’re unable to gather all of this information, please don’t worry, we can absolutely still have a valuable conversation. However, the more detail we have beforehand, the more productive and focused our time together will be.<\/p>' +
+      '<p>Following our initial consultation, we may need to conduct a site visit to gather further details and additional information. This is where our Sales Director, Mike, will take you through the process in more detail. This initial step ensures we have everything required to move your project forward accurately and efficiently.<\/p>' +
+      '<h3 style="color: #2c3e50; margin-top: 30px; font-size: 18px;">' + (isPhoneCall() ? 'Call Details' : 'Meeting Details') + '<\/h3>' +
+      meeting +
       '<p>If you have any questions ahead of our call, please feel free to get in touch. We look forward to speaking with you soon.<\/p>' +
-      buildEmailSummaryHtml() +
-      '<p>Warm regards,<br><strong>The Southpaw Team<\/strong><\/p>' +
-    '<\/div>';
+      close;
   }
 
   function showLoading(show) {
@@ -1185,13 +1311,40 @@
     if (state.equipment.length > 0) summaryData.equipment = state.equipment.map(e => e.title).join(', ');
     const designerConfLabel = (!state.designer || state.designer.id === 'designer-any') ? 'Any (No Preference)' : state.designer.name;
     summaryData.designer = designerConfLabel;
-    if (state.appointmentSlot) summaryData.appointment = state.appointmentSlot.label;
+    if (state.appointmentSlot) {
+      summaryData.callType = isPhoneCall() ? 'Phone call' : 'Video call (Google Meet)';
+      summaryData.appointment = state.appointmentSlot.label;
+    }
 
-    try {
-      sessionStorage.setItem('southpaw_booking', JSON.stringify(summaryData));
-    } catch (e) { /* ignore storage errors */ }
+    // Brands with their own thank-you page: hand the summary over and go there
+    if (BRAND.thankYouUrl) {
+      try {
+        sessionStorage.setItem(BRAND.storageKey, JSON.stringify(summaryData));
+      } catch (e) { /* ignore storage errors */ }
+      window.location.href = BRAND.thankYouUrl;
+      return;
+    }
 
-    window.location.href = 'https://southpaw.co.uk/pages/thank-you';
+    // Otherwise show the thank-you step built into the form
+    const ty = CONFIG.thankYou || {};
+    const section = document.querySelector('.step[data-step="confirmation"]');
+    if (section && ty.title) section.querySelector('h2').textContent = ty.title;
+    if (ty.message) setText('confirmationMessage', ty.message);
+
+    const labels = {
+      name: 'Name', email: 'Email', roomType: 'Room Type', ageGroup: 'Age Group',
+      roomSize: 'Room Size', equipment: 'Equipment', designer: 'Designer',
+      callType: 'Call Type', appointment: 'Appointment',
+    };
+    const summaryEl = document.getElementById('confirmationSummary');
+    if (summaryEl) {
+      summaryEl.innerHTML = `<h3>${state.appointmentSlot ? 'Your Booking Summary' : 'Your Enquiry Summary'}</h3>` +
+        Object.keys(labels).filter(k => summaryData[k]).map(k => summaryRow(labels[k], summaryData[k])).join('');
+    }
+    const actionsEl = document.getElementById('confirmationActions');
+    if (actionsEl) actionsEl.innerHTML = '';
+
+    navigateTo('confirmation');
   }
 
   function summaryRow(label, value) {
@@ -1211,6 +1364,20 @@
   function hidePageHeading() {
     const app = document.getElementById('sensory-app');
     if (!app) return;
+    if (BRAND.pageChrome === 'boost') {
+      // Boost theme (Mike Ayres Design): hide only the page title and
+      // breadcrumbs inside the main content, never the site header or footer
+      const mainEl = document.querySelector('main') || document.querySelector('#MainContent') || document.querySelector('[role="main"]');
+      if (mainEl) {
+        mainEl.querySelectorAll('h1, .page-title, .page__title, .page__title-wrapper, .page-heading').forEach(el => {
+          if (!app.contains(el)) el.style.display = 'none';
+        });
+      }
+      document.querySelectorAll('.breadcrumb, .breadcrumbs, nav.breadcrumb, .breadcrumb-wrapper').forEach(el => {
+        el.style.display = 'none';
+      });
+      return;
+    }
     // Hide any h1/h2 elements that appear before the app container
     let el = app.previousElementSibling;
     while (el) {

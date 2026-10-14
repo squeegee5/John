@@ -15,6 +15,41 @@ const CONFIG = {
   emailTo: 'design-visit@southpaw.co.uk',
   formAction: 'https://formsubmit.co/ajax/design-visit@southpaw.co.uk',
 
+  // ── Brand (wording, colours and links used by the shared app code) ──
+  brand: {
+    name: 'Southpaw',
+    designLabel: 'Southpaw Design',          // "… Consultation Booked", "… Journey"
+    senderName: 'Southpaw Design Team',      // From name on emails
+    teamName: 'The Southpaw Team',           // email sign-off
+    callTitle: 'Southpaw Design Call',       // calendar event title prefix
+    calendarColorId: '11',                   // red dot on the shared calendar
+    photosUrl: 'https://southpaw.co.uk/pages/sensory-room-photos',
+    thankYouUrl: '',                         // '' = show the form's own thank-you
+    storageKey: 'southpaw_booking',
+    pageChrome: 'default',
+    emailHeader: {
+      background: '#2c3e50',
+      textColor: '#ffffff',
+      accent: '#e8a87c',
+      logoUrl: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/southpaw_logo_transparent.png?v=1780503941',
+      logoHeight: 30,
+    },
+  },
+
+  // ── Design Consultations ──────────────────────────────────
+  // enabled: false = no date picker; customers send an enquiry and the team
+  // gets in touch. Set back to true to turn consultation booking on again.
+  consultations: {
+    enabled: false,
+    callTypes: ['video'],
+  },
+
+  // ── Thank-you message (shown when brand.thankYouUrl is '') ──
+  thankYou: {
+    title: 'Thank you for your enquiry',
+    message: 'Our team will be in contact shortly using the details you’ve provided. We look forward to helping you.',
+  },
+
   // ── External Links ────────────────────────────────────────
   designBookUrl: 'https://southpaw.co.uk/pages/sensory-room-photos#design-book',
   designProcessUrl: '/pages/design-process',
@@ -46,7 +81,8 @@ const CONFIG = {
     },
     designer: {
       title: 'Choose Your Designer',
-      description: 'Meet our expert sensory room designers and book a free consultation at a time that suits you.',
+      // While consultations are off; was: '…and book a free consultation at a time that suits you.'
+      description: 'Meet our expert sensory room designers and choose who you’d like to work with on your project.',
       image: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/designerchoice.png?v=1770933730',
     }
   },

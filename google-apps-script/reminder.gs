@@ -115,7 +115,7 @@ function sendReminders() {
     var meetLink = getMeetLink(event);
 
     // Build and send the email
-    var html = buildReminderHtml(customerInfo.firstName, dateStr, timeStr, meetLink, brand);
+    var html = buildReminderHtml(customerInfo.firstName, dateStr, timeStr, meetLink, brand, customerInfo);
 
     try {
       GmailApp.sendEmail(customerInfo.email, brand.subject, '', {
@@ -136,7 +136,7 @@ function sendReminders() {
 
 // ── Parse customer details from event description ────────────
 function parseDescription(desc) {
-  var info = { firstName: '', email: '' };
+  var info = { firstName: '', email: '', phone: '', isPhoneCall: false };
 
   var nameMatch = desc.match(/Name:\s*(.+)/);
   if (nameMatch) {
@@ -148,6 +148,12 @@ function parseDescription(desc) {
   if (emailMatch) {
     info.email = emailMatch[1].trim();
   }
+
+  var phoneMatch = desc.match(/Phone:\s*(.+)/);
+  if (phoneMatch) info.phone = phoneMatch[1].trim();
+
+  // Booking form writes "Call Type: Phone call (...)" for phone consultations
+  info.isPhoneCall = /Call Type:\s*Phone call/i.test(desc);
 
   return info;
 }
@@ -181,14 +187,17 @@ function getMeetLink(event) {
 }
 
 // ── Build the reminder email HTML ────────────────────────────
-function buildReminderHtml(firstName, dateStr, timeStr, meetLink, brand) {
+function buildReminderHtml(firstName, dateStr, timeStr, meetLink, brand, customerInfo) {
+  var isPhoneCall = customerInfo && customerInfo.isPhoneCall;
   var html = '<div style="font-family: Arial, Helvetica, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px;">';
 
   html += '<p>Dear ' + escapeHtml(firstName) + ',</p>';
 
   html += '<p>Just a quick reminder that your initial ' + escapeHtml(brand.brandName) + ' design consultation is scheduled for tomorrow, <strong>' + escapeHtml(dateStr) + '</strong> at <strong>' + escapeHtml(timeStr) + '</strong>.</p>';
 
-  if (meetLink) {
+  if (isPhoneCall) {
+    html += '<p>We will call you on <strong>' + escapeHtml(customerInfo.phone) + '</strong>.</p>';
+  } else if (meetLink) {
     html += '<p>You can join the meeting here:<br><a href="' + escapeHtml(meetLink) + '" style="color: #1a73e8; font-weight: bold;">' + escapeHtml(meetLink) + '</a></p>';
   } else {
     html += '<p>Your meeting link will be included in your calendar invite.</p>';
@@ -196,7 +205,11 @@ function buildReminderHtml(firstName, dateStr, timeStr, meetLink, brand) {
 
   html += '<p>The call will take around 15\u201320 minutes and will give us a chance to learn more about your space, your goals, and how we can best support your project.</p>';
 
-  html += '<p>If you would prefer to speak via phone or WhatsApp instead, simply reply to this email and let us know, and we will happily arrange that.</p>';
+  if (isPhoneCall) {
+    html += '<p>If you would prefer a video call instead, or would like us to use a different number, simply reply to this email and let us know.</p>';
+  } else {
+    html += '<p>If you would prefer to speak via phone or WhatsApp instead, simply reply to this email and let us know, and we will happily arrange that.</p>';
+  }
 
   html += '<p>If you have any photos of the room, floor plans, measurements, or inspiration images you would like to share beforehand, please feel free to send them across. No problem at all if not. Also, feel free to check out our sensory room gallery <a href="' + escapeHtml(brand.galleryUrl) + '" style="color: #1a73e8;">here</a> for inspiration.</p>';
 

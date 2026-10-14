@@ -15,6 +15,36 @@ const CONFIG = {
   emailTo: 'design-visit@mikeayresdesign.co.uk',
   formAction: 'https://formsubmit.co/ajax/design-visit@mikeayresdesign.co.uk',
 
+  // ── Brand (wording, colours and links used by the shared app code) ──
+  brand: {
+    name: 'Mike Ayres Design',
+    designLabel: 'Mike Ayres Design',        // "… Consultation Booked", "… Journey"
+    senderName: 'Mike Ayres Design Team',    // From name on emails
+    teamName: 'The Mike Ayres Design Team',  // email sign-off
+    callTitle: 'Mike Ayres Design Call',     // calendar event title prefix
+    calendarColorId: '9',                    // blue dot on the shared calendar
+    photosUrl: 'https://www.mikeayresdesign.co.uk/pages/sensory-room-photos',
+    thankYouUrl: 'https://www.mikeayresdesign.co.uk/pages/thank-you',
+    storageKey: 'mad_booking',
+    pageChrome: 'boost',
+    emailHeader: {
+      background: '#ffffff',
+      textColor: '#231f20',
+      accent: '#ed1c2e',
+      borderBottom: '4px solid #ed1c2e',
+      logoUrl: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/mike_ayres_design_logo_email.png?v=1791996486&width=320',
+      logoHeight: 72,
+    },
+  },
+
+  // ── Design Consultations ──────────────────────────────────
+  // Customers choose a video (Google Meet) or phone call, then a time.
+  consultations: {
+    enabled: true,
+    callTypes: ['video', 'phone'],
+    callTypeLabels: { video: 'Video call (Google Meet)', phone: 'Phone call' },
+  },
+
   // ── External Links ────────────────────────────────────────
   designBookUrl: 'https://mikeayresdesign.co.uk/pages/sensory-room-photos#design-book',
   designProcessUrl: '/pages/design-process',
@@ -199,8 +229,22 @@ const CONFIG = {
     blockedHours: [12],
     mondayBlockedHours: [13, 14],
     slotsToShow: 5,
-    slotDuration: 60,
-    calendarNote: 'Initial consultations typically last 15-20 minutes, but we book a full hour slot to ensure we have plenty of time to discuss your project.',
+    slotDuration: 30, // minutes; must fit the shortest window below (30 min)
+    calendarNote: 'Initial consultations typically last 15-20 minutes, and we book a 30-minute slot to make sure there’s plenty of time to discuss your project.',
+    // ONLY these dates and times can be booked (24h clock, YYYY-MM-DD).
+    // While this list has entries, the weekday schedule above is ignored.
+    // Times already booked in the shared calendar are still unavailable.
+    availabilityWindows: {
+      '2026-10-20': [['09:00', '12:30'], ['14:30', '16:00']], // Tue 20 Oct
+      '2026-10-21': [['10:30', '13:00'], ['14:30', '15:30']], // Wed 21 Oct
+      '2026-10-26': [['08:30', '09:45'], ['15:00', '16:00']], // Mon 26 Oct
+      '2026-10-27': [['09:00', '12:30'], ['14:30', '16:00']], // Tue 27 Oct
+      '2026-10-29': [['09:00', '12:30'], ['14:30', '16:00']], // Thu 29 Oct
+      '2026-11-03': [['09:00', '12:30'], ['13:30', '15:30']], // Tue 3 Nov
+      '2026-11-04': [['09:00', '13:00'], ['15:00', '16:00']], // Wed 4 Nov
+      '2026-11-05': [['09:30', '12:30'], ['14:30', '15:30']], // Thu 5 Nov
+      '2026-11-09': [['08:30', '09:45'], ['15:30', '16:00']], // Mon 9 Nov
+    },
     // UK Bank Holidays & Christmas closures (YYYY-MM-DD)
     blockedDates: [
       // 2026

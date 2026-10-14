@@ -576,6 +576,25 @@ img { max-width: 100%; height: auto; display: block; }
 .calendar-slot.unavailable { color: var(--color-text-muted); opacity: 0.4; cursor: not-allowed; text-decoration: line-through; }
 .calendar-slot.unavailable:hover { background: transparent; color: var(--color-text-muted); }
 
+/* ── Video / phone call choice (above the calendar) ─────── */
+.call-type-choice { text-align: center; margin: 0 auto var(--space-lg); }
+.call-type-choice:empty { display: none; }
+.call-type-label { font-weight: 600; color: var(--color-primary); margin-bottom: var(--space-sm); }
+.call-type-options { display: inline-flex; gap: var(--space-sm); flex-wrap: wrap; justify-content: center; }
+.call-type-btn {
+  padding: 10px 22px;
+  border: 2px solid var(--color-border);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--color-primary);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.call-type-btn:hover { border-color: var(--color-accent); }
+.call-type-btn.selected { border-color: var(--color-primary); background: var(--color-primary); color: #fff; }
+
 .calendar-note {
   font-size: var(--font-size-sm);
   color: var(--color-text-light);
@@ -632,6 +651,17 @@ img { max-width: 100%; height: auto; display: block; }
 [data-step="room-equipment"] .step-content,
 [data-step="designer-calendar"] .step-content {
   padding-top: var(--space-xl);
+}
+
+/* Equipment page: pull everything up so Continue is visible without scrolling */
+[data-step="room-equipment"] .step-content {
+  padding-top: var(--space-sm);
+}
+[data-step="room-equipment"] .step-header {
+  margin-bottom: var(--space-md);
+}
+[data-step="room-equipment"] .equipment-grid {
+  margin-bottom: var(--space-md);
 }
 
 /* Wider container for room type page (3-per-row layout) */
