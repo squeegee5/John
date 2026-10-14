@@ -580,7 +580,7 @@
         // Explicit time windows: 11am if it's free, else the first free slot
         const free = cal.getWindowSlots(d);
         const pick = free.find(s => s.hour === 11 && s.minute === 0) || free[0];
-        if (pick) return cal.describeSlot(new Date(d), pick.hour, pick.minute);
+        if (pick) return cal.describeSlot(new Date(d), pick.hour, pick.minute, pick.duration);
         d.setDate(d.getDate() + 1);
         continue;
       }
@@ -849,7 +849,7 @@
       const startDate = new Date(slot.date);
       const minute = slot.minute || 0;
       startDate.setHours(slot.hour, minute, 0, 0);
-      const endDate = new Date(startDate.getTime() + getSlotMinutes() * 60 * 1000);
+      const endDate = new Date(startDate.getTime() + (slot.duration || getSlotMinutes()) * 60 * 1000);
 
       const specialTag = slot.isSpecial ? ' (Special Request)' : '';
       const phoneTag = isPhoneCall() ? ' (Phone)' : '';
@@ -1015,7 +1015,7 @@
     if (!slot) return null;
     var start = new Date(slot.date);
     start.setHours(slot.hour, slot.minute || 0, 0, 0);
-    var end = new Date(start.getTime() + getSlotMinutes() * 60 * 1000);
+    var end = new Date(start.getTime() + (slot.duration || getSlotMinutes()) * 60 * 1000);
     function fmt(d) {
       return d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
     }
@@ -1266,7 +1266,7 @@
 
     return open +
       '<p>Thank you for booking your initial design consultation, we’re really looking forward to speaking with you and learning more about your project.<\/p>' +
-      '<p>Our discussion will take approximately 15–20 minutes and will give us a clearer understanding of your space, your vision, and how we can best support you.<\/p>' +
+      '<p>Our discussion will take ' + (CONSULT.typicalLength || 'approximately 15–20 minutes') + ' and will give us a clearer understanding of your space, your vision, and how we can best support you.<\/p>' +
       '<p>To help us prepare ahead of our ' + (isPhoneCall() ? 'call' : 'meeting') + ', it would be greatly appreciated if you could share any of the following (where possible):<\/p>' +
       buildPrepListHtml() +
       '<p>If you’re unable to gather all of this information, please don’t worry, we can absolutely still have a valuable conversation. However, the more detail we have beforehand, the more productive and focused our time together will be.<\/p>' +

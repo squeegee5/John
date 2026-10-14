@@ -41,6 +41,7 @@ var BRANDS = {
     teamName: 'The Southpaw Team',
     galleryUrl: 'https://southpaw.co.uk/pages/sensory-room-photos',
     brandName: 'Southpaw',
+    callLength: 'around 15\u201320 minutes',
   },
   mad: {
     prefix: 'Mike Ayres Design Call:',
@@ -50,6 +51,7 @@ var BRANDS = {
     teamName: 'The Mike Ayres Design Team',
     galleryUrl: 'https://mikeayresdesign.co.uk/pages/sensory-room-photos',
     brandName: 'Mike Ayres Design',
+    callLength: 'around 30 minutes',
   },
 };
 
@@ -203,7 +205,7 @@ function buildReminderHtml(firstName, dateStr, timeStr, meetLink, brand, custome
     html += '<p>Your meeting link will be included in your calendar invite.</p>';
   }
 
-  html += '<p>The call will take around 15\u201320 minutes and will give us a chance to learn more about your space, your goals, and how we can best support your project.</p>';
+  html += '<p>The call will take ' + brand.callLength + ' and will give us a chance to learn more about your space, your goals, and how we can best support your project.</p>';
 
   if (isPhoneCall) {
     html += '<p>If you would prefer a video call instead, or would like us to use a different number, simply reply to this email and let us know.</p>';

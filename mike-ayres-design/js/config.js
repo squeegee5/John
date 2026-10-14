@@ -43,6 +43,7 @@ const CONFIG = {
     enabled: true,
     callTypes: ['video', 'phone'],
     callTypeLabels: { video: 'Video call (Google Meet)', phone: 'Phone call' },
+    typicalLength: 'around 30 minutes', // "Our discussion will take …" in the email
   },
 
   // ── External Links ────────────────────────────────────────
@@ -229,8 +230,9 @@ const CONFIG = {
     blockedHours: [12],
     mondayBlockedHours: [13, 14],
     slotsToShow: 5,
-    slotDuration: 30, // minutes; must fit the shortest window below (30 min)
-    calendarNote: 'Initial consultations typically last 15-20 minutes, and we book a 30-minute slot to make sure there’s plenty of time to discuss your project.',
+    slotDuration: 60,    // minutes booked for each consultation…
+    minSlotDuration: 30, // …or shorter (down to this) where an hour won't fit
+    calendarNote: 'Initial consultations usually take around 30 minutes, and we allow up to an hour so there’s plenty of time to discuss your project.',
     // ONLY these dates and times can be booked (24h clock, YYYY-MM-DD).
     // While this list has entries, the weekday schedule above is ignored.
     // Times already booked in the shared calendar are still unavailable.

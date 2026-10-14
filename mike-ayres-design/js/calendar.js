@@ -135,27 +135,53 @@ class CalendarBooking {
     return this.config.slotDuration || 60;
   }
 
+  // Shortest slot allowed when a full one won't fit (windows mode only)
+  getMinSlotMinutes() {
+    return Math.min(this.config.minSlotDuration || this.getSlotMinutes(), this.getSlotMinutes());
+  }
+
   isRangeBusy(start, end) {
     return this.busySlots.some(busy => start < busy.end && end > busy.start);
   }
 
   /**
+   * Length of a slot starting at `startMin` (minutes from midnight) in a
+   * window ending at `windowEnd`: the full slot length, cut short by the end
+   * of the window or the next existing booking, in 15-minute steps.
+   * Returns 0 if that leaves less than the minimum slot length.
+   */
+  slotLengthAt(date, startMin, windowEnd) {
+    const start = new Date(date);
+    start.setHours(Math.floor(startMin / 60), startMin % 60, 0, 0);
+    let len = Math.min(this.getSlotMinutes(), windowEnd - startMin);
+    const fullEnd = new Date(start.getTime() + len * 60000);
+    for (const busy of this.busySlots) {
+      if (busy.start <= start && busy.end > start) return 0; // already booked
+      if (busy.start > start && busy.start < fullEnd) {
+        len = Math.min(len, Math.floor((busy.start - start) / 60000));
+      }
+    }
+    len = Math.floor(len / 15) * 15;
+    return len >= this.getMinSlotMinutes() ? len : 0;
+  }
+
+  /**
    * Every bookable slot on a date in windows mode: one starting every
-   * `stepMinutes` from each window's start that finishes inside the window,
-   * meets the minimum notice, and doesn't overlap an existing booking.
+   * `stepMinutes` from each window's start, as long as the slot length
+   * allowed there (see slotLengthAt) and the minimum notice are met.
    */
   getWindowSlots(date, stepMinutes) {
-    const dur = this.getSlotMinutes();
-    const step = stepMinutes || dur;
+    const step = stepMinutes || this.getSlotMinutes();
     const earliest = this.getEarliestBookingTime();
     const out = [];
     this.getWindowsForDate(date).forEach(w => {
-      for (let t = w.start; t + dur <= w.end; t += step) {
+      for (let t = w.start; t + this.getMinSlotMinutes() <= w.end; t += step) {
         const start = new Date(date);
         start.setHours(Math.floor(t / 60), t % 60, 0, 0);
-        const end = new Date(start.getTime() + dur * 60000);
-        if (start < earliest || this.isRangeBusy(start, end)) continue;
-        out.push({ hour: start.getHours(), minute: start.getMinutes(), date: new Date(date) });
+        if (start < earliest) continue;
+        const duration = this.slotLengthAt(date, t, w.end);
+        if (!duration) continue;
+        out.push({ hour: start.getHours(), minute: start.getMinutes(), duration, date: new Date(date) });
       }
     });
     return out;
@@ -179,7 +205,7 @@ class CalendarBooking {
     if (!date) return '';
     if (this.usesWindows()) {
       const opts = this.getWindowSlots(date, 15).map(s =>
-        `<option value="${s.hour}:${s.minute}">${this.formatTime15(s.hour, s.minute)}</option>`
+        `<option value="${s.hour}:${s.minute}:${s.duration}">${this.formatTime15(s.hour, s.minute)}</option>`
       ).join('');
       return opts || '<option value="" disabled>No times available</option>';
     }
@@ -419,9 +445,8 @@ class CalendarBooking {
    */
   getSlotsForDay(date) {
     if (this.usesWindows()) {
-      const dur = this.getSlotMinutes();
       const slots = this.getWindowSlots(date).map(s => {
-        const end = s.hour * 60 + s.minute + dur;
+        const end = s.hour * 60 + s.minute + s.duration;
         return Object.assign(s, {
           label: `${this.formatTime12(s.hour, s.minute)} – ${this.formatTime12(Math.floor(end / 60), end % 60)}`,
         });
@@ -511,13 +536,15 @@ class CalendarBooking {
    * Slot details passed to onSelect: "09:00 - 09:30" style times, using
    * the configured slot length.
    */
-  describeSlot(date, hour, minute) {
-    const end = hour * 60 + minute + this.getSlotMinutes();
+  describeSlot(date, hour, minute, duration) {
+    duration = duration || this.getSlotMinutes();
+    const end = hour * 60 + minute + duration;
     const time = `${this.formatTime15(hour, minute)} - ${this.formatTime15(Math.floor(end / 60), end % 60)}`;
     return {
       date,
       hour,
       minute,
+      duration,
       dateFormatted: this.formatDateLong(date),
       timeFormatted: time,
       label: `${this.formatDateLong(date)}, ${time}`,
@@ -611,7 +638,8 @@ class CalendarBooking {
             <div class="${classes.join(' ')}"
                  data-date="${slot.date.toISOString()}"
                  data-hour="${slot.hour}"
-                 data-minute="${slot.minute || 0}">
+                 data-minute="${slot.minute || 0}"
+                 data-duration="${slot.duration || ''}">
               ${slot.label}
             </div>
           `;
@@ -731,15 +759,15 @@ class CalendarBooking {
         const infoEl = reqEl.querySelector('#specialInfo');
         if (!timeEl.value) return; // "No times available"
         const date = new Date(dateEl.value);
-        const [hour, minute] = timeEl.value.split(':').map(Number);
+        const [hour, minute, duration] = timeEl.value.split(':').map(Number);
         const info = infoEl ? infoEl.value.trim() : '';
 
-        this.selectedSlot = { date, hour, minute, isSpecial: true };
+        this.selectedSlot = { date, hour, minute, duration, isSpecial: true };
         this.showSpecialRequest = false;
         this.render();
 
         if (this.onSelect) {
-          const slot = this.describeSlot(date, hour, minute);
+          const slot = this.describeSlot(date, hour, minute, duration);
           slot.isSpecial = true;
           slot.specialInfo = info;
           slot.label += ' (Special Request)';
@@ -779,11 +807,12 @@ class CalendarBooking {
         const date = new Date(slotEl.dataset.date);
         const hour = parseInt(slotEl.dataset.hour, 10);
         const minute = parseInt(slotEl.dataset.minute || '0', 10);
+        const duration = parseInt(slotEl.dataset.duration, 10) || undefined;
 
-        this.selectedSlot = { date, hour, minute };
+        this.selectedSlot = { date, hour, minute, duration };
         this.render();
 
-        if (this.onSelect) this.onSelect(this.describeSlot(date, hour, minute));
+        if (this.onSelect) this.onSelect(this.describeSlot(date, hour, minute, duration));
       });
     });
   }
@@ -791,7 +820,7 @@ class CalendarBooking {
   getSelection() {
     if (!this.selectedSlot) return null;
     const s = this.selectedSlot;
-    return this.describeSlot(s.date, s.hour, s.minute || 0);
+    return this.describeSlot(s.date, s.hour, s.minute || 0, s.duration);
   }
 
   clearSelection() {
