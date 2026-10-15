@@ -24,21 +24,21 @@
   --color-error: #d94f4f;
   --color-selected: #2c3e50;
   --color-selected-bg: #f0ece8;
-  --space-xs: 0.25rem;
-  --space-sm: 0.5rem;
-  --space-md: 1rem;
-  --space-lg: 1.5rem;
-  --space-xl: 2rem;
-  --space-2xl: 3rem;
-  --space-3xl: 4rem;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
   --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-family-heading: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-size-sm: 0.875rem;
-  --font-size-base: 1rem;
-  --font-size-lg: 1.125rem;
-  --font-size-xl: 1.5rem;
-  --font-size-2xl: 2rem;
-  --font-size-3xl: 2.5rem;
+  --font-size-sm: 14px;
+  --font-size-base: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 24px;
+  --font-size-2xl: 32px;
+  --font-size-3xl: 40px;
   --max-width: 960px;
   --border-radius: 8px;
   --border-radius-lg: 12px;
@@ -49,10 +49,12 @@
 }
 
 /* ── Reset & Base ──────────────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-size: 16px; -webkit-text-size-adjust: 100%; }
-body { font-family: var(--font-family); color: var(--color-text); background: var(--color-bg); line-height: 1.6; -webkit-font-smoothing: antialiased; }
-img { max-width: 100%; height: auto; display: block; }
+/* Scoped to the form (zero specificity via :where) so the theme's header,
+   search box and menus keep their own styling. Sizes below are in px rather
+   than rem because the theme sets its own root font size. */
+:where(#sensory-app), :where(#sensory-app) *, :where(#sensory-app) *::before, :where(#sensory-app) *::after { box-sizing: border-box; margin: 0; padding: 0; }
+#sensory-app { font-family: var(--font-family); font-size: 16px; color: var(--color-text); background: var(--color-bg); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+:where(#sensory-app) img { max-width: 100%; height: auto; display: block; }
 
 /* ── App Container ─────────────────────────────────────────── */
 #sensory-app {
@@ -359,12 +361,13 @@ img { max-width: 100%; height: auto; display: block; }
 }
 
 /* ── Buttons ───────────────────────────────────────────────── */
-.btn {
+/* Scoped: the theme's header icons (search, mobile menu) also use .btn */
+:where(#sensory-app) .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-sm);
-  padding: 0.75rem 1.75rem;
+  padding: 12px 28px;
   border: 2px solid transparent;
   border-radius: var(--border-radius);
   font-family: var(--font-family);
@@ -415,7 +418,7 @@ img { max-width: 100%; height: auto; display: block; }
   display: inline-flex;
   align-items: center;
   gap: var(--space-sm);
-  padding: 0.875rem 2rem;
+  padding: 14px 32px;
   background: var(--color-bg-card);
   color: var(--color-primary);
   border: 2px solid var(--color-border);
@@ -471,7 +474,7 @@ img { max-width: 100%; height: auto; display: block; }
 
 .contact-options .btn {
   width: 100%;
-  padding: 1rem 1.5rem;
+  padding: 16px 24px;
 }
 
 .form-row.name-row {
@@ -612,7 +615,7 @@ img { max-width: 100%; height: auto; display: block; }
 .form-group { margin-bottom: var(--space-lg); }
 .form-group label { display: block; font-weight: 600; font-size: var(--font-size-sm); color: var(--color-primary); margin-bottom: var(--space-sm); }
 .form-group input,
-.form-group textarea { width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--color-border); border-radius: var(--border-radius); font-family: var(--font-family); font-size: var(--font-size-base); color: var(--color-text); background: var(--color-bg-card); transition: border-color var(--transition); }
+.form-group textarea { width: 100%; padding: 12px 16px; border: 2px solid var(--color-border); border-radius: var(--border-radius); font-family: var(--font-family); font-size: var(--font-size-base); color: var(--color-text); background: var(--color-bg-card); transition: border-color var(--transition); }
 .form-group textarea { resize: vertical; min-height: 100px; line-height: 1.5; }
 .form-group input::placeholder,
 .form-group textarea::placeholder { color: var(--color-text-muted); }
@@ -630,7 +633,7 @@ img { max-width: 100%; height: auto; display: block; }
 }
 .anytime-container .btn {
   min-width: 200px;
-  padding: 0.875rem 2.5rem;
+  padding: 14px 40px;
   font-size: var(--font-size-lg);
 }
 .anytime-hint {
@@ -720,7 +723,7 @@ img { max-width: 100%; height: auto; display: block; }
 }
 
 @media (max-width: 640px) {
-  :root { --font-size-3xl: 1.75rem; --font-size-2xl: 1.5rem; --font-size-xl: 1.25rem; }
+  :root { --font-size-3xl: 28px; --font-size-2xl: 24px; --font-size-xl: 20px; }
   .step-content { padding: var(--space-2xl) var(--space-md) var(--space-xl); }
   .card-grid.two-col { grid-template-columns: 1fr; }
   .card-grid.four-col { grid-template-columns: repeat(2, 1fr); }
@@ -769,8 +772,8 @@ img { max-width: 100%; height: auto; display: block; }
 .step-content {
   max-width: 960px !important;
   margin: 0 auto !important;
-  padding-left: 2rem !important;
-  padding-right: 2rem !important;
+  padding-left: 32px !important;
+  padding-right: 32px !important;
 }
 /* Landing page and room type pages need wider containers */
 [data-step="landing"] .step-content {
@@ -886,7 +889,7 @@ nav.breadcrumb,
 .special-field select,
 .special-field input {
   width: 100%;
-  padding: 0.625rem 0.75rem;
+  padding: 10px 12px;
   border: 2px solid var(--color-border);
   border-radius: var(--border-radius);
   font-family: var(--font-family);
@@ -911,7 +914,7 @@ nav.breadcrumb,
 }
 
 .btn-sm {
-  padding: 0.5rem 1.25rem;
+  padding: 8px 20px;
   font-size: var(--font-size-sm);
 }
 

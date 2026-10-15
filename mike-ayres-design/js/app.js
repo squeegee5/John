@@ -1246,8 +1246,15 @@
       return open +
         '<p>Thank you for your enquiry. Our team will be in contact shortly using the details you’ve provided. We look forward to helping you.<\/p>' +
         '<p>In the meantime, if you’re able to share any of the following, it will help us prepare (no problem at all if not):<\/p>' +
-        buildPrepListHtml() +
+        '<ul style="padding-left: 20px;">' +
+          '<li>Whether this is an existing room being redesigned or a completely new space<\/li>' +
+          '<li>Your approximate budget for this project<\/li>' +
+          '<li>Your ideal timescale<\/li>' +
+          '<li>Details of any stakeholders involved in the decision-making process<\/li>' +
+          '<li>Any particular challenges or requirements you’d like us to be aware of<\/li>' +
+        '<\/ul>' +
         '<p>Simply reply to this email with anything you’d like to send over.<\/p>' +
+        '<p>Following our initial consultation, we may need to conduct a site visit to gather further details and additional information. This is where our Sales Director, ' + BRAND.salesDirector + ', will take you through the process in more detail. This initial step ensures we have everything required to move your project forward accurately and efficiently.<\/p>' +
         close;
     }
 
