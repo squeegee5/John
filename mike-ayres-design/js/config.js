@@ -23,7 +23,7 @@ const CONFIG = {
     salesDirector: 'Nick',                   // named in the booking email
     callTitle: 'Mike Ayres Design Call',     // calendar event title prefix
     calendarColorId: '9',                    // blue dot on the shared calendar
-    photosUrl: 'https://www.mikeayresdesign.co.uk/pages/sensory-room-photos',
+    photosUrl: 'https://www.mikeayresdesign.co.uk/pages/sensory-gallery-v2',
     thankYouUrl: 'https://www.mikeayresdesign.co.uk/pages/thank-you',
     storageKey: 'mad_booking',
     pageChrome: 'boost',
@@ -47,7 +47,7 @@ const CONFIG = {
   },
 
   // ── External Links ────────────────────────────────────────
-  designBookUrl: 'https://mikeayresdesign.co.uk/pages/sensory-room-photos#design-book',
+  designBookUrl: 'https://www.mikeayresdesign.co.uk/pages/sensory-gallery-v2#design-book',
   designProcessUrl: '/pages/design-process',
 
   // ── Email Signature Image ────────────────────────────────
@@ -68,9 +68,9 @@ const CONFIG = {
       title: 'Choose Your Room',
       description: 'Tell us about the type of sensory room you\'d like to create and we\'ll help bring your vision to life.',
       images: [
+        'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/mad_room_3_softplay_blue.webp?v=1792075475&width=1000',
         'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/mad_room_1_immersive.webp?v=1792075475&width=1000',
         'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/mad_room_2_softplay.jpg?v=1792075475&width=1000',
-        'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/mad_room_3_softplay_blue.webp?v=1792075475&width=1000',
         'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/mad_room_4_interactive_floor.jpg?v=1792075475&width=1000',
         'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/mad_room_5_tactile_mural.jpg?v=1792075475&width=1000',
       ],

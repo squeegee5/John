@@ -49,7 +49,7 @@ var BRANDS = {
     name: 'Mike Ayres Design Team',
     subject: 'Reminder: your Mike Ayres Design consultation is tomorrow',
     teamName: 'The Mike Ayres Design Team',
-    galleryUrl: 'https://mikeayresdesign.co.uk/pages/sensory-room-photos',
+    galleryUrl: 'https://www.mikeayresdesign.co.uk/pages/sensory-gallery-v2',
     brandName: 'Mike Ayres Design',
     callLength: 'around 30 minutes',
   },
