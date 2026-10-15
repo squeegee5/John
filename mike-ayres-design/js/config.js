@@ -13,7 +13,6 @@ const CONFIG = {
   heroTitle: 'Design Your Sensory Room',
   heroSubtitle: 'Start your journey to creating the perfect sensory environment. Choose where you\'d like to begin.',
   emailTo: 'design-visit@mikeayresdesign.co.uk',
-  formAction: 'https://formsubmit.co/ajax/design-visit@mikeayresdesign.co.uk',
 
   // ── Brand (wording, colours and links used by the shared app code) ──
   brand: {
