@@ -107,6 +107,7 @@
 
   // ── Initialization ───────────────────────────────────────
   function init() {
+    applyImageOverrides();
     populateLandingPage();
     populateRoomTypeCards();
     populateAgeCards();
@@ -117,6 +118,40 @@
     setDesignBookLinks();
     bindGlobalEvents();
     updateProgress();
+  }
+
+  // Images can be swapped without a redeploy via a theme file that outputs
+  // <script type="application/json" id="design-form-images"> (MAD:
+  // sections/design-form-images.liquid, edited with the form image manager).
+  // If it's missing or not valid JSON, the config images are used.
+  function applyImageOverrides() {
+    const el = document.getElementById('design-form-images');
+    if (!el) return;
+    let data;
+    try {
+      data = JSON.parse(el.textContent);
+    } catch (e) {
+      console.warn('design-form-images: not valid JSON, using built-in images');
+      return;
+    }
+    const isUrl = v => typeof v === 'string' && v.trim() !== '';
+
+    const room = CONFIG.landingCards && CONFIG.landingCards.room;
+    const slides = Array.isArray(data.slideshow) ? data.slideshow.filter(isUrl) : [];
+    if (room && slides.length) {
+      room.images = slides;
+      room.image = slides[0];
+    }
+    const designerCard = CONFIG.landingCards && CONFIG.landingCards.designer;
+    if (designerCard && isUrl(data.designerCard)) designerCard.image = data.designerCard;
+
+    ['roomTypes', 'ageGroups', 'roomSizes', 'equipment', 'designers'].forEach(key => {
+      if (!Array.isArray(data[key]) || !Array.isArray(CONFIG[key])) return;
+      data[key].forEach(o => {
+        const item = o && CONFIG[key].find(i => i.id === o.id);
+        if (item && isUrl(o.image)) item.image = o.image;
+      });
+    });
   }
 
   // ── Populate sections from config ────────────────────────
