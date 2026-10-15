@@ -68,11 +68,11 @@ const CONFIG = {
       title: 'Choose Your Room',
       description: 'Tell us about the type of sensory room you\'d like to create and we\'ll help bring your vision to life.',
       images: [
-        'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/thumbnail_one.jpg?v=1774348336',
-        'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/thumbnail_three.jpg?v=1774348336',
-        'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/thumbnail_four.jpg?v=1774348336',
-        'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/thumbnail_six.jpg?v=1774348336',
-        'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/thumbnail_two.jpg?v=1774348336',
+        'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/mad_room_1_immersive.webp?v=1792075475&width=1000',
+        'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/mad_room_2_softplay.jpg?v=1792075475&width=1000',
+        'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/mad_room_3_softplay_blue.webp?v=1792075475&width=1000',
+        'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/mad_room_4_interactive_floor.jpg?v=1792075475&width=1000',
+        'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/mad_room_5_tactile_mural.jpg?v=1792075475&width=1000',
       ],
     },
     designer: {
