@@ -1226,9 +1226,9 @@
         '<li>Floor plans or measurements (if available)<\/li>' +
         '<li>Inspiration images, Pinterest boards, or styles you’re drawn to – you can browse our <a href="' + BRAND.photosUrl + '" style="color: #1a73e8;">sensory room photos<\/a> for ideas<\/li>' +
         '<li>Whether this is an existing room being redesigned or a completely new space<\/li>' +
-        '<li>Your approximate budget range<\/li>' +
+        '<li>Your approximate budget for this project<\/li>' +
         '<li>Your ideal timescale<\/li>' +
-        '<li>Any other stakeholders involved in the decision-making process<\/li>' +
+        '<li>Details of any other stakeholders involved in the decision-making process<\/li>' +
         '<li>Any particular challenges or requirements you’d like us to be aware of<\/li>' +
       '<\/ul>';
   }
@@ -1266,11 +1266,11 @@
 
     return open +
       '<p>Thank you for booking your initial design consultation, we’re really looking forward to speaking with you and learning more about your project.<\/p>' +
-      '<p>Our discussion will take ' + (CONSULT.typicalLength || 'approximately 15–20 minutes') + ' and will give us a clearer understanding of your space, your vision, and how we can best support you.<\/p>' +
+      '<p>Our initial discussion will take ' + (CONSULT.typicalLength || 'approximately 15–20 minutes') + ' and will give us a clearer understanding of your space, your vision, and how we can best support you.<\/p>' +
       '<p>To help us prepare ahead of our ' + (isPhoneCall() ? 'call' : 'meeting') + ', it would be greatly appreciated if you could share any of the following (where possible):<\/p>' +
       buildPrepListHtml() +
       '<p>If you’re unable to gather all of this information, please don’t worry, we can absolutely still have a valuable conversation. However, the more detail we have beforehand, the more productive and focused our time together will be.<\/p>' +
-      '<p>Following our initial consultation, we may need to conduct a site visit to gather further details and additional information. This is where our Sales Director, Mike, will take you through the process in more detail. This initial step ensures we have everything required to move your project forward accurately and efficiently.<\/p>' +
+      '<p>Following our initial consultation, we may need to conduct a site visit to gather further details and additional information. This is where our Sales Director, ' + BRAND.salesDirector + ', will take you through the process in more detail. This initial step ensures we have everything required to move your project forward accurately and efficiently.<\/p>' +
       '<h3 style="color: #2c3e50; margin-top: 30px; font-size: 18px;">' + (isPhoneCall() ? 'Call Details' : 'Meeting Details') + '<\/h3>' +
       meeting +
       '<p>If you have any questions ahead of our call, please feel free to get in touch. We look forward to speaking with you soon.<\/p>' +

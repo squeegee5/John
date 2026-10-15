@@ -20,6 +20,7 @@ const CONFIG = {
     designLabel: 'Southpaw Design',          // "… Consultation Booked", "… Journey"
     senderName: 'Southpaw Design Team',      // From name on emails
     teamName: 'The Southpaw Team',           // email sign-off
+    salesDirector: 'Mike',                   // named in the booking email
     callTitle: 'Southpaw Design Call',       // calendar event title prefix
     calendarColorId: '11',                   // red dot on the shared calendar
     photosUrl: 'https://southpaw.co.uk/pages/sensory-room-photos',

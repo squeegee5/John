@@ -20,6 +20,7 @@ const CONFIG = {
     designLabel: 'Mike Ayres Design',        // "… Consultation Booked", "… Journey"
     senderName: 'Mike Ayres Design Team',    // From name on emails
     teamName: 'The Mike Ayres Design Team',  // email sign-off
+    salesDirector: 'Nick',                   // named in the booking email
     callTitle: 'Mike Ayres Design Call',     // calendar event title prefix
     calendarColorId: '9',                    // blue dot on the shared calendar
     photosUrl: 'https://www.mikeayresdesign.co.uk/pages/sensory-room-photos',
@@ -42,7 +43,7 @@ const CONFIG = {
     enabled: true,
     callTypes: ['video', 'phone'],
     callTypeLabels: { video: 'Video call (Google Meet)', phone: 'Phone call' },
-    typicalLength: 'around 30 minutes', // "Our discussion will take …" in the email
+    typicalLength: 'around 15 minutes', // "Our initial discussion will take …" in the email
   },
 
   // ── External Links ────────────────────────────────────────
