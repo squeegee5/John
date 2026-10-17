@@ -745,7 +745,7 @@
 }
 
 /* ── Boost 6.0.0 Theme Overrides ─────────────────────────── */
-/* Force Boost theme page container to be full width so images match Southpaw */
+/* Force Boost theme page container to be full width */
 #sensory-app,
 #sensory-app .step-content {
   max-width: none !important;
