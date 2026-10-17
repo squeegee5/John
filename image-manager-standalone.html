@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sensory Room Form - Image Manager</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #333; line-height: 1.5; padding-bottom: 80px; }
+  .header { background: #2c3e50; color: #fff; padding: 20px 30px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+  .header h1 { font-size: 1.4rem; font-weight: 600; }
+  .tabs { display: flex; gap: 4px; }
+  .tab { padding: 8px 20px; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 0.9rem; font-weight: 500; background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.7); border: none; }
+  .tab.active { background: #fff; color: #2c3e50; }
+  .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+  .instructions { background: #fff; border-radius: 8px; padding: 16px 20px; margin-bottom: 20px; border-left: 4px solid #e8a87c; font-size: 0.9rem; color: #555; }
+  .instructions strong { color: #2c3e50; }
+  .instructions ol { margin: 8px 0 0 20px; }
+  .instructions li { margin-bottom: 4px; }
+  .section { margin-bottom: 30px; }
+  .section-title { font-size: 1.1rem; font-weight: 600; color: #2c3e50; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #e2ddd8; }
+  .image-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+  .image-card { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); transition: box-shadow 0.2s; }
+  .image-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+  .image-card .preview { width: 100%; aspect-ratio: 4/3; object-fit: cover; background: #f0f0f0; display: block; }
+  .image-card .preview.portrait { aspect-ratio: 3/4; object-fit: contain; }
+  .image-card .preview.square { aspect-ratio: 1/1; }
+  .image-card .info { padding: 10px 12px; }
+  .image-card .label { font-size: 0.85rem; font-weight: 600; color: #2c3e50; margin-bottom: 2px; }
+  .image-card .sublabel { font-size: 0.75rem; color: #888; margin-bottom: 8px; }
+  .image-card input { width: 100%; padding: 6px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.72rem; font-family: monospace; color: #555; }
+  .image-card input:focus { outline: none; border-color: #2c3e50; box-shadow: 0 0 0 2px rgba(44,62,80,0.1); }
+  .image-card input.changed { border-color: #e8a87c; background: #fdf8f4; }
+  .actions { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid #ddd; padding: 14px 30px; display: flex; gap: 12px; align-items: center; box-shadow: 0 -2px 8px rgba(0,0,0,0.06); z-index: 10; }
+  .btn { padding: 10px 24px; border: none; border-radius: 6px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .btn-primary { background: #2c3e50; color: #fff; }
+  .btn-primary:hover { background: #3d566e; }
+  .btn-secondary { background: #e8a87c; color: #2c3e50; }
+  .btn-secondary:hover { background: #d4956a; color: #fff; }
+  .btn-outline { background: transparent; color: #2c3e50; border: 2px solid #2c3e50; padding: 8px 22px; }
+  .btn-outline:hover { background: #2c3e50; color: #fff; }
+  .change-count { font-size: 0.85rem; color: #888; margin-left: auto; }
+  .change-count.has-changes { color: #e8a87c; font-weight: 600; }
+  .toast { position: fixed; top: 20px; right: 20px; background: #2c3e50; color: #fff; padding: 12px 20px; border-radius: 8px; font-size: 0.9rem; opacity: 0; transform: translateY(-10px); transition: all 0.3s; z-index: 100; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Sensory Room Form - Image Manager</h1>
+  <div class="tabs">
+    <button class="tab active" onclick="switchBrand('southpaw')">Southpaw</button>
+    <button class="tab" onclick="switchBrand('mad')">Mike Ayres Design</button>
+  </div>
+</div>
+
+<div class="container" id="content"></div>
+
+<div class="actions">
+  <button class="btn btn-primary" onclick="copyChanges()">Copy changed URLs</button>
+  <button class="btn btn-outline" onclick="resetAll()">Reset</button>
+  <span class="change-count" id="changeCount">No changes</span>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// ALL CURRENT IMAGE DATA - edit URLs here or via the UI above
+// ══════════════════════════════════════════════════════════════
+
+var BRANDS = {
+  southpaw: {
+    label: 'Southpaw',
+    sections: {
+      'Landing Slideshow': {
+        aspect: '',
+        images: {
+          'Slide 1': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/thumbnail_one.jpg?v=1774348336',
+          'Slide 2': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/thumbnail_three.jpg?v=1774348336',
+          'Slide 3': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/thumbnail_four.jpg?v=1774348336',
+          'Slide 4': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/thumbnail_six.jpg?v=1774348336',
+          'Slide 5': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/thumbnail_two.jpg?v=1774348336',
+        }
+      },
+      'Landing Cards': {
+        aspect: '',
+        images: {
+          'Choose Your Designer': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/designerchoice.png?v=1770933730',
+        }
+      },
+      'Room Types': {
+        aspect: '',
+        images: {
+          'SI': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/SI.webp?v=1770914146',
+          'MSE': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/MSE.webp?v=1770914161',
+          'Soft Play': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/soft_play.jpg?v=1770915081',
+          'De-escalation': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/deescalation_7.jpg?v=1772120397',
+          'Projection': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/486309898_1393031628781579_1968299947873302313_n.jpg?v=1772324776',
+          'Mural': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/mural.webp?v=1770916099',
+          'Other': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/other.png?v=1770916776',
+          'Multiple Rooms': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/486760940_1232511201679375_685949428353330236_n.jpg?v=1772221577',
+        }
+      },
+      'Age Groups': {
+        aspect: 'portrait',
+        images: {
+          '0 - 5': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/0-5.png?v=1770913562',
+          '6 - 12': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/6-12.png?v=1770913561',
+          '13 - 18': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/18.png?v=1770913546',
+          'Older': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/older.png?v=1770913546',
+        }
+      },
+      'Equipment': {
+        aspect: 'square',
+        images: {
+          'Bubble Tubes': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/bubble_tube1_abdf2f81-f466-46b2-8837-520fcbc0981c.png?v=1772116758',
+          'Swings': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/swing.jpg?v=1772114204',
+          'Projector/s': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/projector.png?v=1772114204',
+          'Tactile Panels': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/panels.png?v=1772117311',
+          'Tactile Mural': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/murals.png?v=1772117310',
+          'Soft Play Elements': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/soft_play_1f110b54-8e52-4490-b923-1f4fe3b164f2.jpg?v=1772117309',
+          'Padding': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/Gemini_Generated_Image_d0svsud0svsud0sv.png?v=1772114210',
+          'Vibration': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/vibration.png?v=1772117311',
+          'Lighting / Fibre Optics': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/Gemini_Generated_Image_j2ic8ej2ic8ej2ic.png?v=1772109759',
+          'Interactive Panels': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/interactive_panels_e19f0654-e2a8-44cb-b9fe-5da33c9b2a54.jpg?v=1772114203',
+          'Weight / Resistance': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/weighted.webp?v=1772114202',
+          'Balance': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/balance.png?v=1772114206',
+          'Ball Pool': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/crash_pit_new_6478398c-c69e-480d-b9df-5852a83652d7.jpg?v=1772114205',
+          'Climbing': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/climbing.jpg?v=1772114205',
+          'Seating': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/seating.webp?v=1772114201',
+        }
+      },
+      'Designers': {
+        aspect: 'square',
+        images: {
+          'Gemma': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/gem.png?v=1772310022',
+          'Natalia': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/natalia_4.png?v=1772620086',
+          'Priya': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/1.png?v=1772216644',
+          'John': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/john.png?v=1772451311',
+          'Mike': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/mike.png?v=1772452114',
+          'Any': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/any.png?v=1772452309',
+        }
+      },
+    }
+  },
+  mad: {
+    label: 'Mike Ayres Design',
+    sections: {
+      'Landing Slideshow': {
+        aspect: '',
+        images: {
+          'Slide 1': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/thumbnail_one.jpg?v=1774348336',
+          'Slide 2': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/thumbnail_three.jpg?v=1774348336',
+          'Slide 3': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/thumbnail_four.jpg?v=1774348336',
+          'Slide 4': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/thumbnail_six.jpg?v=1774348336',
+          'Slide 5': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/thumbnail_two.jpg?v=1774348336',
+        }
+      },
+      'Landing Cards': {
+        aspect: '',
+        images: {
+          'Choose Your Designer': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/designerchoice.png?v=1770933730',
+        }
+      },
+      'Room Types': {
+        aspect: '',
+        images: {
+          'SI': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/SI.webp?v=1770914146',
+          'MSE': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/MSE.webp?v=1770914161',
+          'Soft Play': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/soft_play.jpg?v=1770915081',
+          'De-escalation': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/deescalation_7.jpg?v=1772120397',
+          'Projection': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/486309898_1393031628781579_1968299947873302313_n.jpg?v=1772324776',
+          'Mural': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/mural.webp?v=1770916099',
+          'Other': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/other.png?v=1770916776',
+          'Multiple Rooms': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/486760940_1232511201679375_685949428353330236_n.jpg?v=1772221577',
+        }
+      },
+      'Age Groups': {
+        aspect: 'portrait',
+        images: {
+          '0 - 5': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/0-5.png?v=1770913562',
+          '6 - 12': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/6-12.png?v=1770913561',
+          '13 - 18': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/18.png?v=1770913546',
+          'Older': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/older.png?v=1770913546',
+        }
+      },
+      'Equipment': {
+        aspect: 'square',
+        images: {
+          'Bubble Tubes': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/bubble_tube1_abdf2f81-f466-46b2-8837-520fcbc0981c.png?v=1772116758',
+          'Swings': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/swing.jpg?v=1772114204',
+          'Projector/s': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/projector.png?v=1772114204',
+          'Tactile Panels': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/panels.png?v=1772117311',
+          'Tactile Mural': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/murals.png?v=1772117310',
+          'Soft Play Elements': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/soft_play_1f110b54-8e52-4490-b923-1f4fe3b164f2.jpg?v=1772117309',
+          'Padding': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/Gemini_Generated_Image_d0svsud0svsud0sv.png?v=1772114210',
+          'Vibration': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/vibration.png?v=1772117311',
+          'Lighting / Fibre Optics': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/Gemini_Generated_Image_j2ic8ej2ic8ej2ic.png?v=1772109759',
+          'Interactive Panels': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/interactive_panels_e19f0654-e2a8-44cb-b9fe-5da33c9b2a54.jpg?v=1772114203',
+          'Weight / Resistance': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/weighted.webp?v=1772114202',
+          'Balance': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/balance.png?v=1772114206',
+          'Ball Pool': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/crash_pit_new_6478398c-c69e-480d-b9df-5852a83652d7.jpg?v=1772114205',
+          'Climbing': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/climbing.jpg?v=1772114205',
+          'Seating': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/seating.webp?v=1772114201',
+        }
+      },
+      'Designers': {
+        aspect: 'square',
+        images: {
+          'Gemma': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/gem.png?v=1772310022',
+          'Priya': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/1.png?v=1772216644',
+          'Natalia': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/natalia_4.png?v=1772620086',
+          'Mike': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/mike.png?v=1772452114',
+          'John': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/john.png?v=1772451311',
+          'Any': 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/any.png?v=1772452309',
+        }
+      },
+    }
+  }
+};
+
+// ── Working state ─────────────────────────────────────────
+var currentBrand = 'southpaw';
+var originalData = JSON.parse(JSON.stringify(BRANDS));
+var currentData  = JSON.parse(JSON.stringify(BRANDS));
+
+function render() {
+  var brand = currentData[currentBrand];
+  var html = '<div class="instructions">';
+  html += '<strong>How to update images:</strong>';
+  html += '<ol>';
+  html += '<li>Upload new images to Shopify: <strong>Settings > Files > Upload files</strong></li>';
+  html += '<li>Copy the CDN URL of the uploaded image</li>';
+  html += '<li>Paste it into the URL field below for the image you want to replace</li>';
+  html += '<li>Click <strong>"Copy changed URLs"</strong> at the bottom</li>';
+  html += '<li>Send me the list and I\'ll update the config and redeploy</li>';
+  html += '</ol></div>';
+
+  for (var sectionName in brand.sections) {
+    var section = brand.sections[sectionName];
+    html += '<div class="section"><div class="section-title">' + sectionName + '</div><div class="image-grid">';
+    for (var label in section.images) {
+      var url = section.images[label];
+      var origUrl = originalData[currentBrand].sections[sectionName].images[label];
+      var changed = url !== origUrl;
+      html += '<div class="image-card">';
+      html += '<img class="preview ' + (section.aspect || '') + '" src="' + url + '" alt="' + label + '" onerror="this.style.background=\'#eee\'">';
+      html += '<div class="info">';
+      html += '<div class="label">' + label + '</div>';
+      html += '<div class="sublabel">' + sectionName + '</div>';
+      html += '<input type="text" value="' + url + '" class="' + (changed ? 'changed' : '') + '" data-section="' + sectionName + '" data-key="' + label + '" onchange="updateImage(this)" oninput="updateImage(this)">';
+      html += '</div></div>';
+    }
+    html += '</div></div>';
+  }
+  document.getElementById('content').innerHTML = html;
+  updateChangeCount();
+}
+
+function updateImage(input) {
+  var section = input.dataset.section;
+  var key = input.dataset.key;
+  var newUrl = input.value.trim();
+  currentData[currentBrand].sections[section].images[key] = newUrl;
+  var img = input.closest('.image-card').querySelector('.preview');
+  img.src = newUrl;
+  var origUrl = originalData[currentBrand].sections[section].images[key];
+  input.classList.toggle('changed', newUrl !== origUrl);
+  updateChangeCount();
+}
+
+function updateChangeCount() {
+  var count = 0;
+  for (var brand in currentData) {
+    for (var s in currentData[brand].sections) {
+      for (var k in currentData[brand].sections[s].images) {
+        if (currentData[brand].sections[s].images[k] !== originalData[brand].sections[s].images[k]) count++;
+      }
+    }
+  }
+  var el = document.getElementById('changeCount');
+  el.textContent = count === 0 ? 'No changes' : count + ' change' + (count > 1 ? 's' : '');
+  el.className = 'change-count' + (count > 0 ? ' has-changes' : '');
+}
+
+function copyChanges() {
+  var lines = [];
+  for (var brand in currentData) {
+    for (var s in currentData[brand].sections) {
+      for (var k in currentData[brand].sections[s].images) {
+        var curr = currentData[brand].sections[s].images[k];
+        var orig = originalData[brand].sections[s].images[k];
+        if (curr !== orig) {
+          lines.push(currentData[brand].label + ' > ' + s + ' > ' + k);
+          lines.push('  OLD: ' + orig);
+          lines.push('  NEW: ' + curr);
+          lines.push('');
+        }
+      }
+    }
+  }
+  if (lines.length === 0) {
+    showToast('No changes to copy');
+    return;
+  }
+  var text = 'IMAGE CHANGES:\n\n' + lines.join('\n');
+  navigator.clipboard.writeText(text).then(function() {
+    showToast('Copied ' + lines.filter(function(l) { return l.startsWith('  NEW:'); }).length + ' change(s) to clipboard');
+  });
+}
+
+function resetAll() {
+  currentData = JSON.parse(JSON.stringify(originalData));
+  render();
+  showToast('All changes reset');
+}
+
+function switchBrand(brand) {
+  currentBrand = brand;
+  document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelector('.tab[onclick*="' + brand + '"]').classList.add('active');
+  render();
+}
+
+function showToast(msg) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(function() { el.classList.remove('show'); }, 3000);
+}
+
+render();
+</script>
+</body>
+</html>
