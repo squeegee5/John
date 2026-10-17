@@ -42,7 +42,7 @@
   };
 
   // Brand wording/styling and consultation settings come from config.js, so
-  // Southpaw and Mike Ayres Design share this file unchanged.
+  // Brand wording and settings come from each site's config.js.
   const BRAND = CONFIG.brand;
   const CONSULT = CONFIG.consultations || { enabled: true, callTypes: ['video'] };
   state.callType = (CONSULT.callTypes || ['video'])[0];
