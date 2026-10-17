@@ -21,6 +21,7 @@ const CONFIG = {
     senderName: 'Mike Ayres Design Team',    // From name on emails
     teamName: 'The Mike Ayres Design Team',  // email sign-off
     salesDirector: 'Nick',                   // named in the booking email
+    hostEmail: 'nick@mikeayresdesign.co.uk', // hosts every call: gets Google's invite email
     callTitle: 'Mike Ayres Design Call',     // calendar event title prefix
     calendarColorId: '9',                    // blue dot on the shared calendar
     photosUrl: 'https://www.mikeayresdesign.co.uk/pages/sensory-gallery-v2',

@@ -910,6 +910,14 @@
         guestsCanModify: false,
         guestsCanInviteOthers: false,
       };
+      // With a host (MAD: Nick), the event is created with only the host as a
+      // guest and Google's invite email switched on, so the host gets a normal
+      // calendar invite (with the Meet link). The customer is then added
+      // silently: they get our own email instead, but stay a guest so they
+      // can join the Meet without waiting to be let in.
+      const host = BRAND.hostEmail;
+      const customer = event.attendees[0];
+      if (host) event.attendees = [{ email: host }];
       if (!isPhoneCall()) {
         // Google Meet video conference
         event.conferenceData = {
@@ -920,13 +928,30 @@
         };
       }
 
-      return fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(gc.calendarId)}/events?conferenceDataVersion=1&sendUpdates=none`, {
+      const eventsUrl = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(gc.calendarId)}/events`;
+      return fetch(`${eventsUrl}?conferenceDataVersion=1&sendUpdates=${host ? 'all' : 'none'}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(event),
+      })
+      .then(res => {
+        if (!host || !res.ok) return res;
+        // Add the customer without emailing anyone. The event is already
+        // booked, so a failure here is logged but doesn't stop the booking.
+        return res.json().then(created => fetch(`${eventsUrl}/${encodeURIComponent(created.id)}?sendUpdates=none`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ attendees: [{ email: host }, customer] }),
+        })
+        .then(r => { if (!r.ok) console.warn('Could not add the customer as a guest: HTTP ' + r.status); })
+        .catch(err => console.warn('Could not add the customer as a guest:', err))
+        .then(() => ({ ok: true, json: () => Promise.resolve(created) })));
       })
       .then(res => {
         if (!res.ok) {

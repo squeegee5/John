@@ -643,11 +643,6 @@
   font-style: italic;
 }
 
-/* ── Age Group Height Gradient ────────────────────────────── */
-#ageCards .choice-card:nth-child(1) .card-image-container { aspect-ratio: 5 / 4; }
-#ageCards .choice-card:nth-child(2) .card-image-container { aspect-ratio: 1 / 1; }
-#ageCards .choice-card:nth-child(3) .card-image-container { aspect-ratio: 7 / 8; }
-/* 4th child (Older) keeps the default 3/4 aspect ratio */
 
 /* ── Compact padding for inner steps ─────────────────────── */
 [data-step="room-type"] .step-content,
@@ -681,13 +676,13 @@
   white-space: nowrap;
 }
 
-/* Age group images - fit vertically, bigger */
+/* Age group images - one 16:10 frame for all four; the silhouettes are
+   pre-sized to stand on a shared baseline and grow taller with age */
 .four-col .choice-card .card-image-container {
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 16 / 10;
 }
 .four-col .choice-card .card-image-container img {
   object-fit: contain;
-  padding: var(--space-sm);
 }
 
 /* ── Confirmation Page ─────────────────────────────────────── */
