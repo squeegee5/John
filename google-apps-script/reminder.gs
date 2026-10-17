@@ -51,7 +51,7 @@ var BRANDS = {
     teamName: 'The Mike Ayres Design Team',
     galleryUrl: 'https://www.mikeayresdesign.co.uk/pages/sensory-gallery-v2',
     brandName: 'Mike Ayres Design',
-    callLength: 'around 30 minutes',
+    callLength: 'around 20 minutes',
   },
 };
 

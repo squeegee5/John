@@ -69,7 +69,7 @@ class CalendarBooking {
       return fetch(
         `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(gc.calendarId)}/events?` +
         `timeMin=${encodeURIComponent(timeMin)}&timeMax=${encodeURIComponent(timeMax)}` +
-        `&singleEvents=true&orderBy=startTime&maxResults=2500&fields=items(start,end,status)`,
+        `&singleEvents=true&orderBy=startTime&maxResults=2500&fields=items(start,end,status,summary)`,
         {
           headers: { 'Authorization': `Bearer ${tokenData.access_token}` },
         }
@@ -77,11 +77,14 @@ class CalendarBooking {
       .then(res => res.json())
       .then(data => {
         if (data.items) {
+          const callTitle = (CONFIG.brand && CONFIG.brand.callTitle) || '';
           this.busySlots = data.items
             .filter(ev => ev.status !== 'cancelled')
             .map(ev => ({
               start: new Date(ev.start.dateTime || ev.start.date),
               end: new Date(ev.end.dateTime || ev.end.date),
+              // A consultation booked through this brand's form
+              isBooking: !!callTitle && String(ev.summary || '').indexOf(callTitle) === 0,
             }));
         }
       });
@@ -145,6 +148,23 @@ class CalendarBooking {
   }
 
   /**
+   * True if a consultation starting at `start` would begin within
+   * config.bookingGap minutes of another consultation booked through the
+   * form, e.g. with a 60-minute gap a 9:00 booking also rules out 9:30
+   * (and 8:30), leaving time for overruns and preparation.
+   */
+  isTooCloseToBooking(start) {
+    const gap = (this.config.bookingGap || 0) * 60000;
+    if (!gap) return false;
+    return this.busySlots.some(busy => busy.isBooking && Math.abs(busy.start - start) < gap);
+  }
+
+  // Fixed-length slots unless a shorter minimum is configured
+  hasFixedSlotLength() {
+    return !this.config.minSlotDuration || this.config.minSlotDuration >= this.getSlotMinutes();
+  }
+
+  /**
    * Length of a slot starting at `startMin` (minutes from midnight) in a
    * window ending at `windowEnd`: the full slot length, cut short by the end
    * of the window or the next existing booking, in 15-minute steps.
@@ -171,9 +191,24 @@ class CalendarBooking {
    * allowed there (see slotLengthAt) and the minimum notice are met.
    */
   getWindowSlots(date, stepMinutes) {
-    const step = stepMinutes || this.getSlotMinutes();
+    const step = stepMinutes || this.config.slotInterval || this.getSlotMinutes();
     const earliest = this.getEarliestBookingTime();
     const out = [];
+    if (this.hasFixedSlotLength()) {
+      // Every slot is the full length, starting on the step grid
+      // (e.g. 9:00, 9:30, 10:00 …) and finishing inside its window
+      const len = this.getSlotMinutes();
+      this.getWindowsForDate(date).forEach(w => {
+        for (let t = Math.ceil(w.start / step) * step; t + len <= w.end; t += step) {
+          const start = new Date(date);
+          start.setHours(Math.floor(t / 60), t % 60, 0, 0);
+          const end = new Date(start.getTime() + len * 60000);
+          if (start < earliest || this.isRangeBusy(start, end) || this.isTooCloseToBooking(start)) continue;
+          out.push({ hour: start.getHours(), minute: start.getMinutes(), duration: len, date: new Date(date) });
+        }
+      });
+      return out;
+    }
     this.getWindowsForDate(date).forEach(w => {
       for (let t = w.start; t + this.getMinSlotMinutes() <= w.end; t += step) {
         const start = new Date(date);
@@ -495,6 +530,7 @@ class CalendarBooking {
    * pseudo-randomly (seeded by date so a refresh shows the same ones).
    */
   pickSlots(date, available) {
+    if (this.config.slotsToShow === 0) return available; // 0 = show them all
     const slotsToShow = this.config.slotsToShow || 5;
     if (available.length <= slotsToShow) return available;
 

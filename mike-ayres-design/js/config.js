@@ -229,10 +229,12 @@ const CONFIG = {
     },
     blockedHours: [12],
     mondayBlockedHours: [13, 14],
-    slotsToShow: 5,
-    slotDuration: 60,    // minutes booked for each consultation…
-    minSlotDuration: 30, // …or shorter (down to this) where an hour won't fit
-    calendarNote: 'Initial consultations usually take around 30 minutes, and we allow up to an hour so there’s plenty of time to discuss your project.',
+    slotsToShow: 0,      // 0 = show every free slot
+    slotDuration: 20,    // each consultation is a 20-minute call…
+    slotInterval: 30,    // …starting on the hour or half hour (9:00, 9:30, 10:00 …)
+    bookingGap: 60,      // consultations start at least an hour apart, so a 9:00
+                         // booking also rules out 9:30 (overruns + prep time)
+    calendarNote: 'Initial consultations are 20-minute calls. Choose whichever time suits you best.',
     // ONLY these dates and times can be booked (24h clock, YYYY-MM-DD).
     // While this list has entries, the weekday schedule above is ignored.
     // Times already booked in the shared calendar are still unavailable.
