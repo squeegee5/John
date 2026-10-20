@@ -1,7 +1,7 @@
 /**
  * Design Consultation Booking Service — Google Apps Script web app
  *
- * The website's enquiry form talks to this script instead of holding a
+ * The websites' enquiry forms (Mike Ayres Design and Southpaw) talk to this script instead of holding a
  * Google login in the page. The script runs as the account that deploys it:
  * that account creates the calendar booking, owns the Google Meet and sends
  * the emails (customer emails from the fromAlias address). The host
@@ -18,30 +18,7 @@
  */
 
 var SETTINGS = {
-  brand: {
-    name: 'Mike Ayres Design',
-    designLabel: 'Mike Ayres Design',
-    senderName: 'Mike Ayres Design Team',     // From name on every email
-    teamName: 'The Mike Ayres Design Team',    // email sign-off
-    callTitle: 'Mike Ayres Design Call',       // calendar event title prefix
-    calendarColorId: '9',
-    photosUrl: 'https://www.mikeayresdesign.co.uk/pages/sensory-gallery-v2',
-    salesDirector: 'Nick',
-    typicalLength: 'around 15 minutes',        // booking email
-    reminderCallLength: 'around 20 minutes',   // reminder email
-  },
   calendarId: 'c_a5f29fda9f946928e38859e140e427d27c046af14517c7c3713ac7a1cd2d9aa0@group.calendar.google.com',
-
-  // Customer emails come from this address when it's set up as a "Send mail
-  // as" address in this account's Gmail; otherwise from this account itself.
-  fromAlias: 'design-visit@mikeayresdesign.co.uk',
-  replyTo: 'design-visit@mikeayresdesign.co.uk',
-  // Hosts every call: gets Google's calendar invite (with the Meet link).
-  // Leave '' if the script runs in the host's own account.
-  hostEmail: 'nick@mikeayresdesign.co.uk',
-  // New booking / enquiry notifications
-  notifyTo: 'nick@mikeayresdesign.co.uk',
-  notifyBcc: 'design-visit@mikeayresdesign.co.uk',
 
   // Booking rules (the form applies the same ones)
   minNoticeHours: 24,
@@ -52,13 +29,71 @@ var SETTINGS = {
   maxPerCustomer: 3,       // per email address, per 6 hours
   maxPerHour: 20,          // all bookings and enquiries
 
-  // Extras run on a schedule (created by setup)
   // Off: the existing "24hr Reminder" and "Consultation Notes Helper"
-  // scripts already do these. Only switch on if this script replaces them.
+  // scripts already do these. Only switch on if this script replaces them
+  // (they then run for the Mike Ayres Design site).
   sendReminders: false,    // daily, 9–10am: reminder to tomorrow's customers
   shareNotes: false,       // every 10 min: share Gemini notes, forward to notesNotifyEmail
-  notesNotifyEmail: 'design-visit@mikeayresdesign.co.uk',
+
+  // One block per website. The form says which one it is.
+  sites: {
+    mad: {
+      allowBookings: true,
+      brand: {
+        name: 'Mike Ayres Design',
+        designLabel: 'Mike Ayres Design',
+        senderName: 'Mike Ayres Design Team',     // From name on every email
+        teamName: 'The Mike Ayres Design Team',    // email sign-off
+        callTitle: 'Mike Ayres Design Call',       // calendar event title prefix
+        calendarColorId: '9',
+        photosUrl: 'https://www.mikeayresdesign.co.uk/pages/sensory-gallery-v2',
+        salesDirector: 'Nick',
+        typicalLength: 'around 15 minutes',        // booking email
+        reminderCallLength: 'around 20 minutes',   // reminder email
+      },
+      // Customer emails come from this address when it's a "Send mail as"
+      // address in this account's Gmail; otherwise from the account itself.
+      fromAlias: 'design-visit@mikeayresdesign.co.uk',
+      replyTo: 'design-visit@mikeayresdesign.co.uk',
+      // Hosts every call: gets Google's calendar invite (with the Meet link).
+      // Leave '' if the script runs in the host's own account.
+      hostEmail: 'nick@mikeayresdesign.co.uk',
+      // New booking / enquiry notifications
+      notifyTo: 'nick@mikeayresdesign.co.uk',
+      notifyBcc: 'design-visit@mikeayresdesign.co.uk',
+      notesNotifyEmail: 'design-visit@mikeayresdesign.co.uk',
+    },
+    southpaw: {
+      allowBookings: false,   // the Southpaw form only takes enquiries
+      brand: {
+        name: 'Southpaw',
+        designLabel: 'Southpaw Design',
+        senderName: 'Southpaw Design Team',
+        teamName: 'The Southpaw Team',
+        callTitle: 'Southpaw Design Call',
+        calendarColorId: '11',
+        photosUrl: 'https://southpaw.co.uk/pages/sensory-room-photos',
+        salesDirector: 'Mike',
+        typicalLength: 'approximately 15–20 minutes',
+        reminderCallLength: 'around 15–20 minutes',
+      },
+      fromAlias: 'design-visit@southpaw.co.uk',
+      replyTo: 'design-visit@southpaw.co.uk',
+      hostEmail: '',
+      notifyTo: 'design-visit@southpaw.co.uk',
+      notifyBcc: '',
+      notesNotifyEmail: 'design-visit@southpaw.co.uk',
+    },
+  },
 };
+
+// The website this request is for (set by useSite_)
+var SITE = SETTINGS.sites.mad;
+
+function useSite_(key) {
+  SITE = SETTINGS.sites[key] || SETTINGS.sites.mad;
+  return SITE;
+}
 
 var TZ = 'Europe/London';
 
@@ -68,8 +103,9 @@ var TZ = 'Europe/London';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
+  useSite_(p.site);
   if (p.action === 'busy') return json_(getBusy_(Number(p.days) || 60));
-  return json_({ ok: true, service: SETTINGS.brand.name + ' bookings' });
+  return json_({ ok: true, service: SITE.brand.name + ' bookings' });
 }
 
 function doPost(e) {
@@ -79,8 +115,9 @@ function doPost(e) {
   } catch (err) {
     return json_({ ok: false, error: 'invalid' });
   }
+  useSite_(data.site);
   try {
-    if (data.action === 'book') return json_(book_(data));
+    if (data.action === 'book' && SITE.allowBookings) return json_(book_(data));
     if (data.action === 'enquiry') return json_(enquiry_(data));
     return json_({ ok: false, error: 'invalid' });
   } catch (err) {
@@ -120,7 +157,7 @@ function getBusy_(days) {
 }
 
 function isBooking_(summary) {
-  return String(summary || '').indexOf(SETTINGS.brand.callTitle) === 0;
+  return String(summary || '').indexOf(SITE.brand.callTitle) === 0;
 }
 
 // ════════════════════════════════════════════════════════════
@@ -248,13 +285,13 @@ function slotFree_(start, end) {
 function createEvent_(b, start, end) {
   var phone = b.callType === 'phone';
   var owner = Session.getEffectiveUser().getEmail();
-  var host = SETTINGS.hostEmail && SETTINGS.hostEmail.toLowerCase() !== owner.toLowerCase() ? SETTINGS.hostEmail : '';
+  var host = SITE.hostEmail && SITE.hostEmail.toLowerCase() !== owner.toLowerCase() ? SITE.hostEmail : '';
   var customer = { email: b.email, displayName: b.fullName };
   var resource = {
-    summary: SETTINGS.brand.callTitle + ': ' + b.fullName + ' - ' + (b.premises || 'No Premises') +
+    summary: SITE.brand.callTitle + ': ' + b.fullName + ' - ' + (b.premises || 'No Premises') +
       (phone ? ' (Phone)' : '') + (b.isSpecial ? ' (Special Request)' : ''),
     description: description_(b, start, end),
-    colorId: SETTINGS.brand.calendarColorId,
+    colorId: SITE.brand.calendarColorId,
     start: { dateTime: start.toISOString(), timeZone: TZ },
     end: { dateTime: end.toISOString(), timeZone: TZ },
     // The host gets it in their own calendar; the customer is a guest so
@@ -349,9 +386,9 @@ function slotTime_(start, end) { return fmtHM_(start) + ' - ' + fmtHM_(end); }
 function slotLabel_(start, end) { return fmtDateLong_(start) + ', ' + slotTime_(start, end); }
 
 function senderOptions_() {
-  var opts = { name: SETTINGS.brand.senderName, replyTo: SETTINGS.replyTo };
-  if (SETTINGS.fromAlias && GmailApp.getAliases().indexOf(SETTINGS.fromAlias) !== -1) {
-    opts.from = SETTINGS.fromAlias;
+  var opts = { name: SITE.brand.senderName, replyTo: SITE.replyTo };
+  if (SITE.fromAlias && GmailApp.getAliases().indexOf(SITE.fromAlias) !== -1) {
+    opts.from = SITE.fromAlias;
   }
   return opts;
 }
@@ -372,7 +409,7 @@ function sendCustomerEmail_(b, start, end, meetLink) {
   if (start) {
     extra.attachments = [Utilities.newBlob(customerIcs_(b, start, end, meetLink), 'text/calendar', 'invite.ics')];
   }
-  sendMail_(b.email, 'Next steps on your ' + SETTINGS.brand.designLabel + ' Journey…', html, extra);
+  sendMail_(b.email, 'Next steps on your ' + SITE.brand.designLabel + ' Journey…', html, extra);
 }
 
 // The form sends its designed notification (photos and all) with
@@ -382,10 +419,10 @@ function sendCompanyEmail_(b, start, end, meetLink) {
   var html = b.companyHtml
     ? b.companyHtml.split('%%MEET_LINK%%').join(esc_(meetLink || ''))
     : companyEmailFallback_(b, start, end, meetLink);
-  var subject = SETTINGS.brand.designLabel + (start ? ' Consultation Booked' : ' Enquiry');
+  var subject = SITE.brand.designLabel + (start ? ' Consultation Booked' : ' Enquiry');
   var extra = { replyTo: b.email };
-  if (SETTINGS.notifyBcc) extra.bcc = SETTINGS.notifyBcc;
-  sendMail_(SETTINGS.notifyTo, subject, html, extra);
+  if (SITE.notifyBcc) extra.bcc = SITE.notifyBcc;
+  sendMail_(SITE.notifyTo, subject, html, extra);
 }
 
 function companyEmailFallback_(b, start, end, meetLink) {
@@ -423,7 +460,7 @@ function summaryHtml_(b, start, end) {
 }
 
 function customerEmailHtml_(b, start, end, meetLink) {
-  var B = SETTINGS.brand;
+  var B = SITE.brand;
   var phone = b.callType === 'phone';
   var siteVisit = '<p>Following our initial consultation, we may need to conduct a site visit to gather further details and additional information. This is where our Sales Director, ' + esc_(B.salesDirector) + ', will take you through the process in more detail. This initial step ensures we have everything required to move your project forward accurately and efficiently.</p>';
   var open = '<div style="font-family: Arial, Helvetica, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px;">' +
@@ -492,17 +529,17 @@ function customerIcs_(b, start, end, meetLink) {
   return [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//' + SETTINGS.brand.name + '//Design Consultation//EN',
+    'PRODID:-//' + SITE.brand.name + '//Design Consultation//EN',
     'METHOD:REQUEST',
     'BEGIN:VEVENT',
-    'UID:consultation-' + Utilities.getUuid() + '@' + SETTINGS.replyTo.split('@')[1],
+    'UID:consultation-' + Utilities.getUuid() + '@' + SITE.replyTo.split('@')[1],
     'DTSTAMP:' + fmt(new Date()),
     'DTSTART:' + fmt(start),
     'DTEND:' + fmt(end),
-    'SUMMARY:' + icsText(SETTINGS.brand.callTitle + (phone ? ' (phone call)' : '')),
+    'SUMMARY:' + icsText(SITE.brand.callTitle + (phone ? ' (phone call)' : '')),
     'DESCRIPTION:' + icsText(description),
     location ? 'LOCATION:' + icsText(location) : '',
-    'ORGANIZER;CN=' + SETTINGS.brand.senderName + ':mailto:' + SETTINGS.replyTo,
+    'ORGANIZER;CN=' + SITE.brand.senderName + ':mailto:' + SITE.replyTo,
     'ATTENDEE;CN=' + icsText(b.fullName).replace(/[:;]/g, ' ') + ';RSVP=TRUE:mailto:' + b.email,
     'STATUS:CONFIRMED',
     'END:VEVENT',
@@ -515,6 +552,7 @@ function customerIcs_(b, start, end, meetLink) {
 // ════════════════════════════════════════════════════════════
 
 function sendReminders() {
+  useSite_('mad');
   var calendar = CalendarApp.getCalendarById(SETTINGS.calendarId);
   var tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
@@ -523,14 +561,14 @@ function sendReminders() {
 
   calendar.getEvents(from, to).forEach(function (event) {
     var title = event.getTitle();
-    if (title.indexOf(SETTINGS.brand.callTitle + ':') !== 0) return;
+    if (title.indexOf(SITE.brand.callTitle + ':') !== 0) return;
     if (event.getTag('reminderSent') === 'true') return;
     var info = parseDescription_(event.getDescription() || '');
     if (!info.email) return;
     var start = event.getStartTime();
     var html = reminderHtml_(info, start, meetLinkForEvent_(event));
     try {
-      sendMail_(info.email, 'Reminder: your ' + SETTINGS.brand.name + ' consultation is tomorrow', html, {});
+      sendMail_(info.email, 'Reminder: your ' + SITE.brand.name + ' consultation is tomorrow', html, {});
       event.setTag('reminderSent', 'true');
       console.log('Reminder sent to ' + info.email + ' for ' + title);
     } catch (e) {
@@ -560,7 +598,7 @@ function meetLinkForEvent_(event) {
 }
 
 function reminderHtml_(info, start, meetLink) {
-  var B = SETTINGS.brand;
+  var B = SITE.brand;
   var time = Utilities.formatDate(start, TZ, 'h:mma').toLowerCase();
   var h = '<div style="font-family: Arial, Helvetica, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px;">';
   h += '<p>Dear ' + esc_(info.firstName) + ',</p>';
@@ -589,6 +627,7 @@ function reminderHtml_(info, start, meetLink) {
 // ════════════════════════════════════════════════════════════
 
 function processNewNotes() {
+  useSite_('mad');
   var since = new Date(Date.now() - 7 * 864e5);
   var settled = Date.now() - 5 * 6e4;
   findNotes_(since).forEach(function (f) {
@@ -601,7 +640,7 @@ function processNewNotes() {
 }
 
 function isNotesDoc_(name) {
-  return name.indexOf(SETTINGS.brand.callTitle) === 0 && name.indexOf('Notes by Gemini') !== -1;
+  return name.indexOf(SITE.brand.callTitle) === 0 && name.indexOf('Notes by Gemini') !== -1;
 }
 
 function findNotes_(since) {
@@ -643,7 +682,7 @@ function forwardGeminiEmails_() {
       if (file === undefined) return; // not readable yet, try next run
       if (file) {
         shareWithCompany_(file);
-        msg.forward(SETTINGS.notesNotifyEmail, { name: SETTINGS.brand.senderName });
+        msg.forward(SITE.notesNotifyEmail, { name: SITE.brand.senderName });
       }
       props.setProperty(key, '1');
     });
@@ -677,9 +716,12 @@ function setup() {
   var cal = Calendar.Calendars.get(SETTINGS.calendarId);
   console.log('Running as ' + me + '. Bookings calendar: "' + cal.summary + '".');
   var aliases = GmailApp.getAliases();
-  console.log(aliases.indexOf(SETTINGS.fromAlias) !== -1
-    ? 'Customer emails will come from ' + SETTINGS.fromAlias + '.'
-    : 'NOTE: ' + SETTINGS.fromAlias + ' is not a "Send mail as" address in this Gmail yet, so customer emails will come from ' + me + ' (replies still go to ' + SETTINGS.replyTo + ').');
+  Object.keys(SETTINGS.sites).forEach(function (key) {
+    var site = SETTINGS.sites[key];
+    console.log(aliases.indexOf(site.fromAlias) !== -1
+      ? site.brand.name + ' customer emails will come from ' + site.fromAlias + '.'
+      : 'NOTE: ' + site.fromAlias + ' is not a "Send mail as" address in this Gmail, so ' + site.brand.name + ' customer emails will come from ' + me + ' (replies still go to ' + site.replyTo + ').');
+  });
 
   ScriptApp.getProjectTriggers().forEach(function (t) {
     if (['sendReminders', 'processNewNotes'].indexOf(t.getHandlerFunction()) !== -1) ScriptApp.deleteTrigger(t);

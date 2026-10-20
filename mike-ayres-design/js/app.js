@@ -1013,6 +1013,7 @@
   function submitViaService() {
     const slot = state.appointmentSlot;
     const payload = {
+      site: CONFIG.bookingService.site,
       action: slot ? 'book' : 'enquiry',
       contact: state.contact,
       selections: {

@@ -62,6 +62,7 @@ const CONFIG = {
   // the page holds no Google login. Empty = old direct method.
   bookingService: {
     url: 'https://script.google.com/macros/s/AKfycbxmQIHpFgOIAncv-CQUaA505DpL5fcqv19rIeG_UnTw8jqLjoBvyUpor7Sb5auVTtI/exec',
+    site: 'mad',   // which site block the booking service uses
   },
 
   // ── Google Calendar Integration ─────────────────────────

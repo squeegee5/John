@@ -36,7 +36,7 @@ class CalendarBooking {
     const service = CONFIG.bookingService && CONFIG.bookingService.url;
     if (service) {
       // The booking service (Apps Script) reads the calendar for us
-      return fetch(`${service}?action=busy&days=${this.getMaxLookaheadDays() + 7}`)
+      return fetch(`${service}?action=busy&site=${CONFIG.bookingService.site || ''}&days=${this.getMaxLookaheadDays() + 7}`)
         .then(res => res.json())
         .then(data => {
           if (data && data.items) {

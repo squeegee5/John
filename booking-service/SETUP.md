@@ -5,10 +5,12 @@ details to it; it creates the calendar booking and Google Meet and sends the
 emails from the account that deploys it. The web page then holds no Google
 login.
 
-The Mike Ayres Design copy runs in **john@southpaw.co.uk**. Customer emails
-come from design-visit@mikeayresdesign.co.uk (already a "Send mail as" address
-in that Gmail), Nick (`hostEmail`) gets Google's invite for every call, and
-new-booking emails go to Nick with a Bcc to design-visit@. The existing
+One deployment serves both websites (the form says which site it is; see
+`SETTINGS.sites`). It runs in **john@southpaw.co.uk**. For Mike Ayres Design,
+customer emails come from design-visit@mikeayresdesign.co.uk, Nick
+(`hostEmail`) gets Google's invite for every call, and new-booking emails go
+to Nick with a Bcc to design-visit@. For Southpaw (enquiries only) emails come
+from and go to design-visit@southpaw.co.uk. The existing
 24-hour reminder and notes scripts carry on unchanged.
 
 It can be moved to another account later (for example a dedicated bookings
@@ -29,7 +31,8 @@ account) by repeating these steps there and changing the form's URL.
 1. **Deploy** → **New deployment** → ⚙ next to "Select type" → **Web app**.
 2. Description: `Booking form`. Execute as: **Me**. Who has access: **Anyone**.
 3. **Deploy**, approve if asked, and copy the **Web app URL** (ends in `/exec`).
-4. That URL goes in `bookingService.url` in `mike-ayres-design/js/config.js`.
+4. That URL goes in `bookingService.url` in both `js/config.js` (Southpaw) and
+   `mike-ayres-design/js/config.js`.
 
 If **Anyone** isn't offered, the Google Workspace admin needs to allow web
 apps to be shared outside the organisation.

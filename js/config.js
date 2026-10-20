@@ -62,6 +62,7 @@ const CONFIG = {
   // the page holds no Google login. Empty = old direct method.
   bookingService: {
     url: '',
+    site: 'southpaw',   // which site block the booking service uses
   },
 
   // ── Google Calendar Integration ─────────────────────────
