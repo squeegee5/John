@@ -2,13 +2,14 @@
  * Design Consultation Booking Service — Google Apps Script web app
  *
  * The website's enquiry form talks to this script instead of holding a
- * Google login in the page. The script runs as the account that deploys it
- * (Mike Ayres Design: nick@mikeayresdesign.co.uk), so that account creates
- * the calendar booking, owns the Google Meet and sends every email. Nobody
- * else's name or address is involved.
+ * Google login in the page. The script runs as the account that deploys it:
+ * that account creates the calendar booking, owns the Google Meet and sends
+ * the emails (customer emails from the fromAlias address). The host
+ * (hostEmail) is invited to every call.
  *
- * It also sends this brand's 24-hour reminders and shares its Gemini
- * meeting notes with the company (see SETTINGS.sendReminders / shareNotes).
+ * Optionally it also sends this brand's 24-hour reminders and shares its
+ * Gemini notes (SETTINGS.sendReminders / shareNotes) — leave those off
+ * while the separate reminder and notes scripts handle them.
  *
  * Customer emails are built here from plain details, never taken from the
  * browser, so the script can't be used to send anyone else's content.
@@ -35,6 +36,9 @@ var SETTINGS = {
   // as" address in this account's Gmail; otherwise from this account itself.
   fromAlias: 'design-visit@mikeayresdesign.co.uk',
   replyTo: 'design-visit@mikeayresdesign.co.uk',
+  // Hosts every call: gets Google's calendar invite (with the Meet link).
+  // Leave '' if the script runs in the host's own account.
+  hostEmail: 'nick@mikeayresdesign.co.uk',
   // New booking / enquiry notifications
   notifyTo: 'nick@mikeayresdesign.co.uk',
   notifyBcc: 'design-visit@mikeayresdesign.co.uk',
@@ -49,8 +53,10 @@ var SETTINGS = {
   maxPerHour: 20,          // all bookings and enquiries
 
   // Extras run on a schedule (created by setup)
-  sendReminders: true,     // daily, 9–10am: reminder to tomorrow's customers
-  shareNotes: true,        // every 10 min: share Gemini notes, forward to notesNotifyEmail
+  // Off: the existing "24hr Reminder" and "Consultation Notes Helper"
+  // scripts already do these. Only switch on if this script replaces them.
+  sendReminders: false,    // daily, 9–10am: reminder to tomorrow's customers
+  shareNotes: false,       // every 10 min: share Gemini notes, forward to notesNotifyEmail
   notesNotifyEmail: 'design-visit@mikeayresdesign.co.uk',
 };
 
@@ -242,6 +248,8 @@ function slotFree_(start, end) {
 function createEvent_(b, start, end) {
   var phone = b.callType === 'phone';
   var owner = Session.getEffectiveUser().getEmail();
+  var host = SETTINGS.hostEmail && SETTINGS.hostEmail.toLowerCase() !== owner.toLowerCase() ? SETTINGS.hostEmail : '';
+  var customer = { email: b.email, displayName: b.fullName };
   var resource = {
     summary: SETTINGS.brand.callTitle + ': ' + b.fullName + ' - ' + (b.premises || 'No Premises') +
       (phone ? ' (Phone)' : '') + (b.isSpecial ? ' (Special Request)' : ''),
@@ -250,11 +258,11 @@ function createEvent_(b, start, end) {
     start: { dateTime: start.toISOString(), timeZone: TZ },
     end: { dateTime: end.toISOString(), timeZone: TZ },
     // The host gets it in their own calendar; the customer is a guest so
-    // they can join the Meet directly. No Google emails are sent: the
-    // customer gets our own email instead.
+    // they can join the Meet directly. The customer gets our own email
+    // rather than Google's, and can't see the guest list.
     attendees: [
       { email: owner, responseStatus: 'accepted' },
-      { email: b.email, displayName: b.fullName },
+      customer,
     ],
     guestsCanModify: false,
     guestsCanInviteOthers: false,
@@ -265,7 +273,21 @@ function createEvent_(b, start, end) {
       createRequest: { requestId: Utilities.getUuid(), conferenceSolutionKey: { type: 'hangoutsMeet' } },
     };
   }
-  var ev = Calendar.Events.insert(resource, SETTINGS.calendarId, { conferenceDataVersion: 1, sendUpdates: 'none' });
+  var ev;
+  if (host) {
+    // Google can't email just one guest, so: create the event with only the
+    // host as a guest and invites on (the host gets Google's invite), then
+    // add the customer without any Google email.
+    resource.attendees = [{ email: host }];
+    ev = Calendar.Events.insert(resource, SETTINGS.calendarId, { conferenceDataVersion: 1, sendUpdates: 'all' });
+    try {
+      ev = Calendar.Events.patch({ attendees: [{ email: host }, customer] }, SETTINGS.calendarId, ev.id, { sendUpdates: 'none' });
+    } catch (e) {
+      console.error('Booked, but could not add the customer as a guest: ' + e); // they still get our email
+    }
+  } else {
+    ev = Calendar.Events.insert(resource, SETTINGS.calendarId, { conferenceDataVersion: 1, sendUpdates: 'none' });
+  }
   // The Meet link is usually ready at once; if not, give it a few seconds
   for (var i = 0; i < 5 && !phone && !meetLinkOf_(ev); i++) {
     Utilities.sleep(1000);
