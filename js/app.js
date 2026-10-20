@@ -671,7 +671,7 @@
       { id: 'contactPostcode', required: true },
       { id: 'contactPremises', required: true },
       { id: 'contactAddress', required: true },
-      { id: 'contactNotes', required: true },
+      { id: 'contactNotes', required: CONFIG.notesRequired !== false },
     ];
 
     fields.forEach(field => {
@@ -694,10 +694,6 @@
         input.classList.remove('error');
       }
     });
-
-    // Textarea validation (notes - optional, but we validate its container)
-    const notesEl = document.getElementById('contactNotes');
-    if (notesEl) notesEl.classList.remove('error');
 
     return valid;
   }

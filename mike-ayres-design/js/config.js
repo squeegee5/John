@@ -47,6 +47,9 @@ const CONFIG = {
     typicalLength: 'around 15 minutes', // "Our initial discussion will take …" in the email
   },
 
+  // "Anything else you'd like to tell us…" box on the contact step
+  notesRequired: false,
+
   // ── External Links ────────────────────────────────────────
   designBookUrl: 'https://www.mikeayresdesign.co.uk/pages/sensory-gallery-v2#design-book',
   designProcessUrl: '/pages/design-process',
