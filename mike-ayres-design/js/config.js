@@ -61,7 +61,7 @@ const CONFIG = {
   // When set, the form talks to this script (booking-service/Code.gs) and
   // the page holds no Google login. Empty = old direct method.
   bookingService: {
-    url: '',
+    url: 'https://script.google.com/macros/s/AKfycbxmQIHpFgOIAncv-CQUaA505DpL5fcqv19rIeG_UnTw8jqLjoBvyUpor7Sb5auVTtI/exec',
   },
 
   // ── Google Calendar Integration ─────────────────────────
