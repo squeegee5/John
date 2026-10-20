@@ -865,3 +865,16 @@ h1.page__title,
     width: 100%;
   }
 }
+
+/* Booking couldn't be completed (shown above the current step) */
+#sensory-app .submit-message {
+  background: #fdecea;
+  border: 1px solid #f5c2bd;
+  color: #8a1c13;
+  border-radius: var(--border-radius);
+  padding: 12px 16px;
+  margin: 0 auto 20px;
+  max-width: 640px;
+  font-size: var(--font-size-sm);
+  text-align: center;
+}

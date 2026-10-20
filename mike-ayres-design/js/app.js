@@ -975,6 +975,7 @@
   // ── Submit Helpers ───────────────────────────────────────
 
   function submitAndConfirm() {
+    if (CONFIG.bookingService && CONFIG.bookingService.url) return submitViaService();
     showLoading(true);
 
     var calendarPromise = state.appointmentSlot
@@ -1001,6 +1002,100 @@
       showLoading(false);
       showConfirmation();
     });
+  }
+
+  // ── Booking service (Apps Script) ─────────────────────────
+  // The service creates the calendar booking and Meet, and sends the
+  // emails from its own account; the page holds no Google login. It builds
+  // the customer email itself, so only plain details are sent from here,
+  // plus our designed notification for the team.
+
+  function submitViaService() {
+    const slot = state.appointmentSlot;
+    const payload = {
+      action: slot ? 'book' : 'enquiry',
+      contact: state.contact,
+      selections: {
+        roomType: state.roomType ? state.roomType.title : '',
+        roomTypeDescription: state.roomType ? state.roomType.description : '',
+        ageGroups: state.ageGroup.map(a => a.title),
+        roomSize: state.roomSize ? state.roomSize.title : '',
+        equipment: state.equipment.map(e => e.title),
+        designer: (!state.designer || state.designer.id === 'designer-any') ? 'Any (No Preference)' : state.designer.name,
+      },
+      callType: isPhoneCall() ? 'phone' : 'video',
+      companyHtml: buildCompanyNotificationHtml(slot && !isPhoneCall() ? '%%MEET_LINK%%' : null),
+    };
+    if (slot) {
+      const start = new Date(slot.date);
+      start.setHours(slot.hour, slot.minute || 0, 0, 0);
+      payload.slot = {
+        start: start.toISOString(),
+        minutes: slot.duration || getSlotMinutes(),
+        isSpecial: !!slot.isSpecial,
+        specialInfo: slot.specialInfo || '',
+      };
+    }
+
+    showLoading(true);
+    clearSubmitMessage();
+    return fetch(CONFIG.bookingService.url, {
+      method: 'POST',
+      // text/plain keeps this a "simple" request Apps Script can answer
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload),
+    })
+    .then(res => res.json())
+    .then(res => {
+      showLoading(false);
+      if (res && res.ok) {
+        showConfirmation();
+      } else if (res && res.error === 'taken') {
+        slotTaken();
+      } else {
+        console.warn('Booking service error:', res && res.error);
+        showSubmitMessage(submitFailedText());
+      }
+    })
+    .catch(err => {
+      console.error('Booking service unreachable:', err);
+      showLoading(false);
+      showSubmitMessage(submitFailedText());
+    });
+  }
+
+  function submitFailedText() {
+    return 'Sorry, we couldn’t send your ' + (state.appointmentSlot ? 'booking' : 'enquiry') +
+      '. Please try again in a moment, or email us at ' + CONFIG.emailTo + '.';
+  }
+
+  // Someone else booked the same time a moment earlier: back to the
+  // calendar with fresh availability.
+  function slotTaken() {
+    state.appointmentSlot = null;
+    if (state.currentStep !== 'designer-calendar') navigateTo('designer-calendar');
+    if (calendarInstance) calendarInstance.loadBusyTimes().then(() => calendarInstance.render());
+    showSubmitMessage('Sorry, that time has just been booked by someone else. Please choose another time.');
+  }
+
+  function showSubmitMessage(text) {
+    const step = document.querySelector('.step.active .step-content') || document.querySelector('.step.active');
+    if (!step) return;
+    let box = document.getElementById('submitMessage');
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'submitMessage';
+      box.className = 'submit-message';
+      box.setAttribute('role', 'alert');
+    }
+    box.textContent = text;
+    step.insertBefore(box, step.firstChild);
+    box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function clearSubmitMessage() {
+    const box = document.getElementById('submitMessage');
+    if (box) box.remove();
   }
 
   // ── Gmail Send Helper ─────────────────────────────────────
@@ -1162,14 +1257,14 @@
     s += '<div style="background:#f8f6f3;padding:16px 24px;border-bottom:2px solid ' + hdr.accent + ';">';
     s += '<h3 style="color:#2c3e50;font-size:16px;margin:0 0 10px;">Contact Details<\/h3>';
     s += '<table style="width:100%;border-collapse:collapse;">';
-    if (fullName) s += companyRow('Name', fullName);
-    if (state.contact.email) s += companyRow('Email', '<a href="mailto:' + state.contact.email + '" style="color:#1a73e8;">' + state.contact.email + '<\/a>');
-    if (state.contact.phone) s += companyRow('Phone', state.contact.phone);
-    if (state.contact.postcode) s += companyRow('Postcode', state.contact.postcode);
+    if (fullName) s += companyRow('Name', escHtml(fullName));
+    if (state.contact.email) s += companyRow('Email', '<a href="mailto:' + escHtml(state.contact.email) + '" style="color:#1a73e8;">' + escHtml(state.contact.email) + '<\/a>');
+    if (state.contact.phone) s += companyRow('Phone', escHtml(state.contact.phone));
+    if (state.contact.postcode) s += companyRow('Postcode', escHtml(state.contact.postcode));
     if (state.contact.premises) {
       var premisesVal = state.contact.premises;
       if (state.contact.address) premisesVal += ', ' + state.contact.address;
-      s += companyRow('Premises', premisesVal);
+      s += companyRow('Premises', escHtml(premisesVal));
     }
     s += '<\/table><\/div>';
 
@@ -1180,13 +1275,13 @@
       s += '<table style="width:100%;border-collapse:collapse;">';
       s += companyRow('Date & Time', state.appointmentSlot.label);
       if (isPhoneCall()) {
-        s += companyRow('Call Type', 'Phone call – call the customer on <strong>' + state.contact.phone + '<\/strong>');
+        s += companyRow('Call Type', 'Phone call – call the customer on <strong>' + escHtml(state.contact.phone) + '<\/strong>');
       } else {
         s += companyRow('Call Type', 'Video call (Google Meet)');
         if (meetLink) s += companyRow('Google Meet', '<a href="' + meetLink + '" style="color:#1a73e8;">' + meetLink + '<\/a>');
       }
       if (state.appointmentSlot.isSpecial && state.appointmentSlot.specialInfo) {
-        s += companyRow('Special Request', state.appointmentSlot.specialInfo);
+        s += companyRow('Special Request', escHtml(state.appointmentSlot.specialInfo));
       }
       s += '<\/table><\/div>';
     }
@@ -1219,7 +1314,7 @@
       s += companyRow('Age Group', state.ageGroup.map(function(a) { return a.title; }).join(', '));
     }
     if (state.roomSize) s += companyRow('Room Size', state.roomSize.title);
-    if (state.contact.notes) s += companyRow('Notes', '“' + state.contact.notes + '”');
+    if (state.contact.notes) s += companyRow('Notes', '“' + escHtml(state.contact.notes) + '”');
     s += '<\/table><\/div>';
 
     // Equipment with images (grid)
@@ -1239,6 +1334,10 @@
 
     s += '<\/div>';
     return s;
+  }
+
+  function escHtml(v) {
+    return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
   function companyRow(label, value) {

@@ -57,6 +57,13 @@ const CONFIG = {
   // ── Email Signature Image ────────────────────────────────
   emailSignatureImage: 'https://cdn.shopify.com/s/files/1/0652/8044/2581/files/SP_Email_Signature_3cd2d1d3-13f3-4fd4-b527-fb98fe4ace70.png?v=1772620100',
 
+  // ── Booking service (Google Apps Script web app) ─────────
+  // When set, the form talks to this script (booking-service/Code.gs) and
+  // the page holds no Google login. Empty = old direct method.
+  bookingService: {
+    url: '',
+  },
+
   // ── Google Calendar Integration ─────────────────────────
   googleCalendar: {
     calendarId: 'c_a5f29fda9f946928e38859e140e427d27c046af14517c7c3713ac7a1cd2d9aa0@group.calendar.google.com',

@@ -33,6 +33,24 @@ class CalendarBooking {
    * Fetch busy times from Google Calendar to prevent double booking.
    */
   loadBusyTimes() {
+    const service = CONFIG.bookingService && CONFIG.bookingService.url;
+    if (service) {
+      // The booking service (Apps Script) reads the calendar for us
+      return fetch(`${service}?action=busy&days=${this.getMaxLookaheadDays() + 7}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.items) {
+            this.busySlots = data.items.map(ev => ({
+              start: new Date(ev.start),
+              end: new Date(ev.end),
+              isBooking: !!ev.isBooking,
+            }));
+          }
+        })
+        .catch(err => console.warn('Failed to load busy times:', err))
+        .finally(() => { this.busyLoaded = true; });
+    }
+
     const gc = CONFIG.googleCalendar;
     if (!gc.refreshToken) {
       this.busyLoaded = true;

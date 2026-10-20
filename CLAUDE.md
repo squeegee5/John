@@ -12,3 +12,7 @@
   `mike-ayres-design/gallery/form-image-manager.html`), not in `config.js`.
 - MAD gallery images: `sections/sp-gallery-section-v2.liquid`, edited with
   `mike-ayres-design/gallery/image-manager.html`.
+- **Booking service:** `booking-service/Code.gs` is an Apps Script web app (MAD copy runs as
+  nick@mikeayresdesign.co.uk). When `bookingService.url` is set in a brand's config, the form
+  sends bookings to it and the build leaves the Google login out of the page. Customer emails
+  are built inside the script; keep its templates in step with `buildCustomerEmailHtml` in app.js.
