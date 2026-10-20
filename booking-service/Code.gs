@@ -7,9 +7,9 @@
  * the emails (customer emails from the fromAlias address). The host
  * (hostEmail) is invited to every call.
  *
- * Optionally it also sends this brand's 24-hour reminders and shares its
- * Gemini notes (SETTINGS.sendReminders / shareNotes) — leave those off
- * while the separate reminder and notes scripts handle them.
+ * In the jobsAccount (Nick's) copy it also sends Mike Ayres Design's
+ * 24-hour reminders and shares its Gemini notes. Other copies (John's, for
+ * Southpaw) skip those, so the same file can be pasted into both.
  *
  * Customer emails are built here from plain details, never taken from the
  * browser, so the script can't be used to send anyone else's content.
@@ -29,11 +29,11 @@ var SETTINGS = {
   maxPerCustomer: 3,       // per email address, per 6 hours
   maxPerHour: 20,          // all bookings and enquiries
 
-  // Off: the existing "24hr Reminder" and "Consultation Notes Helper"
-  // scripts already do these. Only switch on if this script replaces them
-  // (they then run for the Mike Ayres Design site).
-  sendReminders: false,    // daily, 9–10am: reminder to tomorrow's customers
-  shareNotes: false,       // every 10 min: share Gemini notes, forward to notesNotifyEmail
+  // Scheduled jobs for the Mike Ayres Design site, run only in this
+  // account's copy (it owns the Meets, so the Gemini notes are in its Drive).
+  jobsAccount: 'nick@mikeayresdesign.co.uk',
+  sendReminders: true,     // daily, 9–10am: reminder to tomorrow's customers
+  shareNotes: true,        // every 10 min: share Gemini notes, forward to notesNotifyEmail
 
   // One block per website. The form says which one it is.
   sites: {
@@ -192,7 +192,7 @@ function book_(data) {
   }
 
   var meetLink = meetLinkOf_(ev);
-  sendCustomerEmail_(b, start, end, meetLink);
+  sendCustomerEmail_(b, start, end, meetLink, ev.iCalUID);
   sendCompanyEmail_(b, start, end, meetLink);
   return { ok: true, meetLink: meetLink };
 }
@@ -403,11 +403,11 @@ function sendMail_(to, subject, html, extra) {
   GmailApp.sendEmail(to, subject, text, opts);
 }
 
-function sendCustomerEmail_(b, start, end, meetLink) {
+function sendCustomerEmail_(b, start, end, meetLink, uid) {
   var html = customerEmailHtml_(b, start, end, meetLink);
   var extra = {};
   if (start) {
-    extra.attachments = [Utilities.newBlob(customerIcs_(b, start, end, meetLink), 'text/calendar', 'invite.ics')];
+    extra.attachments = [Utilities.newBlob(customerIcs_(b, start, end, meetLink, uid), 'text/calendar', 'invite.ics')];
   }
   sendMail_(b.email, 'Next steps on your ' + SITE.brand.designLabel + ' Journey…', html, extra);
 }
@@ -519,7 +519,9 @@ function customerEmailHtml_(b, start, end, meetLink) {
     close;
 }
 
-function customerIcs_(b, start, end, meetLink) {
+// Same UID as the Google Calendar event, so a customer whose calendar
+// already has the booking (as a guest) doesn't get a second copy.
+function customerIcs_(b, start, end, meetLink, uid) {
   var phone = b.callType === 'phone';
   var fmt = function (d) { return d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, ''); };
   var icsText = function (s) { return String(s).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n'); };
@@ -532,14 +534,14 @@ function customerIcs_(b, start, end, meetLink) {
     'PRODID:-//' + SITE.brand.name + '//Design Consultation//EN',
     'METHOD:REQUEST',
     'BEGIN:VEVENT',
-    'UID:consultation-' + Utilities.getUuid() + '@' + SITE.replyTo.split('@')[1],
+    'UID:' + (uid || 'consultation-' + Utilities.getUuid() + '@' + SITE.replyTo.split('@')[1]),
     'DTSTAMP:' + fmt(new Date()),
     'DTSTART:' + fmt(start),
     'DTEND:' + fmt(end),
     'SUMMARY:' + icsText(SITE.brand.callTitle + (phone ? ' (phone call)' : '')),
     'DESCRIPTION:' + icsText(description),
     location ? 'LOCATION:' + icsText(location) : '',
-    'ORGANIZER;CN=' + SITE.brand.senderName + ':mailto:' + SITE.replyTo,
+    'ORGANIZER;CN=' + SITE.brand.senderName + ':mailto:' + Session.getEffectiveUser().getEmail(),
     'ATTENDEE;CN=' + icsText(b.fullName).replace(/[:;]/g, ' ') + ';RSVP=TRUE:mailto:' + b.email,
     'STATUS:CONFIRMED',
     'END:VEVENT',
@@ -552,6 +554,7 @@ function customerIcs_(b, start, end, meetLink) {
 // ════════════════════════════════════════════════════════════
 
 function sendReminders() {
+  if (!runsJobs_()) return;
   useSite_('mad');
   var calendar = CalendarApp.getCalendarById(SETTINGS.calendarId);
   var tomorrow = new Date();
@@ -627,6 +630,7 @@ function reminderHtml_(info, start, meetLink) {
 // ════════════════════════════════════════════════════════════
 
 function processNewNotes() {
+  if (!runsJobs_()) return;
   useSite_('mad');
   var since = new Date(Date.now() - 7 * 864e5);
   var settled = Date.now() - 5 * 6e4;
@@ -637,6 +641,10 @@ function processNewNotes() {
     markDone_(f.getId());
   });
   forwardGeminiEmails_();
+}
+
+function runsJobs_() {
+  return Session.getEffectiveUser().getEmail().toLowerCase() === SETTINGS.jobsAccount.toLowerCase();
 }
 
 function isNotesDoc_(name) {
@@ -716,7 +724,7 @@ function setup() {
   var cal = Calendar.Calendars.get(SETTINGS.calendarId);
   console.log('Running as ' + me + '. Bookings calendar: "' + cal.summary + '".');
   var aliases = GmailApp.getAliases();
-  Object.keys(SETTINGS.sites).forEach(function (key) {
+  Object.keys(SETTINGS.sites).filter(function (key) { return !runsJobs_() || key === 'mad'; }).forEach(function (key) {
     var site = SETTINGS.sites[key];
     console.log(aliases.indexOf(site.fromAlias) !== -1
       ? site.brand.name + ' customer emails will come from ' + site.fromAlias + '.'
@@ -726,11 +734,13 @@ function setup() {
   ScriptApp.getProjectTriggers().forEach(function (t) {
     if (['sendReminders', 'processNewNotes'].indexOf(t.getHandlerFunction()) !== -1) ScriptApp.deleteTrigger(t);
   });
-  if (SETTINGS.sendReminders) {
+  if (!runsJobs_()) {
+    console.log('Reminders and notes sharing run in ' + SETTINGS.jobsAccount + "'s copy, not this one.");
+  } else if (SETTINGS.sendReminders) {
     ScriptApp.newTrigger('sendReminders').timeBased().everyDays(1).atHour(9).inTimezone(TZ).create();
     console.log('Daily reminders scheduled (9–10am).');
   }
-  if (SETTINGS.shareNotes) {
+  if (runsJobs_() && SETTINGS.shareNotes) {
     DriveApp.getRootFolder(); // ask for Drive access now
     ScriptApp.newTrigger('processNewNotes').timeBased().everyMinutes(10).create();
     console.log('Gemini notes sharing scheduled (every 10 minutes).');

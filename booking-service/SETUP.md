@@ -5,16 +5,21 @@ details to it; it creates the calendar booking and Google Meet and sends the
 emails from the account that deploys it. The web page then holds no Google
 login.
 
-One deployment serves both websites (the form says which site it is; see
-`SETTINGS.sites`). It runs in **john@southpaw.co.uk**. For Mike Ayres Design,
-customer emails come from design-visit@mikeayresdesign.co.uk, Nick
-(`hostEmail`) gets Google's invite for every call, and new-booking emails go
-to Nick with a Bcc to design-visit@. For Southpaw (enquiries only) emails come
-from and go to design-visit@southpaw.co.uk. The existing
-24-hour reminder and notes scripts carry on unchanged.
+The same file is deployed twice:
 
-It can be moved to another account later (for example a dedicated bookings
-account) by repeating these steps there and changing the form's URL.
+- **Nick's copy** (nick@mikeayresdesign.co.uk) serves the **Mike Ayres Design**
+  form: it creates the booking and owns the Meet, customer emails come from
+  design-visit@mikeayresdesign.co.uk (a "Send mail as" address in Nick's
+  Gmail) or else from Nick, and new-booking emails go to Nick with a Bcc to
+  design-visit@. Because it runs as `SETTINGS.jobsAccount`, it also sends MAD's
+  24-hour reminders and shares MAD's Gemini notes.
+- **John's copy** (john@southpaw.co.uk) serves the **Southpaw** form
+  (enquiries only). It skips the scheduled jobs.
+
+Nick's copy is made from John's: John shares his project with Nick (Viewer),
+Nick opens it, **Overview → Make a copy**, runs **setup**, and deploys it.
+Once the MAD form uses Nick's copy, delete the `mad: { … },` block from John's
+"24hr Reminder" script so MAD customers don't get two reminders.
 
 ## 1. Create the script
 
