@@ -974,8 +974,14 @@
 
   // ── Submit Helpers ───────────────────────────────────────
 
+  // Set while a booking or enquiry is being sent, so a double-click (or a
+  // second tap while it's sending) can't send it twice.
+  let submitting = false;
+
   function submitAndConfirm() {
+    if (submitting) return;
     if (CONFIG.bookingService && CONFIG.bookingService.url) return submitViaService();
+    submitting = true;
     showLoading(true);
 
     var calendarPromise = state.appointmentSlot
@@ -1038,6 +1044,7 @@
       };
     }
 
+    submitting = true;
     showLoading(true);
     clearSubmitMessage();
     return fetch(CONFIG.bookingService.url, {
@@ -1051,7 +1058,10 @@
       showLoading(false);
       if (res && res.ok) {
         showConfirmation();
-      } else if (res && res.error === 'taken') {
+        return; // stays locked: it's done
+      }
+      submitting = false;
+      if (res && res.error === 'taken') {
         slotTaken();
       } else {
         console.warn('Booking service error:', res && res.error);
@@ -1060,6 +1070,7 @@
     })
     .catch(err => {
       console.error('Booking service unreachable:', err);
+      submitting = false;
       showLoading(false);
       showSubmitMessage(submitFailedText());
     });
