@@ -17,3 +17,6 @@
   Southpaw). When `bookingService.url` is set in a brand's config, the form
   sends bookings to it and the build leaves the Google login out of the page. Customer emails
   are built inside the script; keep its templates in step with `buildCustomerEmailHtml` in app.js.
+- **Old MAD design form** `/pages/book-a-free-design-visit` is hidden and 301-redirects to
+  `/pages/design-consultation` (Shopify URL redirect), so old ads/links reach the new form.
+  The new form's `/pages/thank-you` fires the Google Ads conversion `AW-11158103406/6-nACKTLlc8YEO7KzMgp`.
