@@ -62,6 +62,9 @@ var SETTINGS = {
       notifyTo: 'nick@mikeayresdesign.co.uk',
       notifyBcc: 'design-visit@mikeayresdesign.co.uk',
       notesNotifyEmail: 'design-visit@mikeayresdesign.co.uk',
+      // Calendar events that don't make Nick unavailable: Southpaw calls are
+      // taken by someone else. Matched against the event title.
+      ignoreEvents: [/^Southpaw Design Call/i, /^Sales Visit Booked 05\.11/i],
     },
     southpaw: {
       allowBookings: false,   // the Southpaw form only takes enquiries
@@ -145,7 +148,7 @@ function getBusy_(days) {
     fields: 'items(start,end,status,summary)',
   });
   var items = (res.items || [])
-    .filter(function (ev) { return ev.status !== 'cancelled'; })
+    .filter(function (ev) { return ev.status !== 'cancelled' && !ignored_(ev.summary); })
     .map(function (ev) {
       return {
         start: ev.start.dateTime || ev.start.date,
@@ -154,6 +157,11 @@ function getBusy_(days) {
       };
     });
   return { ok: true, items: items };
+}
+
+// Events this site doesn't treat as busy (SITE.ignoreEvents)
+function ignored_(summary) {
+  return (SITE.ignoreEvents || []).some(function (re) { return re.test(String(summary || '')); });
 }
 
 function isBooking_(summary) {
@@ -274,7 +282,7 @@ function slotFree_(start, end) {
     fields: 'items(start,end,status,summary)',
   });
   return !(res.items || []).some(function (ev) {
-    if (ev.status === 'cancelled') return false;
+    if (ev.status === 'cancelled' || ignored_(ev.summary)) return false;
     var s = new Date(ev.start.dateTime || ev.start.date);
     var e = new Date(ev.end.dateTime || ev.end.date);
     if (start < e && end > s) return true;
