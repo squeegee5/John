@@ -26,6 +26,7 @@
     // Designer selections
     designer: null,
     appointmentSlot: null,
+    outOfHours: null,   // { preference } when asking for an out-of-hours call
 
     // Contact details
     contact: {
@@ -426,7 +427,13 @@
         const container = document.getElementById('calendarContainer');
         if (!calendarInstance) {
           calendarInstance = new CalendarBooking(container, (slotData) => {
-            state.appointmentSlot = slotData;
+            if (slotData.outOfHours) {
+              state.outOfHours = { preference: slotData.preference };
+              state.appointmentSlot = null;
+            } else {
+              state.outOfHours = null;
+              state.appointmentSlot = slotData;
+            }
             setTimeout(() => {
               if (state.contactFilled) {
                 state.completedPaths.add('designer');
@@ -553,7 +560,12 @@
           collectContactData();
           state.contactFilled = true;
 
-          if (state.firstPath === 'designer' && state.designer && !state.appointmentSlot) {
+          if (state.outOfHours) {
+            // Out-of-hours request chosen on the calendar: send it now
+            const currentPath = getCurrentPath();
+            if (currentPath) state.completedPaths.add(currentPath);
+            submitAndConfirm();
+          } else if (state.firstPath === 'designer' && state.designer && !state.appointmentSlot) {
             // Designer-first: go to calendar (email sent after slot selected)
             proceedToScheduling();
           } else if (state.firstPath === 'room' && !state.completedPaths.has('room')) {
@@ -1021,7 +1033,12 @@
     const payload = {
       site: CONFIG.bookingService.site,
       action: slot ? 'book' : 'enquiry',
-      contact: state.contact,
+      contact: state.outOfHours
+        ? Object.assign({}, state.contact, {
+            notes: ('Out-of-hours consultation requested – times that suit: ' + state.outOfHours.preference +
+              (state.contact.notes ? '\n\n' + state.contact.notes : '')),
+          })
+        : state.contact,
       selections: {
         roomType: state.roomType ? state.roomType.title : '',
         roomTypeDescription: state.roomType ? state.roomType.description : '',
@@ -1261,7 +1278,7 @@
       (hdr.borderBottom ? 'border-bottom:' + hdr.borderBottom + ';' : '') + '">';
     s += '<img src="' + hdr.logoUrl + '" alt="' + BRAND.name + '" height="' + hdr.logoHeight + '" style="display:block;margin-bottom:8px;" />';
     s += '<h2 style="margin:0;font-size:20px;color:' + hdr.textColor + ';">' +
-      (booked ? 'New Design Consultation Booking' : 'New Design Enquiry') + '<\/h2>';
+      (booked ? 'New Design Consultation Booking' : state.outOfHours ? 'Out-of-Hours Consultation Request' : 'New Design Enquiry') + '<\/h2>';
     s += '<\/div>';
 
     // Contact details section
@@ -1295,6 +1312,16 @@
       if (state.appointmentSlot.isSpecial && state.appointmentSlot.specialInfo) {
         s += companyRow('Special Request', escHtml(state.appointmentSlot.specialInfo));
       }
+      s += '<\/table><\/div>';
+    }
+
+    // Out-of-hours request: email the customer to arrange a time
+    if (state.outOfHours) {
+      s += '<div style="background:#fff8e6;padding:16px 24px;border-bottom:1px solid #f0d9a0;">';
+      s += '<h3 style="color:#2c3e50;font-size:16px;margin:0 0 10px;">Out-of-Hours Consultation<\/h3>';
+      s += '<table style="width:100%;border-collapse:collapse;">';
+      s += companyRow('Times that suit', '“' + escHtml(state.outOfHours.preference) + '”');
+      s += companyRow('Next step', 'Email the customer to arrange a time');
       s += '<\/table><\/div>';
     }
 
@@ -1488,6 +1515,8 @@
     if (state.appointmentSlot) {
       summaryData.callType = isPhoneCall() ? 'Phone call' : 'Video call (Google Meet)';
       summaryData.appointment = state.appointmentSlot.label;
+    } else if (state.outOfHours) {
+      summaryData.appointment = 'Out-of-hours consultation – we’ll email you to arrange a time';
     }
 
     // Brands with their own thank-you page: hand the summary over and go there

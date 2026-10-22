@@ -938,3 +938,11 @@ nav.breadcrumb,
   font-size: var(--font-size-sm);
   text-align: center;
 }
+
+/* Two request buttons under the calendar sit side by side, wrapping on phones */
+#sensory-app .special-request-section .special-request-btn + .special-request-btn { margin-left: var(--space-sm); }
+@media (max-width: 600px) {
+  #sensory-app .special-request-section .special-request-btn { display: flex; width: 100%; margin: 0 0 var(--space-sm) 0; }
+  #sensory-app .special-request-section .special-request-btn + .special-request-btn { margin-left: 0; }
+}
+#sensory-app .special-field input.error { border-color: var(--color-error); }

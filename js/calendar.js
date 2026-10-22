@@ -35,14 +35,17 @@ class CalendarBooking {
   loadBusyTimes() {
     const service = CONFIG.bookingService && CONFIG.bookingService.url;
     if (service) {
-      // The booking service (Apps Script) reads the calendar for us
-      return fetch(`${service}?action=busy&site=${CONFIG.bookingService.site || ''}&days=${this.getMaxLookaheadDays() + 7}`)
+      // The booking service (Apps Script) reads the calendar for us; one
+      // retry if the first attempt fails on a flaky connection
+      const url = `${service}?action=busy&site=${CONFIG.bookingService.site || ''}&days=${this.getMaxLookaheadDays() + 7}`;
+      return fetch(url)
+        .catch(() => new Promise(r => setTimeout(r, 1500)).then(() => fetch(url)))
         .then(res => res.json())
         .then(data => {
           if (data && data.items) {
             this.busySlots = data.items.map(ev => ({
-              start: new Date(ev.start),
-              end: new Date(ev.end),
+              start: this.parseEventTime(ev.start),
+              end: this.parseEventTime(ev.end),
               isBooking: !!ev.isBooking,
             }));
           }
@@ -99,8 +102,8 @@ class CalendarBooking {
           this.busySlots = data.items
             .filter(ev => ev.status !== 'cancelled')
             .map(ev => ({
-              start: new Date(ev.start.dateTime || ev.start.date),
-              end: new Date(ev.end.dateTime || ev.end.date),
+              start: this.parseEventTime(ev.start.dateTime || ev.start.date),
+              end: this.parseEventTime(ev.end.dateTime || ev.end.date),
               // A consultation booked through this brand's form
               isBooking: !!callTitle && String(ev.summary || '').indexOf(callTitle) === 0,
             }));
@@ -116,11 +119,23 @@ class CalendarBooking {
   }
 
   /**
+   * An event time from Google Calendar. All-day events come as a bare date
+   * ("2026-10-27"), which means that whole day locally, not UTC midnight.
+   */
+  parseEventTime(value) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value));
+    return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : new Date(value);
+  }
+
+  /**
    * How many calendar days ahead the booking window reaches. With only a
    * couple of bookable weekdays this needs to span many weeks to offer a
    * useful number of days.
    */
   getMaxLookaheadDays() {
+    if (this.hasWeeklyWindows()) {
+      return (this.config.weeksAhead || 4) * 7 + 14;
+    }
     if (this.usesWindows()) {
       // Reach the last listed date, however far ahead it is
       const keys = Object.keys(this.config.availabilityWindows).sort();
@@ -139,6 +154,13 @@ class CalendarBooking {
 
   usesWindows() {
     const w = this.config.availabilityWindows;
+    return this.hasWeeklyWindows() || (!!w && Object.keys(w).length > 0);
+  }
+
+  // A normal week's bookable times (config.weeklyWindows, by weekday
+  // 0=Sun … 6=Sat), used for any date without its own availabilityWindows entry.
+  hasWeeklyWindows() {
+    const w = this.config.weeklyWindows;
     return !!w && Object.keys(w).length > 0;
   }
 
@@ -148,7 +170,8 @@ class CalendarBooking {
   }
 
   getWindowsForDate(date) {
-    const list = (this.config.availabilityWindows || {})[this.dateKey(date)] || [];
+    const byDate = (this.config.availabilityWindows || {})[this.dateKey(date)];
+    const list = byDate || (this.config.weeklyWindows || {})[date.getDay()] || [];
     return list.map(([s, e]) => ({ start: this.toMinutes(s), end: this.toMinutes(e) }));
   }
 
@@ -446,6 +469,17 @@ class CalendarBooking {
   }
 
   /**
+   * A day to show in the calendar: a working day that isn't closed, and
+   * (with time windows) still has at least one free time, so customers
+   * never see a column with nothing to pick — e.g. tomorrow, inside the
+   * notice period, or a day Nick has blocked.
+   */
+  isBookableDay(d) {
+    if (!this.isWorkingDay(d) || this.isBlockedDate(d) || this.isDateClosed(d) || this.isPostHolidayBuffer(d)) return false;
+    return !this.usesWindows() || this.getWindowSlots(d).length > 0;
+  }
+
+  /**
    * Get visible working days for the current page.
    */
   getVisibleDays() {
@@ -463,7 +497,7 @@ class CalendarBooking {
     const maxLookahead = this.getMaxLookaheadDays();
     let d = new Date(startDate);
     for (let i = 0; i < maxLookahead && workingDays.length < totalNeeded; i++) {
-      if (this.isWorkingDay(d) && !this.isBlockedDate(d) && !this.isDateClosed(d) && !this.isPostHolidayBuffer(d)) {
+      if (this.isBookableDay(d)) {
         workingDays.push(new Date(d));
       }
       d.setDate(d.getDate() + 1);
@@ -486,7 +520,7 @@ class CalendarBooking {
     let count = 0;
     let d = new Date(startDate);
     for (let i = 0; i < maxLookahead; i++) {
-      if (this.isWorkingDay(d) && !this.isBlockedDate(d) && !this.isDateClosed(d) && !this.isPostHolidayBuffer(d)) count++;
+      if (this.isBookableDay(d)) count++;
       d.setDate(d.getDate() + 1);
     }
     return Math.ceil(count / daysToShow);
@@ -731,7 +765,7 @@ class CalendarBooking {
       let d = new Date(startDate);
       const maxLookahead = this.getMaxLookaheadDays();
       for (let i = 0; i < maxLookahead; i++) {
-        if (this.isWorkingDay(d) && !this.isBlockedDate(d) && !this.isDateClosed(d) && !this.isPostHolidayBuffer(d)) {
+        if (this.isBookableDay(d)) {
           datOpts.push(new Date(d));
         }
         d.setDate(d.getDate() + 1);
@@ -769,11 +803,30 @@ class CalendarBooking {
           </div>
         </div>
       `;
+    } else if (this.showOutOfHours) {
+      reqEl.innerHTML = `
+        <div class="special-request-form">
+          <h4>Request an Out-of-Hours Consultation</h4>
+          <p class="special-hint">Can't make any of these times? Tell us when suits you and we'll email you to arrange it.</p>
+          <div class="special-field">
+            <label for="outOfHoursInfo">When would suit you?</label>
+            <input type="text" id="outOfHoursInfo" placeholder="e.g. weekday evenings after 5pm, or a Monday">
+          </div>
+          <div class="special-actions">
+            <button class="btn btn-back btn-sm" id="outOfHoursCancel">Cancel</button>
+            <button class="btn btn-primary btn-sm" id="outOfHoursSubmit">Send Request</button>
+          </div>
+        </div>
+      `;
     } else {
       reqEl.innerHTML = `
         <button class="btn btn-outline special-request-btn" id="specialRequestToggle">
           Request a Specific Time
         </button>
+        ${this.config.outOfHoursRequest ? `
+        <button class="btn btn-outline special-request-btn" id="outOfHoursToggle">
+          Request an Out-of-Hours Consultation
+        </button>` : ''}
       `;
     }
 
@@ -783,6 +836,36 @@ class CalendarBooking {
       toggleBtn.addEventListener('click', () => {
         this.showSpecialRequest = true;
         this.renderSpecialRequest();
+      });
+    }
+
+    const oohToggle = reqEl.querySelector('#outOfHoursToggle');
+    if (oohToggle) {
+      oohToggle.addEventListener('click', () => {
+        this.showOutOfHours = true;
+        this.renderSpecialRequest();
+      });
+    }
+    const oohCancel = reqEl.querySelector('#outOfHoursCancel');
+    if (oohCancel) {
+      oohCancel.addEventListener('click', () => {
+        this.showOutOfHours = false;
+        this.renderSpecialRequest();
+      });
+    }
+    const oohSubmit = reqEl.querySelector('#outOfHoursSubmit');
+    if (oohSubmit) {
+      oohSubmit.addEventListener('click', () => {
+        const infoEl = reqEl.querySelector('#outOfHoursInfo');
+        const preference = infoEl ? infoEl.value.trim() : '';
+        if (!preference) {
+          infoEl.classList.add('error');
+          infoEl.focus();
+          return;
+        }
+        this.showOutOfHours = false;
+        this.renderSpecialRequest();
+        if (this.onSelect) this.onSelect({ outOfHours: true, preference });
       });
     }
 

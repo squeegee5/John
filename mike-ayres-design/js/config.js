@@ -247,20 +247,20 @@ const CONFIG = {
     bookingGap: 60,      // consultations start at least an hour apart, so a 9:00
                          // booking also rules out 9:30 (overruns + prep time)
     calendarNote: 'Initial consultations are 20-minute calls. Choose whichever time suits you best.',
-    // ONLY these dates and times can be booked (24h clock, YYYY-MM-DD).
-    // While this list has entries, the weekday schedule above is ignored.
-    // Times already booked in the shared calendar are still unavailable.
-    availabilityWindows: {
-      '2026-10-20': [['09:00', '12:30'], ['14:30', '16:00']], // Tue 20 Oct
-      '2026-10-21': [['10:30', '13:00'], ['14:30', '15:30']], // Wed 21 Oct
-      '2026-10-26': [['08:30', '09:45'], ['15:00', '16:00']], // Mon 26 Oct
-      '2026-10-27': [['09:00', '12:30'], ['14:30', '16:00']], // Tue 27 Oct
-      '2026-10-29': [['09:00', '12:30'], ['14:30', '16:00']], // Thu 29 Oct
-      '2026-11-03': [['09:00', '12:30'], ['13:30', '15:30']], // Tue 3 Nov
-      '2026-11-04': [['09:00', '13:00'], ['15:00', '16:00']], // Wed 4 Nov
-      '2026-11-05': [['09:30', '12:30'], ['14:30', '15:30']], // Thu 5 Nov
-      '2026-11-09': [['08:30', '09:45'], ['15:30', '16:00']], // Mon 9 Nov
+    // Nick's normal week: the times customers can book (24h clock).
+    // Anything Nick puts in the "Sensory Design Video/Call" calendar (all-day
+    // or timed, e.g. "NO CONSULTATIONS") blocks those times.
+    weeklyWindows: {
+      2: [['08:30', '12:30'], ['14:00', '16:30']], // Tuesday
+      3: [['08:30', '12:30'], ['14:00', '16:30']], // Wednesday
+      4: [['08:30', '12:30'], ['14:00', '16:30']], // Thursday
+      5: [['08:30', '12:30']],                     // Friday
     },
+    // One-off exceptions for particular dates (YYYY-MM-DD), e.g.
+    // '2026-12-01': [['09:00', '12:00']], or [] for no bookings that day.
+    availabilityWindows: {},
+    // "Request an Out-of-Hours Consultation" button under the calendar
+    outOfHoursRequest: true,
     // UK Bank Holidays & Christmas closures (YYYY-MM-DD)
     blockedDates: [
       // 2026
