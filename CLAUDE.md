@@ -20,3 +20,6 @@
 - **Old MAD design form** `/pages/book-a-free-design-visit` is hidden and 301-redirects to
   `/pages/design-consultation` (Shopify URL redirect), so old ads/links reach the new form.
   The new form's `/pages/thank-you` fires the Google Ads conversion `AW-11158103406/6-nACKTLlc8YEO7KzMgp`.
+- **Southpaw form** ends on `https://southpaw.co.uk/pages/thank-you` (repo copy: `theme-southpaw/pages/`).
+  Two Google Ads conversions fire there: GTM-NWWF5NZ6 (`Sf_RCNTij90bEO7KzMgp`, URL contains
+  /pages/thank-you) and a URL rule set in Google Ads itself (`Fg5pCN-K-_IcEO7KzMgp`). Don't move that URL.

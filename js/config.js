@@ -24,7 +24,7 @@ const CONFIG = {
     callTitle: 'Southpaw Design Call',       // calendar event title prefix
     calendarColorId: '11',                   // red dot on the shared calendar
     photosUrl: 'https://southpaw.co.uk/pages/sensory-room-photos',
-    thankYouUrl: '',                         // '' = show the form's own thank-you
+    thankYouUrl: 'https://southpaw.co.uk/pages/thank-you', // fires the Google Ads conversion (Tag Manager)
     storageKey: 'southpaw_booking',
     pageChrome: 'default',
     emailHeader: {
@@ -44,7 +44,7 @@ const CONFIG = {
     callTypes: ['video'],
   },
 
-  // ── Thank-you message (shown when brand.thankYouUrl is '') ──
+  // ── Thank-you message (only used if brand.thankYouUrl is '') ──
   thankYou: {
     title: 'Thank you for your enquiry',
     message: 'Our team will be in contact shortly using the details you’ve provided. We look forward to helping you.',
