@@ -2,7 +2,7 @@
  * Consultation Notes Helper — Google Apps Script (runs as john@southpaw.co.uk)
  *
  * Every 10 minutes, for "Notes by Gemini" from booking-form calls only
- * (titles starting "Southpaw Design Call" / "Mike Ayres Design Call"):
+ * (titles starting "Southpaw Design Call"):
  *   1. Shares the notes doc so anyone at Somato Group with the link can edit
  *      (company only — customers never get access)
  *   2. Forwards Gemini's own notes email to that brand's design-visit@
