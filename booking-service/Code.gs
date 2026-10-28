@@ -33,7 +33,7 @@ var SETTINGS = {
   // account's copy (it owns the Meets, so the Gemini notes are in its Drive).
   jobsAccount: 'nick@mikeayresdesign.co.uk',
   sendReminders: true,     // daily, 9–10am: reminder to tomorrow's customers
-  shareNotes: true,        // every 10 min: share Gemini notes, forward to notesNotifyEmail
+  shareNotes: false,       // off: Nick gets Gemini's notes himself and files them (no forwarding to the team)
 
   // One block per website. The form says which one it is.
   sites: {

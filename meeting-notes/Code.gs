@@ -9,7 +9,6 @@
  *      address, after the doc is shared, so colleagues can open
  *      "View the full notes":
  *        Southpaw Design Call    → design-visit@southpaw.co.uk
- *        Mike Ayres Design Call  → design-visit@mikeayresdesign.co.uk
  *
  * First-time setup: choose "setup" in the function dropdown, Run, approve.
  * Updating this code: just paste and save — the schedule keeps running.
@@ -19,7 +18,8 @@ const SETTINGS = {
   // Calls whose notes are handled, and where each brand's notes are sent
   brands: [
     { prefix: 'Southpaw Design Call', notifyEmail: 'design-visit@southpaw.co.uk', senderName: 'Southpaw Design Team' },
-    { prefix: 'Mike Ayres Design Call', notifyEmail: 'design-visit@mikeayresdesign.co.uk', senderName: 'Mike Ayres Design Team' },
+    // Mike Ayres Design calls: not handled here. Nick hosts them and gets
+    // Gemini's notes himself; nothing is forwarded to the team.
   ],
   notesTitleMarker: 'Notes by Gemini',
   geminiSender: 'gemini-notes@google.com',
