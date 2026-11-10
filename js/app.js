@@ -1475,7 +1475,7 @@
       '<h3 style="color: #2c3e50; margin-top: 30px; font-size: 18px;">' + (isPhoneCall() ? 'Call Details' : 'Meeting Details') + '<\/h3>' +
       meeting +
       '<p>If you have any questions ahead of our call, please feel free to get in touch. We look forward to speaking with you soon.<\/p>' +
-      close;
+      close.replace(/<\/div>$/, '<p style="font-size: 12px; color: #888; line-height: 1.5; margin-top: 24px; border-top: 1px solid #eee; padding-top: 12px;">Please note: we may use an AI note-taker during your consultation to help us capture the details of your project accurately. Notes are kept by our design team and not shared outside the company. If you’d prefer us not to, just let us know at the start of the call or reply to this email.<\/p><\/div>');
   }
 
   function showLoading(show) {

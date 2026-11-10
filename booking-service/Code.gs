@@ -100,6 +100,9 @@ function useSite_(key) {
 
 var TZ = 'Europe/London';
 
+// Small print at the foot of booking confirmations and reminders
+var AI_NOTE_HTML = '<p style="font-size: 12px; color: #888; line-height: 1.5; margin-top: 24px; border-top: 1px solid #eee; padding-top: 12px;">Please note: we may use an AI note-taker during your consultation to help us capture the details of your project accurately. Notes are kept by our design team and not shared outside the company. If you’d prefer us not to, just let us know at the start of the call or reply to this email.</p>';
+
 // ════════════════════════════════════════════════════════════
 // Web app
 // ════════════════════════════════════════════════════════════
@@ -524,7 +527,7 @@ function customerEmailHtml_(b, start, end, meetLink) {
     '<h3 style="color: #2c3e50; margin-top: 30px; font-size: 18px;">' + (phone ? 'Call Details' : 'Meeting Details') + '</h3>' +
     meeting +
     '<p>If you have any questions ahead of our call, please feel free to get in touch. We look forward to speaking with you soon.</p>' +
-    close;
+    close.replace(/<\/div>$/, AI_NOTE_HTML + '</div>');
 }
 
 // Same UID as the Google Calendar event, so a customer whose calendar
@@ -627,7 +630,7 @@ function reminderHtml_(info, start, meetLink) {
     : '<p>If you would prefer to speak via phone or WhatsApp instead, simply reply to this email and let us know, and we will happily arrange that.</p>';
   h += '<p>If you have any photos of the room, floor plans, measurements, or inspiration images you would like to share beforehand, please feel free to send them across. No problem at all if not. Also, feel free to check out our sensory room gallery <a href="' + esc_(B.photosUrl) + '" style="color: #1a73e8;">here</a> for inspiration.</p>';
   h += '<p>We look forward to speaking with you.</p>';
-  h += '<p>Warm regards,<br><strong>' + esc_(B.teamName) + '</strong></p></div>';
+  h += '<p>Warm regards,<br><strong>' + esc_(B.teamName) + '</strong></p>' + AI_NOTE_HTML + '</div>';
   return h;
 }
 
