@@ -1,0 +1,1457 @@
+<script>document.body.classList.add('sp-gallery-active');</script>
+{{ 'sp-gallery.css' | asset_url | stylesheet_tag }}
+<style>
+  /* Use Nunito font (matching Boost theme) */
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&display=swap');
+  .sp-gallery-wrapper,
+  .sp-gallery-wrapper * {
+    font-family: 'Nunito', sans-serif !important;
+  }
+
+  /* UNDO Southpaw-specific header fixes — Boost theme header is not fixed */
+  .sp-gallery-active .shopify-section--header,
+  .sp-gallery-active header.header,
+  .sp-gallery-active .header__wrapper {
+    position: relative !important;
+  }
+  /* Restore Boost header — undo any hiding/collapsing */
+  .sp-gallery-active header,
+  .sp-gallery-active .header-content,
+  .sp-gallery-active #shopify-section-header,
+  .sp-gallery-active [class*="header-section"] {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Remove the 140px padding meant for Southpaw's fixed header */
+  .sp-gallery-wrapper {
+    padding-top: 10px !important;
+  }
+
+  /* Hide breadcrumb */
+  .sp-gallery-active .breadcrumbs,
+  .sp-gallery-active .breadcrumb,
+  .sp-gallery-active .breadcrumb-wrapper,
+  .sp-gallery-active .breadcrumbs-container,
+  .sp-gallery-active nav.breadcrumb,
+  .sp-gallery-active .boost-pfs-filter-breadcrumb,
+  .sp-gallery-active [class*="breadcrumb"] {
+    display: none !important;
+  }
+
+  /* Remove theme page spacing */
+  .sp-gallery-active #MainContent,
+  .sp-gallery-active main,
+  .sp-gallery-active .main-content,
+  .sp-gallery-active .page-content,
+  .sp-gallery-active [role="main"] {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+  .sp-gallery-active .shopify-section:first-of-type {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+  }
+
+  /* Hide page title — but NOT .page-header which Boost uses for the logo */
+  .sp-gallery-active .section-header,
+  .sp-gallery-active .page-title-wrapper {
+    display: none !important;
+  }
+
+  /* Fix sticky filter bar position — sits below Boost's 53px fixed nav */
+  .sp-filter-bar {
+    top: 53px !important;
+  }
+
+  /* Reduce animation jerkiness when switching categories */
+  .sp-fade-in {
+    transition: opacity 0.4s ease, transform 0.3s ease !important;
+  }
+
+  /* === V2 FILTER BAR - MATCHING MOCKUP === */
+
+  /* Override filter bar for row layout */
+  .sp-filter-bar {
+    flex-wrap: nowrap !important;
+    gap: 18px !important;
+    padding: 16px 20px !important;
+    align-items: center !important;
+    flex-direction: row !important;
+    justify-content: center !important;
+  }
+
+  /* Row alignment: Design Book and Enquire Today align with the gallery buttons (bottom of the group) */
+  .sp-filter-bar-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 14px;
+    justify-content: center;
+    width: 100%;
+  }
+
+  /* Offset outside buttons upward by the group's bottom padding (16px) so they line up exactly with the gallery buttons, not the bottom of the enclosure */
+  .sp-filter-bar-row > .sp-filter-btn,
+  .sp-filter-bar-row > .sp-enquire-btn {
+    margin-bottom: 16px;
+  }
+
+  /* Enclosure for the gallery category buttons — transparent, shows grouping */
+  .sp-filter-group {
+    position: relative;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 14px 22px 16px;
+    border-radius: 22px;
+    background: rgba(255,255,255,0.25);
+    border: 1.5px solid rgba(160,160,200,0.22);
+    box-shadow: 0 2px 16px rgba(100,100,160,0.08), inset 0 1px 2px rgba(255,255,255,0.4);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  .sp-filter-group-buttons {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* Title INSIDE the enclosure, above the buttons */
+  .sp-filter-title {
+    text-align: center;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #4a4a6a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    width: 100%;
+  }
+  .sp-filter-title::before,
+  .sp-filter-title::after {
+    content: '';
+    height: 2px;
+    width: 110px;
+    border-radius: 2px;
+  }
+  /* Left line: rainbow fading left-to-right */
+  .sp-filter-title::before {
+    background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(255,100,100,0.3) 20%,
+      rgba(255,180,80,0.45) 40%,
+      rgba(120,200,120,0.55) 60%,
+      rgba(100,160,220,0.65) 80%,
+      rgba(160,120,220,0.75) 100%);
+  }
+  /* Right line: rainbow fading right-to-left */
+  .sp-filter-title::after {
+    background: linear-gradient(90deg,
+      rgba(160,120,220,0.75) 0%,
+      rgba(100,160,220,0.65) 20%,
+      rgba(120,200,120,0.55) 40%,
+      rgba(255,180,80,0.45) 60%,
+      rgba(255,100,100,0.3) 80%,
+      transparent 100%);
+  }
+
+  /* Button icon — bigger */
+  .sp-btn-icon {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    flex-shrink: 0;
+  }
+
+  /* BIGGER buttons */
+  .sp-filter-bar .sp-filter-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    white-space: nowrap !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    padding: 11px 20px !important;
+    letter-spacing: 0.5px !important;
+    border: 2px solid !important;
+    background: rgba(255,255,255,0.85) !important;
+    transition: all 0.25s ease !important;
+  }
+
+  /* Pressed-in look for active/selected buttons (inner shadow, no black) */
+  .sp-filter-bar .sp-filter-btn.sp-active {
+    background: rgba(240,240,250,0.7) !important;
+    color: inherit !important;
+    box-shadow:
+      inset 0 2px 5px rgba(0,0,0,0.18),
+      inset 0 -1px 2px rgba(255,255,255,0.5) !important;
+    transform: translateY(1px);
+  }
+
+  /* === INDIVIDUAL BUTTON COLORS === */
+
+  /* Design Book — brighter RED border */
+  .sp-filter-btn[data-category="designs"] {
+    color: #e53030 !important;
+    border-color: #ff3838 !important;
+  }
+  .sp-filter-btn[data-category="designs"]:hover {
+    background: rgba(255,56,56,0.08) !important;
+    border-color: #ff1f1f !important;
+  }
+  .sp-filter-btn[data-category="designs"].sp-active {
+    background: rgba(255,56,56,0.12) !important;
+    color: #d01a1a !important;
+  }
+
+  /* All Sensory — white inside, purple border, visible light-purple inner shadow when pressed */
+  .sp-filter-btn[data-category="all"] {
+    color: #8e5aa8 !important;
+    border-color: #b574d0 !important;
+    background: #ffffff !important;
+  }
+  .sp-filter-btn[data-category="all"]:hover {
+    background: #ffffff !important;
+    border-color: #9a5bbf !important;
+  }
+  .sp-filter-bar .sp-filter-btn[data-category="all"].sp-active {
+    background: #ffffff !important;
+    color: #8e5aa8 !important;
+    box-shadow:
+      inset 0 4px 10px rgba(165,110,200,0.55),
+      inset 0 2px 4px rgba(142,90,168,0.35),
+      inset 0 -2px 3px rgba(255,255,255,0.6) !important;
+  }
+
+  /* MSE — BLUE border. When pressed: dark night-sky background with shimmering stars, white text, inverted icon */
+  .sp-filter-btn[data-category="mse"] {
+    color: #3d7dc9 !important;
+    border-color: #4a90e2 !important;
+  }
+  .sp-filter-btn[data-category="mse"]:hover {
+    background: rgba(74,144,226,0.08) !important;
+  }
+  .sp-filter-bar .sp-filter-btn[data-category="mse"].sp-active {
+    background: linear-gradient(135deg, #0a1a3a 0%, #16325e 45%, #0e2248 100%) !important;
+    color: #ffffff !important;
+    border-color: #3e6fb8 !important;
+    position: relative !important;
+    overflow: hidden !important;
+    box-shadow:
+      inset 0 2px 6px rgba(0,0,0,0.45),
+      inset 0 -1px 2px rgba(120,180,255,0.15) !important;
+  }
+  /* Star field shimmer layer */
+  .sp-filter-bar .sp-filter-btn[data-category="mse"].sp-active::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    background-image:
+      radial-gradient(1px 1px at 8% 30%, #ffffff 99%, transparent),
+      radial-gradient(1px 1px at 22% 68%, #e8f0ff 99%, transparent),
+      radial-gradient(1.5px 1.5px at 38% 22%, #ffffff 99%, transparent),
+      radial-gradient(1px 1px at 52% 80%, #cfe0ff 99%, transparent),
+      radial-gradient(1px 1px at 65% 35%, #ffffff 99%, transparent),
+      radial-gradient(1.2px 1.2px at 78% 62%, #ffffff 99%, transparent),
+      radial-gradient(1px 1px at 88% 28%, #dbe8ff 99%, transparent),
+      radial-gradient(1px 1px at 95% 72%, #ffffff 99%, transparent),
+      radial-gradient(1.5px 1.5px at 45% 50%, #ffffff 99%, transparent);
+    animation: sp-mse-shimmer 2.4s ease-in-out infinite;
+    z-index: 0;
+  }
+  /* Second star layer twinkles out of phase for a more natural sparkle */
+  .sp-filter-bar .sp-filter-btn[data-category="mse"].sp-active::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    background-image:
+      radial-gradient(1px 1px at 15% 50%, #ffffff 99%, transparent),
+      radial-gradient(1px 1px at 33% 42%, #b8d0ff 99%, transparent),
+      radial-gradient(1px 1px at 58% 18%, #ffffff 99%, transparent),
+      radial-gradient(1.2px 1.2px at 72% 78%, #ffffff 99%, transparent),
+      radial-gradient(1px 1px at 85% 50%, #cfe0ff 99%, transparent);
+    animation: sp-mse-shimmer 3.6s ease-in-out infinite 1.2s;
+    z-index: 0;
+  }
+  /* Keep icon and text above the star layers */
+  .sp-filter-bar .sp-filter-btn[data-category="mse"].sp-active > * {
+    position: relative;
+    z-index: 1;
+  }
+  /* Swap icon to the inverted (white-on-dark) variant when pressed */
+  .sp-filter-bar .sp-filter-btn[data-category="mse"].sp-active .sp-btn-icon {
+    content: url('https://cdn.shopify.com/s/files/1/0589/4825/5913/files/inverted_mse.png?v=1776382245') !important;
+    filter: drop-shadow(0 0 2px rgba(180,210,255,0.5)) !important;
+  }
+  @keyframes sp-mse-shimmer {
+    0%, 100% { opacity: 0.35; }
+    50%      { opacity: 1; }
+  }
+
+  /* Soft Play — RAINBOW border. White-ish unpressed, darker rainbow tint when pressed */
+  .sp-filter-btn[data-category="soft-play"] {
+    color: #555 !important;
+    border: 2px solid transparent !important;
+    background:
+      linear-gradient(#ffffff, #ffffff) padding-box,
+      linear-gradient(90deg, #ff6b6b, #ffa94d, #ffd93d, #6bcb77, #4d96ff, #b08cff) border-box !important;
+  }
+  .sp-filter-btn[data-category="soft-play"]:hover {
+    background:
+      linear-gradient(rgba(255,250,245,1), rgba(255,250,245,1)) padding-box,
+      linear-gradient(90deg, #ff6b6b, #ffa94d, #ffd93d, #6bcb77, #4d96ff, #b08cff) border-box !important;
+  }
+  .sp-filter-bar .sp-filter-btn[data-category="soft-play"].sp-active {
+    color: #555 !important;
+    background:
+      linear-gradient(rgba(245,245,255,0.7), rgba(245,245,255,0.7)) padding-box,
+      linear-gradient(90deg, #ff6b6b, #ffa94d, #ffd93d, #6bcb77, #4d96ff, #b08cff) border-box !important;
+    box-shadow:
+      inset 0 2px 5px rgba(0,0,0,0.18),
+      inset 0 -1px 2px rgba(255,255,255,0.5) !important;
+  }
+
+  /* Tactile Murals — purple/blue/pink gradient border. White-ish unpressed, darker gradient tint when pressed */
+  .sp-filter-btn[data-category="murals"] {
+    color: #7a5aa8 !important;
+    border: 2px solid transparent !important;
+    background:
+      linear-gradient(#ffffff, #ffffff) padding-box,
+      linear-gradient(90deg, #b57edb, #8a7ee0, #5d9be8, #e668b5, #b85aa8) border-box !important;
+  }
+  .sp-filter-btn[data-category="murals"]:hover {
+    background:
+      linear-gradient(rgba(252,248,255,1), rgba(252,248,255,1)) padding-box,
+      linear-gradient(90deg, #b57edb, #8a7ee0, #5d9be8, #e668b5, #b85aa8) border-box !important;
+  }
+  .sp-filter-bar .sp-filter-btn[data-category="murals"].sp-active {
+    color: #7a5aa8 !important;
+    background:
+      linear-gradient(rgba(245,240,250,0.7), rgba(245,240,250,0.7)) padding-box,
+      linear-gradient(90deg, #b57edb, #8a7ee0, #5d9be8, #e668b5, #b85aa8) border-box !important;
+    box-shadow:
+      inset 0 2px 5px rgba(0,0,0,0.18),
+      inset 0 -1px 2px rgba(255,255,255,0.5) !important;
+  }
+
+  /* Projection — PINK border */
+  .sp-filter-btn[data-category="projection"] {
+    color: #d94a88 !important;
+    border-color: #ec5fa0 !important;
+  }
+  .sp-filter-btn[data-category="projection"]:hover {
+    background: rgba(236,95,160,0.08) !important;
+  }
+  .sp-filter-btn[data-category="projection"].sp-active {
+    background: rgba(236,95,160,0.15) !important;
+  }
+
+  /* De-escalation — LIGHT BLUE border */
+  .sp-filter-btn[data-category="de-escalation"] {
+    color: #4aa3c4 !important;
+    border-color: #5dbce0 !important;
+  }
+  .sp-filter-btn[data-category="de-escalation"]:hover {
+    background: rgba(93,188,224,0.08) !important;
+  }
+  .sp-filter-btn[data-category="de-escalation"].sp-active {
+    background: rgba(93,188,224,0.15) !important;
+  }
+
+  /* Enquire Today — brighter GREEN bolder border */
+  .sp-enquire-btn {
+    color: #1fb958 !important;
+    border: 2.5px solid #1fd263 !important;
+  }
+  .sp-enquire-btn:hover {
+    background: rgba(31,210,99,0.1) !important;
+    border-color: #14bd52 !important;
+  }
+
+  /* === Even faster background animations === */
+  .sp-light-orb:nth-child(1) { animation-duration: 6s !important; }
+  .sp-light-orb:nth-child(2) { animation-duration: 7.5s !important; }
+  .sp-light-orb:nth-child(3) { animation-duration: 5.5s !important; }
+  .sp-light-orb:nth-child(4) { animation-duration: 7s !important; }
+  .sp-light-orb:nth-child(5) { animation-duration: 5s !important; }
+  .sp-light-orb:nth-child(6) { animation-duration: 6.5s !important; }
+  .sp-light-orb:nth-child(7) { animation-duration: 6s !important; }
+
+  /* Responsive: wrap on smaller screens */
+  @media (max-width: 1200px) {
+    .sp-filter-bar {
+      flex-wrap: wrap !important;
+    }
+    .sp-filter-group-buttons {
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+  }
+</style>
+
+<div class="sp-gallery-wrapper">
+
+  <!-- Flowing Lights Background -->
+  <div class="sp-lights-bg">
+    <div class="sp-light-orb"></div>
+    <div class="sp-light-orb"></div>
+    <div class="sp-light-orb"></div>
+    <div class="sp-light-orb"></div>
+    <div class="sp-light-orb"></div>
+    <div class="sp-light-orb"></div>
+    <div class="sp-light-orb"></div>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="sp-filter-bar">
+    <div class="sp-filter-bar-row">
+      <button class="sp-filter-btn" data-category="designs">
+        <img class="sp-btn-icon" src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/design_book.png?v=1776333947" alt="">
+        Design Book
+      </button>
+
+      <div class="sp-filter-group">
+        <div class="sp-filter-title">Sensory Gallery</div>
+        <div class="sp-filter-group-buttons">
+          <button class="sp-filter-btn sp-active" data-category="all">
+            <img class="sp-btn-icon" src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/all_sensory.png?v=1776333947" alt="">
+            All Sensory
+          </button>
+          <button class="sp-filter-btn" data-category="mse">
+            <img class="sp-btn-icon" src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/MSE.png?v=1776333948" alt="">
+            MSE
+          </button>
+          <button class="sp-filter-btn" data-category="soft-play">
+            <img class="sp-btn-icon" src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/soft_play1.png?v=1776333947" alt="">
+            Soft Play
+          </button>
+          <button class="sp-filter-btn" data-category="murals">
+            <img class="sp-btn-icon" src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/tactile_murals.png?v=1776333947" alt="">
+            Tactile Murals
+          </button>
+          <button class="sp-filter-btn" data-category="projection">
+            <img class="sp-btn-icon" src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/projection.png?v=1776333947" alt="">
+            Projection
+          </button>
+          <button class="sp-filter-btn" data-category="de-escalation">
+            <img class="sp-btn-icon" src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/de-escalation1.png?v=1776333948" alt="">
+            De-escalation
+          </button>
+        </div>
+      </div>
+
+      <a class="sp-filter-btn sp-enquire-btn" href="https://www.mikeayresdesign.co.uk/pages/design-consultation" target="_blank" rel="noopener">
+        <img class="sp-btn-icon" src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/Enquire_Today.png?v=1776333947" alt="">
+        Enquire Today
+      </a>
+    </div>
+  </div>
+
+  <!-- Slideshow Section -->
+  <div class="sp-slideshow-section">
+    <div class="sp-slides-container"></div>
+    <div class="sp-slideshow-overlay">
+      <button class="sp-slide-nav sp-slide-prev" aria-label="Previous image">&#8249;</button>
+      <button class="sp-slide-nav sp-slide-next" aria-label="Next image">&#8250;</button>
+      <div class="sp-slide-counter">1 / 1</div>
+      <div class="sp-scroll-hint">
+        <span>Scroll Down</span>
+        <div class="sp-scroll-arrow"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Info Bar -->
+  <div class="sp-info-bar">
+    <div class="sp-info-logo">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/9000-008-a-or_Master_MAD_logo_Colour_Stacked_Type_06-05-2015_1_1.jpg?v=1775559163" alt="Mike Ayres Design" onerror="this.style.display='none'">
+    </div>
+    <div class="sp-info-text"></div>
+    <button class="sp-view-gallery-btn">View Gallery</button>
+  </div>
+
+  <div class="sp-detail-label">Gallery</div>
+
+  <!-- ===================== -->
+  <!-- DESIGN BOOK VIEW -->
+  <!-- ===================== -->
+  <div class="sp-designs-view">
+
+    <!-- Banner with rotating background images -->
+    <div class="sp-db-banner">
+      <div class="sp-db-banner-slide sp-active" style="background-image:url('https://cdn.shopify.com/s/files/1/0652/8044/2581/files/banner1_3083b73b-734f-4131-9e9e-1a4a90770e67.jpg?v=1773934142')"></div>
+      <div class="sp-db-banner-slide" style="background-image:url('https://cdn.shopify.com/s/files/1/0589/4825/5913/files/Linwood2.png?v=1775726216')"></div>
+      <div class="sp-db-banner-slide" style="background-image:url('https://cdn.shopify.com/s/files/1/0652/8044/2581/files/mural_4_f9644cdc-cdd2-4d9a-9522-ef15aabd8529.jpg?v=1773934169')"></div>
+      <div class="sp-db-banner-slide" style="background-image:url('https://cdn.shopify.com/s/files/1/0589/4825/5913/files/000_1551-054-a-or_1.jpg?v=1775748491')"></div>
+      <div class="sp-db-banner-slide" style="background-image:url('https://cdn.shopify.com/s/files/1/0589/4825/5913/files/willow_brook_20250326_130734b.jpg?v=1775726213')"></div>
+      <div class="sp-db-banner-slide" style="background-image:url('https://cdn.shopify.com/s/files/1/0589/4825/5913/files/IMG_2905b.png?v=1775732279')"></div>
+      <div class="sp-db-banner-slide" style="background-image:url('https://cdn.shopify.com/s/files/1/0589/4825/5913/files/2598-001-b-crop-1920w-_muralZ_cf0f45ec-f741-4c47-83dd-38f057bf436a.jpg?v=1775731961')"></div>
+      <div class="sp-db-banner-slide" style="background-image:url('https://cdn.shopify.com/s/files/1/0589/4825/5913/files/000z_2836-002-a-or_2840869b-3abb-430c-ab86-51790327fc99.webp?v=1775748386')"></div>
+      <div class="sp-db-banner-slide" style="background-image:url('https://cdn.shopify.com/s/files/1/0652/8044/2581/files/murals_-_Xzzz.png?v=1773231000')"></div>
+      <div class="sp-db-banner-textbox">
+        <h1>Design Book</h1>
+        <p>concept to creation</p>
+      </div>
+      <div class="sp-db-scroll-btn">
+        <span>Scroll</span>
+        <div class="sp-scroll-arrow"></div>
+      </div>
+    </div>
+
+    <!-- About Section with MP4 Video -->
+    <div class="sp-db-about">
+      <div class="sp-db-about-inner">
+        <div class="sp-db-about-text">
+          <div class="sp-db-about-label">About Our Work</div>
+          <h2>Every space tells a story. We design the experience.</h2>
+          <p>Every Mike Ayres Design project begins with a unique design tailored to the space and its users. From initial concept through to final installation, our design team works closely with clients to create environments that inspire, engage, and provide real benefit.</p>
+          <p>Our process combines creative vision with practical expertise, ensuring each sensory environment is both beautiful and functional.</p>
+        </div>
+        <div class="sp-db-video">
+          <video autoplay muted loop playsinline>
+            <source src="https://cdn.shopify.com/videos/c/o/v/b1cd7ac03e2f44ff83bbe902f76fd6e9.mp4" type="video/mp4">
+          </video>
+        </div>
+      </div>
+    </div>
+
+    <!-- Design Gallery (2 columns, with lightbox) -->
+    <div class="sp-db-gallery-section">
+      <h3 class="sp-db-gallery-title">Designs</h3>
+      <p class="sp-db-gallery-subtitle">Concept to creation</p>
+
+      <div class="sp-db-gallery-grid">
+        <div class="sp-db-gallery-item sp-fade-in">
+          <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/pegboard_room.png?v=1773271686" alt="Design Visual">
+        </div>
+        <div class="sp-db-gallery-item sp-fade-in">
+          <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/MSE_1231231213.png?v=1773271686" alt="Design Visual">
+        </div>
+        <div class="sp-db-gallery-item sp-fade-in">
+          <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/613_Sherwood_Park_SS_SI_Design_V3-3.jpg?v=1773271686" alt="Design Visual">
+        </div>
+        <div class="sp-db-gallery-item sp-fade-in">
+          <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/banner5.jpg?v=1772061966" alt="Design Visual">
+        </div>
+        <div class="sp-db-gallery-item sp-fade-in">
+          <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/Screenshot_2026-03-11_185005.png?v=1773268245" alt="Design Visual">
+        </div>
+        <div class="sp-db-gallery-item sp-fade-in">
+          <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/sp_mse_12331.png?v=1773250780" alt="Design Visual">
+        </div>
+        <div class="sp-db-gallery-item sp-fade-in">
+          <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/design_4a.png?v=1772229224" alt="Design Visual">
+        </div>
+        <div class="sp-db-gallery-item sp-fade-in">
+          <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/design_4b.png?v=1772229222" alt="Design Visual">
+        </div>
+        <div class="sp-db-gallery-item sp-fade-in">
+          <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/design_2a.png?v=1772062782" alt="Design Visual">
+        </div>
+        <div class="sp-db-gallery-item sp-fade-in">
+          <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/design_2b.jpg?v=1772062771" alt="Design Visual">
+        </div>
+        <div class="sp-db-gallery-item sp-fade-in">
+          <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/cloud_room.png?v=1773271686" alt="Design Visual">
+        </div>
+        <div class="sp-db-gallery-item sp-fade-in">
+          <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/design_3b.jpg?v=1772064521" alt="Design Visual">
+        </div>
+      </div>
+    </div>
+
+    <!-- Design Lightbox -->
+    <div class="sp-db-lightbox">
+      <button class="sp-db-lightbox-close" aria-label="Close">&times;</button>
+      <button class="sp-db-lightbox-nav sp-db-lightbox-prev" aria-label="Previous">&#8249;</button>
+      <button class="sp-db-lightbox-nav sp-db-lightbox-next" aria-label="Next">&#8250;</button>
+      <img class="sp-db-lightbox-img" src="" alt="">
+      <div class="sp-db-lightbox-counter"></div>
+      <div class="sp-db-lightbox-end">
+        <p>End of Design Book</p>
+        <button class="sp-db-lightbox-view-gallery">View Full Gallery</button>
+      </div>
+    </div>
+
+    <!-- Design Proposal Sections -->
+    <div class="sp-db-proposal">
+
+      <!-- Project Timeline -->
+      <div class="sp-db-section sp-fade-in">
+        <div class="sp-db-section-label">The Process</div>
+        <h3>Project Timeline</h3>
+        <p>Design and installation projects take time and communication. This timeline highlights each stage of the process and the approximate timing you would expect. Communication is key and we will work together to meet the needs of you and your clients.</p>
+        <img class="sp-db-timeline-img sp-fade-in" src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/project_timeline_2.png?v=1772328991" alt="Project Timeline">
+      </div>
+
+      <!-- Our Design Process -->
+      <div class="sp-db-section sp-fade-in">
+        <div class="sp-db-section-label">How We Work</div>
+        <h3>Our Design Process</h3>
+        <p>Our design process begins with a sales visit where we discuss your requirements and vision for the space. Following this, our team creates a comprehensive design proposal and quotation tailored to your needs.</p>
+        <p>Once you decide to proceed, you raise a Purchase Order and arrange a 50% deposit. We then conduct a thorough site survey to ensure all custom items are made to measure. Your signed proposal places the order, and installation takes place 8-10 weeks from that point.</p>
+        <div class="sp-db-two-col sp-fade-in">
+          <div>
+            <h4>Design Visuals</h4>
+            <p>We supply multiple site visuals of the proposed design, giving you a clear picture of how your finished space will look. These detailed renders show the room from various angles, helping you visualise the placement of every element.</p>
+            <img class="sp-db-zoom-img sp-fade-in" src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/stand_alone_design.png?v=1772229413" alt="Design Visual Example" data-zoomable>
+          </div>
+          <div>
+            <h4>Design Plan</h4>
+            <p>Each proposal includes a design plan showing your layout in plan form. All products are numbered on the plan and listed alongside, providing a comprehensive overview of the equipment placement and room configuration.</p>
+            <img class="sp-db-zoom-img sp-fade-in" src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/plan.png?v=1772230042" alt="Design Plan Example" data-zoomable>
+          </div>
+        </div>
+      </div>
+
+      <!-- Site Survey -->
+      <div class="sp-db-section sp-fade-in">
+        <div class="sp-db-section-label">Preparation</div>
+        <h3>Booking the Site Survey</h3>
+        <p>The speed at which a room is completed is dependent upon the readiness of the room. A site survey will be undertaken as soon as possible, but only when Mike Ayres Design have been informed the room is in its finished state, including:</p>
+        <ul>
+          <li>Electrical work (if required)</li>
+          <li>All building work or alterations complete (including ceilings &amp; 2nd fix items)</li>
+          <li>Any hoists or lifting equipment is in situ</li>
+          <li>All fixtures and fittings complete, including air conditioning or heating units</li>
+          <li>Clean and empty, free from all obstructions</li>
+          <li>Unoccupied and available for our staff to have minimum 1 hour uninterrupted access</li>
+        </ul>
+        <p>It is always advisable that you view our installation services as the final stage of your building/room preparation process. Once we come to install, your environment will be cleaned and ready to use straight away.</p>
+      </div>
+
+      <!-- Project Brief -->
+      <div class="sp-db-section sp-fade-in">
+        <div class="sp-db-section-label">Your Vision</div>
+        <h3>The Project Brief</h3>
+        <p>Every project starts with your brief. You tell us about your new space, and we outline your requirements along with additional design notes and considerations.</p>
+        <p>Our design team considers every aspect of the environment &mdash; from suspension points for swings, to wall and floor matting for safety, climbing equipment for gross motor development, and flexible items that allow therapists to create sensory circuits around the room.</p>
+        <div class="sp-db-two-col sp-fade-in">
+          <div>
+            <h4>Product Descriptions</h4>
+            <p>Each design proposal includes detailed descriptions of the key items seen within the design. From rocking barrels and platform swings to climbing walls and sensory loungers, we ensure you understand the purpose and therapeutic benefit of every piece of equipment.</p>
+            <img class="sp-db-zoom-img sp-fade-in" src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/Screenshot_2026-02-27_231708.png?v=1772234245" alt="Product Descriptions Example" data-zoomable>
+          </div>
+          <div>
+            <h4>Colour Choices</h4>
+            <p>We provide a comprehensive selection of colour choices for the various made-to-order items in your design. From PU fabrics for bean chairs, vinyl for wall cushions and floor mats, to soft textured fabrics for sensory rockers &mdash; your space is customised to your preference.</p>
+            <img class="sp-db-zoom-img sp-fade-in" src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/Screenshot_2026-03-11_173359.png?v=1773268245" alt="Colour Choices Example" data-zoomable>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ===================== -->
+  <!-- MASONRY GALLERY -->
+  <!-- ===================== -->
+  <div class="sp-masonry">
+
+    <!-- ========== MSE ========== -->
+        <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/3857_vaughan.png?v=1782822877" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/000_000_0704-001-a-or.jpg?v=1775646413" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/364212411_991512418933504_7452583814010003443_n.jpg?v=1775568546" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/1b_dark_room_calm_room.jpg?v=1775568359" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/Sandgate_20250124_135734c.jpg?v=1775568414" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/SP_996_MSE.jpg?v=1775732109" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/20251212_120421.jpg?v=1775748491" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/000_1551-054-a-or_1.jpg?v=1775748491" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/3_Carshalton.jpg?v=1775731959" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/000_2333-006-a-or.jpg?v=1775646411" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/000_2537-003-a-or_1.png?v=1775748493" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/152279556_3723891737646054_4858105013810592257_n.jpg?v=1775567856" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/000_2329-006-a-med_240bd7e3-ca9d-4b53-9e2b-b65bc2b12a82.jpg?v=1775731960" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/SP998_train_mse_mix.jpg?v=1771600152" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/000_2158-003-a-or.jpg?v=1775646714" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/SP_990_MSE.jpg?v=1771600887" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/20241031_123750_5a896776-5d50-4045-8f43-6cc37f294602.jpg?v=1775731775" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/to_add_7.png?v=1775731625" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/sp_mse_3707_-_kentish_town2.jpg?v=1771618801" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/000z_2468-005-a-med_ca3a0c40-7dea-411d-9a01-be6c457139c3.jpg?v=1775726212" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/sp_mse_1231231.jpg?v=1772666518" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/fishies_2303-112-a-or.jpg?v=1775568125" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/sp_mse_234325.jpg?v=1772666517" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/sp_soft_play_mse.jpg?v=1772666521" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/mse_23423422.png?v=1772666523" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/sp_mse_12312.webp?v=1771620048" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/SP_9123_MSE.jpg?v=1771601256" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/SP_974_mix.jpg?v=1771600896" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/SP_993_MSE.jpg?v=1771600895" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/SP_Soft_MSE_mix.jpg?v=1771600890" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/SP_984_MSE_mix.jpg?v=1771600888" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/sp_mse_12312312.jpg?v=1772220091" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/SP_999_MSE_MIX.jpg?v=1771600127" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/MSE_SP_123121.jpg?v=1772128054" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/MSE_234234.png?v=1773272044" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/SP_MSE_12312_79cb41d3-51d5-48f6-9f48-841023dd7b83.png?v=1773232712" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/sp_mse_12331.png?v=1773250780" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/mse_2341231231.png?v=1772666512" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/sp_mse_1232344.png?v=1773250780" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/sp_mse_234.jpg?v=1772666519" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/mse_134124.png?v=1772666521" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/soft_play_2342342.jpg?v=1772666521" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/123579516_3440828669285697_227389483499642759_n.jpg?v=1775567855" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/2303-104-a-or.jpg?v=1775568124" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/20231213_132657.jpg?v=1775568498" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/000a_a_2761-002-a-or_copy_f16b1a57-0f22-48d4-a2d4-1ff4d0dc22fb_1024x1024_1.webp?v=1775568544" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/Dorothy_Gardner_IMG_9664cd_MAD.jpg?v=1775726209" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/2031-021-a-or_8a42f669-5cd4-4787-a4a0-395a21d45750.jpg?v=1775731626" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/IMG_0071.jpg?v=1775731627" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/566_queens_park8.jpg?v=1775731627" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/000a_1_1024x1024_6cec9055-8d2f-4951-8d9a-b750a2b75d1f.webp?v=1775731957" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/Sandgate_20250124_140137.jpg?v=1775731961" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/20240814_162311.jpg?v=1775732111" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/3672_northbury1.jpg?v=1775732111" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/IMG_5782b.jpg?v=1775732112" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/3694_-_nexus_-_eagle_room.heic?v=1775732139" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/SP_999.jpg?v=1775732314" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/000_1551-001-a-med.jpg?v=1775744477" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/000_1487-129-a-or_10e4ee0d-93b6-470c-8463-f50cabd55bb9.jpg?v=1775748492" alt="MSE Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="mse">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/30_2026_02_22_19_PM.png?v=1782828686" alt="MSE Room">
+    </div>
+
+    <!-- ========== SI ========== -->
+                            <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/1a.png?v=1782826041" alt="SI Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/SI_321321.jpg?v=1771620190" alt="SI Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/2902-003-a-or.jpg?v=1775568499" alt="SI Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/1_8d41899a-2bcb-4c78-9554-904dd83c5ec4.png?v=1782825945" alt="SI Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/Golborne_IMG_0601.jpg?v=1775726213" alt="SI Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/SI_123123123.jpg?v=1771620175" alt="SI Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/IMG_20180307_141204.jpg?v=1772157881" alt="SI Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/SP__SI_1233321.jpg?v=1771620156" alt="SI Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/IMG_20180806_123853_2.jpg?v=1772159004" alt="SI Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/IMG_20180116_181556.jpg?v=1772159005" alt="SI Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/SP_SI_frideswide1e.jpg?v=1771602018" alt="SI Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/SP_SI_soundwell_20250417_115031.jpg?v=1771601459" alt="SI Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/SP_SI_soundwell_2_20250417_154621.jpg?v=1771601459" alt="SI Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/SP_SI_soundwell_20250417_115007.jpg?v=1771601455" alt="SI Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/SP_989_SI.jpg?v=1771600895" alt="SI Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/SP_981_SI.webp?v=1771600884" alt="SI Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/SP_SI_12312312_not_on.jpg?v=1772063760" alt="SI Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/SP_997_SI_2.jpg?v=1771947370" alt="SI Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/SP_SI_123123.webp?v=1772056207" alt="SI Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/SP_923_SI.webp?v=1772056209" alt="SI Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/SI_SP.jpg?v=1772128052" alt="SI Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/IMG_20191107_151857_dea69b5d-6e79-4e22-a977-acb0077abd38.jpg?v=1772157390" alt="SI Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/IMG_20180307_141247.jpg?v=1772157881" alt="SI Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/IMG_20180307_141311.jpg?v=1772157882" alt="SI Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/IMG_20180307_141231.jpg?v=1772157881" alt="SI Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/PXL_20210428_080011742.MP.jpg?v=1772159177" alt="SI Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/PXL_20200928_144104958.MP.jpg?v=1772159006" alt="SI Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/IMG_20200121_130924.jpg?v=1772159006" alt="SI Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/IMG_20190916_143135.jpg?v=1772159004" alt="SI Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/IMG_20180306_083251.jpg?v=1772159004" alt="SI Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/IMG_20180221_130647.jpg?v=1772159003" alt="SI Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/IMG_20180924_122418.jpg?v=1772158995" alt="SI Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/IMG_20180227_135845.jpg?v=1772159003" alt="SI Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/design_4b.png?v=1772229222" alt="SI Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/487201200_1399846154766793_2847529797709069715_n.jpg?v=1775726209" alt="SI Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/20250326_130734c.jpg?v=1775726209" alt="SI Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/Exploria_1b_MAD.jpg?v=1775726209" alt="SI Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="si">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/SP_SI_123131.jpg?v=1771620120" alt="SI Room">
+    </div>
+
+    <!-- ========== SOFT PLAY ========== -->
+                            <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/oakley_AA_IMG_0296c.jpg?v=1775726208" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/sp_soft_kids_99981_96d751e9-f177-4b23-a1fc-fafbc4f9a772.png?v=1773232713" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/IMG_2935b.jpg?v=1775732276" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/459196387_1247560629995347_4709455984463183147_n_e39cc1b3-e1bb-4c1a-9807-aa140ed21456.jpg?v=1775568545" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/SP_9878_soft2_not_on2.jpg?v=1772128068" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/Exploria_1b_MAD.jpg?v=1775726209" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/1a.png?v=1782826041" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/418986218_1110037800414298_2335331201873020990_n.jpg?v=1775568547" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/sp_soft_2342342342.png?v=1772667951" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/IMG_8759c.jpg?v=1775731962" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/503581680_9927917013910131_3359391428074348840_n.jpg?v=1775567824" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/IMG_8381.heic?v=1775732111" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/beam1_ec3b47be-ea9e-4cfb-935a-97fe4f837dad.png?v=1775748489" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/3zzz2_f1290cf1-d6d4-4e19-b954-1dbbf2446695.png?v=1775732390" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/Gallions_IMG_9926C.jpg?v=1775726212" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/willow_brook_20250326_130734b.jpg?v=1775726213" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/20250326_130849.jpg?v=1775731626" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/20250214_120737.jpg?v=1775731962" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/IMG_8761.heic?v=1775732111" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/IMG_2905b.png?v=1775732279" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/IMG_20191107_151839.jpg?v=1772157882" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/487201200_1399846154766793_2847529797709069715_n.jpg?v=1775726209" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/IMG_20191107_151857_dea69b5d-6e79-4e22-a977-acb0077abd38.jpg?v=1772157390" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/IMG_20200219_160528_7d122322-d817-4410-872f-82e24bb80088.jpg?v=1772157388" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/IMG_20170920_103758.jpg?v=1772157388" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/IMG_20170920_103732.jpg?v=1772157387" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/20240430_134637.jpg?v=1772157387" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/sp_-_soft_play_123231.jpg?v=1772109758" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/IMG_20170920_103732.jpg?v=1772157387" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/SP_soft_23432_f097d6ef-2d4e-47c8-9696-0ee63c3c0a5a.jpg?v=1772157383" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/SP_-_Soft_Play_and_SI_123.jpg?v=1772109747" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/design_2b.jpg?v=1772062771" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/000_2333-006-a-or.jpg?v=1775646411" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/MIGHTY_MONSTERS_IMG-20250603-WA0009-C_open_B.jpg?v=1775726210" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/Dorothy_Gardner_IMG_9664cd_MAD.jpg?v=1775726209" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/exploria_MAD_20250214_120915_1b.jpg?v=1775726209" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/Golborne_IMG_0601.jpg?v=1775726213" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/Linwood2.png?v=1775726216" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/20250326_131710.jpg?v=1775731626" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/20250214_120728.jpg?v=1775731960" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/000a_2915-001-a-or.jpg?v=1775731961" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/IMG_8747.heic?v=1775732111" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/IMG_8748.heic?v=1775732111" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/IMG_8781.heic?v=1775732111" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/ChatGPT_Image_Jun_29_2026_02_35_41_PM.png?v=1782827984" alt="Soft Play">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="soft-play">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/774_oldway_1_3ab42b39-2e93-43ca-a60b-535583f1ecc7.png?v=1782822877" alt="Soft Play">
+    </div>
+
+    <!-- ========== MURALS ========== -->
+                            <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/banner1.jpg?v=1775567957" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/izzzz.png?v=1775732390" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/mural_4.jpg?v=1775567800" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/000a_a_1620-002-b-or_1024x1024_6e90abdc-da8c-4ecc-94e0-81a9dd1c0c90.webp?v=1775731957" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/sp_mural_89898.jpg?v=1771616267" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/MSE_-_Xzzz.png?v=1775732390" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/000z_2836-002-a-or_2840869b-3abb-430c-ab86-51790327fc99.webp?v=1775748386" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/sp_mural_6.jpg?v=1771616186" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/sp_mural_998.jpg?v=1771601742" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/sp_mural_5_b.jpg?v=1771616186" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/sp_mural_7_f0f7868b-7560-4c9b-90c0-91607133656f.jpg?v=1771616185" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/000z_2836-001-b-or_d1a32901-bf12-49c1-809f-3e7ad9c56a37.jpg?v=1775734942" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/sp_mural_99123.jpg?v=1771613824" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/sp_mural_1232.jpg?v=1771601738" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/sp_mural_9999_ac39c99b-91c3-4b26-9812-a08d1a5d47fc.jpg?v=1771613792" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/SP_mural_9999.jpg?v=1771601655" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/sp_mural_9898.jpg?v=1771601656" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/sp_mural_9898_cdaeffeb-5308-4faf-a886-079a2e3cc50c.jpg?v=1771601656" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/sp_mural_99.jpg?v=1771601654" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/sp_mural_7.jpg?v=1771601655" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/SP_Mural_2.jpg?v=1771601651" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/000a_2761-002-a-or_copy_e8e6caea-ab8a-45aa-bf2a-3c86df42d631.jpg?v=1775568209" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/SP_mural_9.jpg?v=1771601650" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/sp_mural_9898_0580cc4c-e2f0-4998-a98a-a5795cb67e4c.jpg?v=1771947326" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/000z_2836-002-a-or.webp?v=1775567995" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/DSCN7857_3c6b8d07-8e56-4d55-b87f-f708a2b52828.jpg?v=1775568175" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/Untitled-1_1112b322-db19-4784-8412-636c2898b3d1.jpg?v=1775568176" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/000z_2227-001-a-or_-_b_7b5fe56e-72ba-40ae-8cb4-f7f08ea2c524.jpg?v=1775568211" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/000a_a_2761-002-a-or_copy_f16b1a57-0f22-48d4-a2d4-1ff4d0dc22fb_1024x1024_1.webp?v=1775568544" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/DSCN7867_copy.jpg?v=1775731625" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/IMG_0045b.jpg?v=1775731626" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/20250610_152120_0afa55b3-1dac-4b00-b2ab-7951325ec619.jpg?v=1775731627" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/20250610_152147b.jpg?v=1775731776" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/2598-001-b-crop-1920w-_muralZ_cf0f45ec-f741-4c47-83dd-38f057bf436a.jpg?v=1775731961" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/3731_oakwood_updates.heic?v=1775732111" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/3731_oakwood_updates2.heic?v=1775732111" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/20250723_140501.jpg?v=1775732111" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/IMG_2905_6d48f7d1-06c0-49b1-abad-9a96ef5273fc.jpg?v=1775734933" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/sp_mural_1232.jpg?v=1775734934" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/Tactile_Mural_Even_Swindon_Primary_School_02_copy_9c3b0910-fa8f-45f7-9b67-2ffe69f36ac1.jpg?v=1775734935" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/DSCN4412_9b9ff68f-d907-4883-9274-47f7dddb7245.jpg?v=1775734936" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/000z_1769-005-a-or_c82c1686-0fa6-44dd-a507-7d47d9e9565a.jpg?v=1775734937" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/IMG_2909.jpg?v=1775734949" alt="Mural">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="murals">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/000z_2767-008-d-or.png?v=1775748495" alt="Mural">
+    </div>
+
+    <!-- ========== DE-ESCALATION ========== -->
+                            <div class="sp-masonry-item sp-fade-in" data-category="de-escalation">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/De-escalation_1.jpg?v=1772666512" alt="De-escalation Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="de-escalation">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/29_2026_10_46_01_AM.png?v=1782828704" alt="De-escalation Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="de-escalation">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/SP_DARK_1_2.jpg?v=1771947270" alt="De-escalation Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="de-escalation">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/deescalation_4.jpg?v=1772120398" alt="De-escalation Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="de-escalation">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/deescalation_7.jpg?v=1772120397" alt="De-escalation Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="de-escalation">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/IMG_5782b.jpg?v=1775732112" alt="De-escalation Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="de-escalation">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/deescalation_3.jpg?v=1772124605" alt="De-escalation Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="de-escalation">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/deescalation_2.jpg?v=1772120391" alt="De-escalation Room">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="de-escalation">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/deescalation_6.jpg?v=1772120386" alt="De-escalation Room">
+    </div>
+
+    <!-- ========== PROJECTION ========== -->
+                            <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/good1a.png?v=1782823538" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/152069864_3723876160980945_1177657354084210872_n.jpg?v=1772324776" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/ChatGPT_Image_Jun_30_2026_02_19_01_PM.png?v=1782825910" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/000_2158-003-a-or.jpg?v=1775646714" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/511602137_10077516558950175_5959205880776868635_n.jpg?v=1772324775" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/Sandgate_20250124_135734c.jpg?v=1775568414" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/75619127_2572066656161907_8727769056125386752_n.jpg?v=1772324776" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/152279556_3723891737646054_4858105013810592257_n.jpg?v=1772324776" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/fishies_2303-112-a-or.jpg?v=1775568125" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/MC_Projected_on.jpg?v=1772324859" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/projection_2343242.jpg?v=1772324774" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/Mum_and_daughter_-_Archaeology_table_projection.jpg?v=1772324778" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/green_projection_room_1.jpg?v=1772324776" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/364178354_991512948933451_5907086381093356775_n.jpg?v=1775568545" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/78378517_2572066866161886_283376917078343680_n.jpg?v=1772324776" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/486309898_1393031628781579_1968299947873302313_n.jpg?v=1772324776" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/fishy_corner.jpg?v=1775568122" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/80408822_2641752952526610_8852796073802989568_n.jpg?v=1772324777" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/499716396_10077516572283507_2929558389497442578_n.jpg?v=1772324776" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/512666925_23871019299173334_1303881952138021994_n.jpg?v=1772324775" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/IMG_E0233_d210ad6c-f1c5-4655-90a9-1d4a5ab8dfcb.webp?v=1772324775" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/projection_23424324.jpg?v=1772324775" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/projection_234242.jpg?v=1772324775" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/55504347_2131479256887318_2654573961144172544_n.jpg?v=1772324775" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/projection_23424.jpg?v=1772324775" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/6.webp?v=1772324774" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/projection_234234234.jpg?v=1772324775" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/512930167_23871019389173325_6363792953937467675_n.jpg?v=1772324775" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/513954288_23891465450462052_3131414560385225623_n.jpg?v=1772324775" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/3_1080x_430ac583-b153-4483-af13-ff01198998af.webp?v=1772324774" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/Budii-Ballrollingacrossfloor1_1799x1012_a33b2d5c-7f9f-4fc6-a862-cddbe90f2475.webp?v=1772324774" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/512783893_23871019269173337_8014451230179575599_n.jpg?v=1772325215" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/10-1_1080x_5bdfd094-1783-4cb6-aa3c-d650c9257473.webp?v=1772324774" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/projection_3211.jpg?v=1772324774" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/2_1080x_34441844-bee7-44e9-856d-bf4bf10a267c.webp?v=1772324774" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/123579516_3440828669285697_227389483499642759_n.jpg?v=1772324774" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/omi-sensory_767x767_ceea3b34-0f4d-4788-9046-f6983e17ecc9.webp?v=1772324774" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/16-1_1080x_7bd75059-570e-479b-9747-e824a92a8bc2.webp?v=1772324774" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/Budiioceantableprjection1_1799x1012_addd71ee-2a03-47b0-8108-3bcae123846c.webp?v=1772324774" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/1_1080x_5e1f15da-93e8-43b7-a52f-04064a69a397.webp?v=1772324773" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/9_1080x_6cf3cecc-c68b-4687-bb37-dab5ce410e34.webp?v=1772324773" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/11_1080x_0bf528b2-8e76-4a35-b0d1-bfcc218e27cc.webp?v=1772324773" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/autism2020-495x400-1.webp?v=1772324772" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/IMG_E0195-scaled-e1662124852677-1500x844.webp?v=1772324773" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/IMG_E0052_608x608_fbb4ef21-feb2-4bde-b7b2-cbfe953bb0b7.webp?v=1772324772" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/IMG_E0162-scaled-e1662124813342-1030x579_1030x579_b72e6899-52f1-412b-89b2-46dc3bff0a64.webp?v=1772324772" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/mobiis3_1296x_600x450_7379a67a-20fa-4d10-a922-e2ec00430114.webp?v=1772324772" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/projection_234.jpg?v=1772324772" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/omi-children_688x688_0320b54b-7d9b-43fc-bfc0-0ab6983d9357.webp?v=1772324772" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0652/8044/2581/files/Budii-ball-games-football_e0997a96-fa59-4491-9284-cab862814929.webp?v=1772324772" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/000_1487-129-a-or.jpg?v=1775646410" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/123579516_3440828669285697_227389483499642759_n.jpg?v=1775567855" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/1601-201-g-adjusted_0285.jpg?v=1775568122" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/2303-104-a-or.jpg?v=1775568124" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/3672_northbury1.jpg?v=1775732111" alt="Projection">
+    </div>
+    <div class="sp-masonry-item sp-fade-in" data-category="projection">
+      <img src="https://cdn.shopify.com/s/files/1/0589/4825/5913/files/000_1487-129-a-or_10e4ee0d-93b6-470c-8463-f50cabd55bb9.jpg?v=1775748492" alt="Projection">
+    </div>
+
+
+  
+  <!-- Mute Button -->
+  <button class="sp-mute-btn" aria-label="Toggle audio">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+      <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+      <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+    </svg>
+  </button>
+
+</div>
+
+<script src="{{ 'sp-gallery.js' | asset_url }}" defer></script>
+
+{% schema %}
+{
+  "name": "SP Gallery",
+  "tag": "section",
+  "class": "sp-gallery-section",
+  "settings": []
+}
+{% endschema %}
