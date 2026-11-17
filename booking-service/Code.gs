@@ -68,6 +68,13 @@ var SETTINGS = {
     },
     southpaw: {
       allowBookings: false,   // the Southpaw form only takes enquiries
+      // Customer email after an enquiry: just these paragraphs (no checklist
+      // or summary), signed off "Kind regards".
+      enquiryEmail: [
+        'Thank you for getting in touch about your sensory room project. We’ve received your enquiry, and our Sales Director, Mike, will be in touch with you shortly to talk through your plans.',
+        'There’s nothing you need to do in the meantime. We will guide you through each step of the process, from your initial consultation to the finished space.',
+        'We look forward to speaking with you.',
+      ],
       brand: {
         name: 'Southpaw',
         designLabel: 'Southpaw Design',
@@ -478,6 +485,12 @@ function customerEmailHtml_(b, start, end, meetLink) {
     '<p>Dear ' + esc_(b.firstName) + ',</p>';
   var close = summaryHtml_(b, start, end) +
     '<p>Warm regards,<br><strong>' + esc_(B.teamName) + '</strong></p></div>';
+
+  if (!start && SITE.enquiryEmail) {
+    return open +
+      SITE.enquiryEmail.map(function (p) { return '<p>' + esc_(p) + '</p>'; }).join('') +
+      '<p>Kind regards,<br><strong>' + esc_(B.teamName) + '</strong></p></div>';
+  }
 
   if (!start) {
     return open +
