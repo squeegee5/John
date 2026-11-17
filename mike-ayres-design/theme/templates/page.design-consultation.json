@@ -1,0 +1,19 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-page",
+      "settings": {
+        "show_title": false,
+        "title_alignment": "center"
+      }
+    },
+    "form-images": {
+      "type": "design-form-images",
+      "settings": {}
+    }
+  },
+  "order": [
+    "main",
+    "form-images"
+  ]
+}

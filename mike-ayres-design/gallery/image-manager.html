@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mike Ayres Design Gallery - Image Manager</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f5f5f7;
+    color: #1d1d1f;
+    line-height: 1.5;
+  }
+
+  .app-header {
+    background: #1d1d1f;
+    color: #fff;
+    padding: 16px 24px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .app-header h1 {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .app-header .header-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn:hover { opacity: 0.85; }
+
+  .btn-primary {
+    background: #0071e3;
+    color: #fff;
+  }
+
+  .btn-success {
+    background: #30d158;
+    color: #fff;
+  }
+
+  .btn-secondary {
+    background: #e8e8ed;
+    color: #1d1d1f;
+  }
+
+  .btn-danger {
+    background: #ff3b30;
+    color: #fff;
+  }
+
+  /* Load screen */
+  #loadScreen {
+    max-width: 800px;
+    margin: 60px auto;
+    padding: 40px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+
+  #loadScreen h2 {
+    font-size: 22px;
+    margin-bottom: 8px;
+  }
+
+  #loadScreen p {
+    color: #86868b;
+    margin-bottom: 20px;
+    font-size: 14px;
+  }
+
+  #loadScreen textarea {
+    width: 100%;
+    height: 300px;
+    border: 2px dashed #d2d2d7;
+    border-radius: 12px;
+    padding: 16px;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+    font-size: 12px;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  #loadScreen textarea:focus {
+    border-color: #0071e3;
+  }
+
+  .load-actions {
+    margin-top: 16px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .file-input-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: #e8e8ed;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .file-input-label:hover { background: #d2d2d7; }
+  .file-input-label input { display: none; }
+
+  /* Editor */
+  #editor { display: none; padding: 20px 24px 60px; }
+
+  .stats-bar {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .stat {
+    background: #fff;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 13px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+
+  .stat strong {
+    font-size: 20px;
+    display: block;
+    color: #0071e3;
+  }
+
+  /* Category sections */
+  .category-section {
+    background: #fff;
+    border-radius: 14px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    overflow: hidden;
+  }
+
+  .category-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+  }
+
+  .category-header:hover { background: #f5f5f7; }
+
+  .category-header h3 {
+    font-size: 15px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .category-count {
+    background: #0071e3;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+
+  .category-chevron {
+    font-size: 18px;
+    color: #86868b;
+    transition: transform 0.25s;
+  }
+
+  .category-section.collapsed .category-chevron {
+    transform: rotate(-90deg);
+  }
+
+  .category-section.collapsed .category-body {
+    display: none;
+  }
+
+  .category-body {
+    padding: 4px 20px 20px;
+  }
+
+  .category-actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .add-image-form {
+    display: none;
+    margin-bottom: 12px;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .add-image-form.visible { display: flex; }
+
+  .add-image-form input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #d2d2d7;
+    border-radius: 8px;
+    font-size: 13px;
+    outline: none;
+  }
+
+  .add-image-form input:focus {
+    border-color: #0071e3;
+    box-shadow: 0 0 0 3px rgba(0,113,227,0.15);
+  }
+
+  /* Thumbnail grid */
+  .thumb-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .thumb-item {
+    position: relative;
+    width: 150px;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #f5f5f7;
+    border: 2px solid transparent;
+    cursor: grab;
+    transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+  }
+
+  .thumb-item:hover {
+    border-color: #0071e3;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  }
+
+  .thumb-item.dragging {
+    opacity: 0.4;
+    transform: scale(0.95);
+  }
+
+  .thumb-item.drag-over {
+    border-color: #30d158;
+    background: #f0fff4;
+  }
+
+  .thumb-item img {
+    width: 100%;
+    height: 110px;
+    object-fit: cover;
+    display: block;
+    background: #e8e8ed;
+  }
+
+  .thumb-item img.error {
+    height: 110px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .thumb-filename {
+    font-size: 10px;
+    color: #86868b;
+    padding: 6px 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .thumb-delete {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 24px;
+    height: 24px;
+    background: rgba(0,0,0,0.7);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    font-size: 14px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s, background 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+
+  .thumb-item:hover .thumb-delete { opacity: 1; }
+  .thumb-delete:hover { background: #ff3b30; }
+
+  .thumb-index {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+
+  /* Export modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .modal-overlay.visible {
+    display: flex;
+  }
+
+  .modal {
+    background: #fff;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 900px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+
+  .modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #e8e8ed;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .modal-header h2 { font-size: 18px; }
+
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #86868b;
+    padding: 4px;
+  }
+
+  .modal-body {
+    padding: 20px 24px;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .modal-body textarea {
+    width: 100%;
+    height: 400px;
+    border: 1px solid #d2d2d7;
+    border-radius: 10px;
+    padding: 12px;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+    font-size: 11px;
+    resize: vertical;
+    outline: none;
+  }
+
+  .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid #e8e8ed;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #1d1d1f;
+    color: #fff;
+    padding: 10px 24px;
+    border-radius: 10px;
+    font-size: 13px;
+    z-index: 300;
+    transition: transform 0.3s;
+    pointer-events: none;
+  }
+
+  .toast.visible {
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .empty-state {
+    color: #86868b;
+    font-size: 13px;
+    font-style: italic;
+    padding: 20px;
+    text-align: center;
+  }
+
+  @media (max-width: 640px) {
+    .thumb-item { width: 120px; }
+    .thumb-item img { height: 85px; }
+    .app-header { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <h1>Mike Ayres Design Gallery - Image Manager</h1>
+  <div class="header-actions" id="headerActions" style="display:none">
+    <button class="btn btn-success" onclick="generateOutput()">Generate Updated Liquid</button>
+    <button class="btn btn-secondary" onclick="expandAll()">Expand All</button>
+    <button class="btn btn-secondary" onclick="collapseAll()">Collapse All</button>
+  </div>
+</div>
+
+<div id="loadScreen">
+  <h2>Load Your Liquid File</h2>
+  <p>Paste the contents of <code>sections/sp-gallery-section-v2.liquid</code> (the live gallery at /pages/sensory-gallery-v2) below, or use the file picker to load it.</p>
+  <textarea id="liquidInput" placeholder="Paste your sp-gallery-section-v2.liquid content here..."></textarea>
+  <div class="load-actions">
+    <button class="btn btn-primary" onclick="parseLiquid()">Parse &amp; Load</button>
+    <label class="file-input-label">
+      Load File
+      <input type="file" id="fileInput" accept=".liquid,.html,.txt" onchange="loadFile(event)">
+    </label>
+  </div>
+</div>
+
+<div id="editor"></div>
+
+<div class="modal-overlay" id="exportModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Generated Liquid Output</h2>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <textarea id="exportOutput" readonly></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="copyOutput()">Copy to Clipboard</button>
+      <button class="btn btn-primary" onclick="downloadOutput()">Download .liquid</button>
+      <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ========== STATE ==========
+let originalSource = '';
+let categories = {};
+
+// Category definitions in display order
+const CATEGORY_DEFS = [
+  { id: 'banner', label: 'Design Book Banner', type: 'banner' },
+  { id: 'gallery', label: 'Design Book Gallery (Concept to Creation)', type: 'gallery' },
+  { id: 'zoom', label: 'Design Book Zoom Images', type: 'zoom' },
+  { id: 'timeline', label: 'Timeline Image', type: 'timeline' },
+  { id: 'mse', label: 'MSE', type: 'masonry' },
+  { id: 'si', label: 'SI', type: 'masonry' },
+  { id: 'soft-play', label: 'Soft Play', type: 'masonry' },
+  { id: 'murals', label: 'Murals', type: 'masonry' },
+  { id: 'de-escalation', label: 'De-escalation', type: 'masonry' },
+  { id: 'projection', label: 'Projection', type: 'masonry' },
+];
+
+// ========== FILE LOADING ==========
+function loadFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    document.getElementById('liquidInput').value = ev.target.result;
+    parseLiquid();
+  };
+  reader.readAsText(file);
+}
+
+// ========== PARSING ==========
+function parseLiquid() {
+  const src = document.getElementById('liquidInput').value.trim();
+  if (!src) { showToast('Please paste or load a liquid file first.'); return; }
+  originalSource = src;
+  categories = {};
+
+  // Parse banner slides
+  const bannerImages = [];
+  const bannerRe = /class="sp-db-banner-slide[^"]*"\s+style="background-image:url\('([^']+)'\)"/g;
+  let m;
+  while ((m = bannerRe.exec(src)) !== null) {
+    bannerImages.push({ url: m[1], alt: 'Banner' });
+  }
+  categories['banner'] = bannerImages;
+
+  // Parse gallery items
+  const galleryImages = [];
+  const gallerySection = src.match(/<div class="sp-db-gallery-grid">([\s\S]*?)<\/div>\s*<\/div>/);
+  if (gallerySection) {
+    const imgRe = /<div class="sp-db-gallery-item sp-fade-in">\s*<img\s+src="([^"]+)"\s+alt="([^"]*)"/g;
+    while ((m = imgRe.exec(src)) !== null) {
+      galleryImages.push({ url: m[1], alt: m[2] });
+    }
+  }
+  categories['gallery'] = galleryImages;
+
+  // Parse zoom images
+  const zoomImages = [];
+  const zoomRe = /<img\s+class="sp-db-zoom-img sp-fade-in"\s+src="([^"]+)"\s+alt="([^"]*)"/g;
+  while ((m = zoomRe.exec(src)) !== null) {
+    zoomImages.push({ url: m[1], alt: m[2] });
+  }
+  categories['zoom'] = zoomImages;
+
+  // Parse timeline image
+  const timelineImages = [];
+  const tlRe = /<img\s+class="sp-db-timeline-img sp-fade-in"\s+src="([^"]+)"\s+alt="([^"]*)"/g;
+  while ((m = tlRe.exec(src)) !== null) {
+    timelineImages.push({ url: m[1], alt: m[2] });
+  }
+  categories['timeline'] = timelineImages;
+
+  // Parse masonry items by data-category
+  const masonryCats = ['mse', 'si', 'soft-play', 'murals', 'de-escalation', 'projection'];
+  masonryCats.forEach(cat => {
+    const items = [];
+    const re = new RegExp('<div class="sp-masonry-item sp-fade-in" data-category="' + cat.replace('-', '\\-') + '">\\s*<img\\s+src="([^"]+)"\\s+alt="([^"]*)"', 'g');
+    while ((m = re.exec(src)) !== null) {
+      items.push({ url: m[1], alt: m[2] });
+    }
+    categories[cat] = items;
+  });
+
+  renderEditor();
+}
+
+// ========== RENDERING ==========
+function renderEditor() {
+  const editor = document.getElementById('editor');
+  document.getElementById('loadScreen').style.display = 'none';
+  editor.style.display = 'block';
+  document.getElementById('headerActions').style.display = 'flex';
+
+  // Stats
+  let totalImages = 0;
+  CATEGORY_DEFS.forEach(c => { totalImages += (categories[c.id] || []).length; });
+
+  let html = '<div class="stats-bar">';
+  html += '<div class="stat"><strong>' + totalImages + '</strong>Total Images</div>';
+  html += '<div class="stat"><strong>' + CATEGORY_DEFS.length + '</strong>Categories</div>';
+  CATEGORY_DEFS.forEach(c => {
+    const count = (categories[c.id] || []).length;
+    html += '<div class="stat"><strong>' + count + '</strong>' + c.label + '</div>';
+  });
+  html += '</div>';
+
+  // Category sections
+  CATEGORY_DEFS.forEach(cat => {
+    const items = categories[cat.id] || [];
+    html += '<div class="category-section" data-cat-id="' + cat.id + '">';
+    html += '<div class="category-header" onclick="toggleSection(this)">';
+    html += '<h3>' + cat.label + ' <span class="category-count">' + items.length + '</span></h3>';
+    html += '<span class="category-chevron">&#9660;</span>';
+    html += '</div>';
+    html += '<div class="category-body">';
+
+    // Actions
+    html += '<div class="category-actions">';
+    html += '<button class="btn btn-secondary" onclick="showAddForm(\'' + cat.id + '\')">+ Add Image</button>';
+    html += '</div>';
+
+    // Add form
+    html += '<div class="add-image-form" id="addForm-' + cat.id + '">';
+    html += '<input type="text" id="addUrl-' + cat.id + '" placeholder="Paste CDN image URL...">';
+    html += '<input type="text" id="addAlt-' + cat.id + '" placeholder="Alt text" style="max-width:160px">';
+    html += '<button class="btn btn-primary" onclick="addImage(\'' + cat.id + '\')">Add</button>';
+    html += '<button class="btn btn-secondary" onclick="hideAddForm(\'' + cat.id + '\')">Cancel</button>';
+    html += '</div>';
+
+    // Thumbnails
+    html += '<div class="thumb-grid" id="grid-' + cat.id + '">';
+    if (items.length === 0) {
+      html += '<div class="empty-state">No images in this category</div>';
+    } else {
+      items.forEach((img, idx) => {
+        html += renderThumb(cat.id, img, idx);
+      });
+    }
+    html += '</div>';
+
+    html += '</div></div>';
+  });
+
+  editor.innerHTML = html;
+  setupDragAndDrop();
+}
+
+function renderThumb(catId, img, idx) {
+  const filename = extractFilename(img.url);
+  let h = '<div class="thumb-item" draggable="true" data-cat="' + catId + '" data-idx="' + idx + '">';
+  h += '<span class="thumb-index">' + (idx + 1) + '</span>';
+  h += '<button class="thumb-delete" onclick="deleteImage(\'' + catId + '\',' + idx + ')" title="Remove image">&times;</button>';
+  h += '<img src="' + img.url + '" alt="' + (img.alt || '') + '" loading="lazy" onerror="this.style.background=\'#ffe0e0\';this.alt=\'Failed to load\'">';
+  h += '<div class="thumb-filename" title="' + filename + '">' + filename + '</div>';
+  h += '</div>';
+  return h;
+}
+
+function extractFilename(url) {
+  try {
+    const parts = url.split('/');
+    let name = parts[parts.length - 1];
+    name = name.split('?')[0];
+    return decodeURIComponent(name);
+  } catch {
+    return url;
+  }
+}
+
+// ========== CATEGORY ACTIONS ==========
+function toggleSection(header) {
+  header.parentElement.classList.toggle('collapsed');
+}
+
+function expandAll() {
+  document.querySelectorAll('.category-section').forEach(s => s.classList.remove('collapsed'));
+}
+
+function collapseAll() {
+  document.querySelectorAll('.category-section').forEach(s => s.classList.add('collapsed'));
+}
+
+function showAddForm(catId) {
+  document.getElementById('addForm-' + catId).classList.add('visible');
+  document.getElementById('addUrl-' + catId).focus();
+}
+
+function hideAddForm(catId) {
+  document.getElementById('addForm-' + catId).classList.remove('visible');
+  document.getElementById('addUrl-' + catId).value = '';
+  document.getElementById('addAlt-' + catId).value = '';
+}
+
+function addImage(catId) {
+  const url = document.getElementById('addUrl-' + catId).value.trim();
+  if (!url) { showToast('Please enter a URL.'); return; }
+
+  const catDef = CATEGORY_DEFS.find(c => c.id === catId);
+  let defaultAlt = '';
+  if (catDef) {
+    const altMap = { 'banner': 'Banner', 'gallery': 'Design Visual', 'zoom': 'Zoom Image', 'timeline': 'Project Timeline',
+      'mse': 'MSE Room', 'si': 'SI Room', 'soft-play': 'Soft Play', 'murals': 'Mural',
+      'de-escalation': 'De-escalation Room', 'projection': 'Projection' };
+    defaultAlt = altMap[catId] || '';
+  }
+
+  const alt = document.getElementById('addAlt-' + catId).value.trim() || defaultAlt;
+  categories[catId].push({ url, alt });
+  hideAddForm(catId);
+  renderEditor();
+  showToast('Image added to ' + catDef.label);
+}
+
+function deleteImage(catId, idx) {
+  categories[catId].splice(idx, 1);
+  renderEditor();
+  showToast('Image removed');
+}
+
+// ========== DRAG AND DROP ==========
+function setupDragAndDrop() {
+  document.querySelectorAll('.thumb-item').forEach(item => {
+    item.addEventListener('dragstart', onDragStart);
+    item.addEventListener('dragend', onDragEnd);
+    item.addEventListener('dragover', onDragOver);
+    item.addEventListener('dragenter', onDragEnter);
+    item.addEventListener('dragleave', onDragLeave);
+    item.addEventListener('drop', onDrop);
+  });
+}
+
+let dragSrcEl = null;
+let dragSrcCat = null;
+let dragSrcIdx = null;
+
+function onDragStart(e) {
+  dragSrcEl = this;
+  dragSrcCat = this.dataset.cat;
+  dragSrcIdx = parseInt(this.dataset.idx);
+  this.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', dragSrcIdx);
+}
+
+function onDragEnd(e) {
+  this.classList.remove('dragging');
+  document.querySelectorAll('.thumb-item').forEach(item => item.classList.remove('drag-over'));
+}
+
+function onDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+}
+
+function onDragEnter(e) {
+  e.preventDefault();
+  if (this.dataset.cat === dragSrcCat && this !== dragSrcEl) {
+    this.classList.add('drag-over');
+  }
+}
+
+function onDragLeave(e) {
+  this.classList.remove('drag-over');
+}
+
+function onDrop(e) {
+  e.preventDefault();
+  this.classList.remove('drag-over');
+
+  const targetCat = this.dataset.cat;
+  const targetIdx = parseInt(this.dataset.idx);
+
+  if (targetCat !== dragSrcCat || targetIdx === dragSrcIdx) return;
+
+  const items = categories[dragSrcCat];
+  const moved = items.splice(dragSrcIdx, 1)[0];
+  items.splice(targetIdx, 0, moved);
+
+  renderEditor();
+  showToast('Image reordered');
+}
+
+// ========== EXPORT / GENERATE ==========
+function generateOutput() {
+  let output = originalSource;
+
+  // 1. Replace banner slides
+  const bannerContainerRe = /(<div class="sp-db-banner">)\s*((?:<div class="sp-db-banner-slide[\s\S]*?<\/div>\s*)*)([\s\S]*?<\/div>)/;
+  const bannerMatch = output.match(bannerContainerRe);
+  if (bannerMatch) {
+    // Find the exact block of banner slides
+    const bannerStart = output.indexOf('<div class="sp-db-banner">');
+    const textboxStart = output.indexOf('<div class="sp-db-banner-textbox">');
+    if (bannerStart !== -1 && textboxStart !== -1) {
+      const beforeBanner = output.substring(0, bannerStart + '<div class="sp-db-banner">'.length);
+      const afterSlides = output.substring(textboxStart);
+
+      let newSlides = '\n';
+      categories['banner'].forEach((img, i) => {
+        const activeClass = i === 0 ? ' sp-active' : '';
+        newSlides += '      <div class="sp-db-banner-slide' + activeClass + '" style="background-image:url(\'' + img.url + '\')"></div>\n';
+      });
+      newSlides += '      ';
+
+      output = beforeBanner + newSlides + afterSlides;
+    }
+  }
+
+  // 2. Replace gallery items
+  const galleryGridStart = output.indexOf('<div class="sp-db-gallery-grid">');
+  const galleryGridEnd = output.indexOf('</div>', output.indexOf('</div>', galleryGridStart + 1) + 1);
+  if (galleryGridStart !== -1) {
+    // Find the closing tag of sp-db-gallery-grid properly
+    const gridOpenTag = '<div class="sp-db-gallery-grid">';
+    const gStart = output.indexOf(gridOpenTag);
+    // Find matching close - count nested divs
+    let depth = 1;
+    let pos = gStart + gridOpenTag.length;
+    while (depth > 0 && pos < output.length) {
+      const nextOpen = output.indexOf('<div', pos);
+      const nextClose = output.indexOf('</div>', pos);
+      if (nextClose === -1) break;
+      if (nextOpen !== -1 && nextOpen < nextClose) {
+        depth++;
+        pos = nextOpen + 4;
+      } else {
+        depth--;
+        if (depth === 0) {
+          const before = output.substring(0, gStart + gridOpenTag.length);
+          const after = output.substring(nextClose);
+
+          let newGallery = '\n';
+          categories['gallery'].forEach(img => {
+            newGallery += '        <div class="sp-db-gallery-item sp-fade-in">\n';
+            newGallery += '          <img src="' + img.url + '" alt="' + img.alt + '">\n';
+            newGallery += '        </div>\n';
+          });
+          newGallery += '      ';
+
+          output = before + newGallery + after;
+        }
+        pos = nextClose + 6;
+      }
+    }
+  }
+
+  // 3. Replace zoom images (in-place, order matters)
+  const zoomImgs = categories['zoom'];
+  let zoomIdx = 0;
+  output = output.replace(/<img\s+class="sp-db-zoom-img sp-fade-in"\s+src="[^"]+"\s+alt="[^"]*"\s+data-zoomable>/g, function(match) {
+    if (zoomIdx < zoomImgs.length) {
+      const img = zoomImgs[zoomIdx++];
+      return '<img class="sp-db-zoom-img sp-fade-in" src="' + img.url + '" alt="' + img.alt + '" data-zoomable>';
+    }
+    return match;
+  });
+
+  // 4. Replace timeline image
+  if (categories['timeline'].length > 0) {
+    output = output.replace(
+      /<img\s+class="sp-db-timeline-img sp-fade-in"\s+src="[^"]+"\s+alt="[^"]*">/g,
+      '<img class="sp-db-timeline-img sp-fade-in" src="' + categories['timeline'][0].url + '" alt="' + categories['timeline'][0].alt + '">'
+    );
+  }
+
+  // 5. Replace masonry items
+  const masonryCats = ['mse', 'si', 'soft-play', 'murals', 'de-escalation', 'projection'];
+  masonryCats.forEach(cat => {
+    // Find the comment and all items for this category
+    const catRegexSafe = cat.replace('-', '\\-');
+    const items = categories[cat];
+
+    // Build regex to find all masonry items of this category
+    const itemRe = new RegExp(
+      '<div class="sp-masonry-item sp-fade-in" data-category="' + catRegexSafe + '">\\s*<img\\s+src="[^"]+"\\s+alt="[^"]*">\\s*</div>',
+      'g'
+    );
+
+    // Find all matches and their positions
+    const matches = [];
+    let m2;
+    while ((m2 = itemRe.exec(output)) !== null) {
+      matches.push({ start: m2.index, end: m2.index + m2[0].length, text: m2[0] });
+    }
+
+    if (matches.length === 0 && items.length === 0) return;
+
+    if (matches.length > 0) {
+      // Replace from last to first to preserve positions
+      const firstStart = matches[0].start;
+      const lastEnd = matches[matches.length - 1].end;
+
+      // Check for comments before first item
+      const beforeBlock = output.substring(Math.max(0, firstStart - 200), firstStart);
+      const commentMatch = beforeBlock.match(/([ \t]*<!--[^>]*-->[ \t]*\n?\s*)$/);
+      let blockStart = firstStart;
+      if (commentMatch) {
+        blockStart = firstStart - commentMatch[1].length;
+      }
+
+      let newBlock = '';
+      // Preserve the comment (minus the indent before the first item, which
+      // is re-added below — otherwise it grows on every save)
+      if (commentMatch) {
+        newBlock += commentMatch[1].replace(/[ \t]+$/, '');
+      }
+
+      items.forEach(img => {
+        newBlock += '    <div class="sp-masonry-item sp-fade-in" data-category="' + cat + '">\n';
+        newBlock += '      <img src="' + img.url + '" alt="' + img.alt + '">\n';
+        newBlock += '    </div>\n';
+      });
+      // The text after the last old item already starts with a newline
+      newBlock = newBlock.replace(/\n$/, '');
+
+      output = output.substring(0, blockStart) + newBlock + output.substring(lastEnd);
+    } else if (items.length > 0) {
+      // No existing items but we have new ones - find insertion point
+      const masonryEnd = output.indexOf('</div>', output.indexOf('<div class="sp-masonry">'));
+      if (masonryEnd !== -1) {
+        let newBlock = '\n';
+        items.forEach(img => {
+          newBlock += '    <div class="sp-masonry-item sp-fade-in" data-category="' + cat + '">\n';
+          newBlock += '      <img src="' + img.url + '" alt="' + img.alt + '">\n';
+          newBlock += '    </div>\n';
+        });
+        output = output.substring(0, masonryEnd) + newBlock + output.substring(masonryEnd);
+      }
+    }
+  });
+
+  // Clean up any extra blank lines (more than 2 consecutive)
+  output = output.replace(/\n{4,}/g, '\n\n');
+
+  document.getElementById('exportOutput').value = output;
+  document.getElementById('exportModal').classList.add('visible');
+}
+
+function copyOutput() {
+  const ta = document.getElementById('exportOutput');
+  ta.select();
+  navigator.clipboard.writeText(ta.value).then(() => {
+    showToast('Copied to clipboard');
+  }).catch(() => {
+    document.execCommand('copy');
+    showToast('Copied to clipboard');
+  });
+}
+
+function downloadOutput() {
+  const content = document.getElementById('exportOutput').value;
+  const blob = new Blob([content], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'sp-gallery-section-v2.liquid';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('File downloaded');
+}
+
+function closeModal() {
+  document.getElementById('exportModal').classList.remove('visible');
+}
+
+// ========== TOAST ==========
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('visible');
+  setTimeout(() => toast.classList.remove('visible'), 2200);
+}
+</script>
+</body>
+</html>
